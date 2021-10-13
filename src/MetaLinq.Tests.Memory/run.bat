@@ -1,0 +1,1 @@
+c:\Github\bin\DotMemoryUnit\dotMemoryUnit.exe c:\Users\tolstikov\.nuget\packages\nunit.consolerunner\3.12.0\tools\nunit3-console.exe -- bin\Debug\MetaLinq.Tests.Memory.dll --workers=1

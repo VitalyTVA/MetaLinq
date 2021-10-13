@@ -1,0 +1,10 @@
+﻿using System;
+using NetFabric.Hyperlinq;
+using System.Collections.Generic;
+
+namespace MetaLinqBenchmark {
+    static class Hyper {
+        //public static List<int> SelectMany(TestData[] testData) => testData.AsValueEnumerable().SelectMany(static x => x.Ints).ToList();
+        public static List<int> Select_Where(int[] ints) => ints.AsValueEnumerable().Select(static x => x * 10).Where(static x => x % 100 == 0).ToList();
+    }
+}

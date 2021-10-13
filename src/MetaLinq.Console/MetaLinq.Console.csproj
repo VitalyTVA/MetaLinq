@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JetBrains.DotMemoryUnit" Version="3.1.20200127.214830" />
+    <PackageReference Include="JetBrains.Profiler.Api" Version="1.1.8" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MetaLinq\MetaLinq.csproj" />
   </ItemGroup>
 

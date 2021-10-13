@@ -3,40 +3,57 @@ using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using System;
+using MetaLinq;
 using System.Collections.Generic;
-using En = System.Linq.Enumerable;
+using System.Linq;
 
-namespace MetaLinq.Benchmark {
+namespace MetaLinqBenchmark {
     class Program {
         static void Main(string[] args) {
-            var summary = BenchmarkRunner.Run<Select_Where_ToList>();
+            var summary = BenchmarkRunner.Run<Benchmarks>();
         }
     }
 
-    //[SimpleJob(RuntimeMoniker.Net50, warmupCount: 1, targetCount: 5)]
-    [SimpleJob(RunStrategy.Throughput, RuntimeMoniker.Net50)]
+    [SimpleJob(RuntimeMoniker.Net50, warmupCount: 2, targetCount: 10)]
     //[MinColumn, MaxColumn, MeanColumn, MedianColumn]
     [MeanColumn]
     [MemoryDiagnoser]
-    public class Select_Where_ToList {
-        private int[] data;
+    public class Benchmarks {
+        int[] ints;
+        TestData[] testData;
 
-        [Params(5)]
+        [Params(100000)]
         public int N;
 
         [GlobalSetup]
         public void Setup() {
-            data = En.ToArray(En.Range(0, N));
+            ints = Enumerable.Range(0, N).ToArray();
+            testData = new TestData[N];
             for(int i = 0; i < N; i++) {
-                data[i] = i;
+                testData[i] = new TestData(new[] { i * 10, i * 10 + 1 });
             }
         }
 
         [Benchmark]
-        public List<int> Meta() => data.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList();
+        public List<int> SelectMany_Meta() => Meta.SelectMany(testData);
+        [Benchmark]
+        public List<int> SelectMany_Standard() => Standard.SelectMany(testData);
+        [Benchmark]
+        public List<int> SelectMany_AF() => AF.SelectMany(testData);
 
         [Benchmark]
-        public List<int> Standard() => En.ToList(En.Where(En.Select(data, static x => x * 10), static x => x % 100 == 0));
+        public List<int> Select_Where_Meta() => Meta.Select_Where(ints);
+        [Benchmark]
+        public List<int> Select_Where_Standard() => Standard.Select_Where(ints);
+        [Benchmark]
+        public List<int> Select_Where_Hyper() => Hyper.Select_Where(ints);
+        [Benchmark]
+        public List<int> Select_Where_AF() => AF.Select_Where(ints);
     }
-
+    class TestData {
+        public TestData(int[] ints) {
+            Ints = ints;
+        }
+        public int[] Ints { get; }
+    }
 }
