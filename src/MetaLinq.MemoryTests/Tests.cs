@@ -37,64 +37,47 @@ namespace MetaLinqTests.Memory {
 
         class Foo { }
         class Bar { }
-        [Test]
-        public static void TheTest() {
-            AssertDifference();
-            Select_Where_Meta();
-            Select_Where_Standard();
-            SelectMany_Meta_Array();
-            SelectMany_Meta_List();
-            //SelectMany_Standard();
-        }
         struct DisposableStruct : IDisposable {
             public void Dispose() {
             }
         }
-        static void AssertDifference() {
+        [Test]
+        public static void AssertDifference_NoAllocs() {
             MemoryTestHelper.AssertDifference(() => { }, null);
+        }
+        [Test]
+        public static void AssertDifference_SomeAllocs() {
             MemoryTestHelper.AssertDifference(() => { new Foo(); new Foo(); new Bar(); }, new[] {
                 (typeof(Foo).FullName, 2),
                 (typeof(Bar).FullName, 1),
 
             });
+        }
+        [Test]
+        public static void AssertDifference_HiddenAllocs() {
             MemoryTestHelper.AssertDifference(() => { IDisposable boxed = new DisposableStruct(); }, new[] {
                 (typeof(DisposableStruct).FullName, 1),
             });
         }
-        static void Select_Where_Meta() {
-            MemoryTestHelper.AssertDifference(() => GetResultMeta(data), new[] {
-                ("System.Collections.Generic.List`1[System.Int32]", 1),
-                ("System.Int32[]", 1),
-            });
+        [Test]
+        public static void Select_Where_Meta() {
+            MemoryTestHelper.AssertDifference(() => GetResultMeta(data), ExpectedListOfIntsAllocations());
         }
-        static void Select_Where_Standard() {
-            MemoryTestHelper.AssertDifference(() => GetResultStandard(data), new[] {
-                ("System.Collections.Generic.List`1[System.Int32]", 1),
-                ("System.Int32[]", 1),
-                ("System.Linq.Enumerable+WhereEnumerableIterator`1[System.Int32]", 1),
-                ("System.Linq.Enumerable+WhereSelectArrayIterator`2[System.Int32,System.Int32]", 1),
-            });
+        [Test]
+        public static void SelectMany_Meta_Array() {
+            MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany(static x => x.IntArray).ToList(), ExpectedListOfIntsAllocations());
         }
-        static void SelectMany_Meta_Array() {
-            MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany(static x => x.IntArray).ToList(), new[] {
-                ("System.Collections.Generic.List`1[System.Int32]", 1),
-                ("System.Int32[]", 3),
-            });
-        }
-        static void SelectMany_Meta_List() {
-            MemoryTestHelper.AssertDifference(() => testDataList.SelectMany(static x => x.IntArray).ToList(), new[] {
-                ("System.Collections.Generic.List`1[System.Int32]", 1),
-                ("System.Int32[]", 3),
-            });
+        [Test]
+        public static void SelectMany_Meta_List() {
+            MemoryTestHelper.AssertDifference(() => testDataList.SelectMany(static x => x.IntArray).ToList(), ExpectedListOfIntsAllocations());
         }
 
-        //static void SelectMany_Standard() {
-        //    MemoryTestHelper.AssertDifference(() => En.ToList(En.SelectMany(testData, static x => x.Ints)), new[] {
-        //        ("System.Collections.Generic.List`1[System.Int32]", 1),
-        //        ("System.Int32[]", 3),
-        //    });
-        //}
-
+        static (string, int)[] ExpectedListOfIntsAllocations() {
+            return new[] {
+                ("System.Collections.Generic.List`1[System.Int32]", 1),
+                ("System.Int32[]", 1),
+            };
+        }
 
         static List<int> GetResultMeta(int[] data) {
             return data.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList();

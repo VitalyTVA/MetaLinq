@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "MetaLinq.MemoryTests": {
+      "commandName": "Executable",
+      "executablePath": "c:\\Github\\bin\\DotMemoryUnit\\dotMemoryUnit.exe",
+      "commandLineArgs": "MetaLinq.MemoryTests.exe"
+    }
+  }
+}

@@ -100,8 +100,8 @@ namespace MetaLinq {
         public static List<TResult> ToList<TSource, TSourceEnumerable, TResult, TResultEnumerable>(this SelectManyResult<TSource, TSourceEnumerable, TResult, TResultEnumerable> source)
             where TResultEnumerable : IEnumerable<TResult>
             where TSourceEnumerable : IEnumerable<TSource> {
-            var result = new List<TResult>();
-            //using var result = new LargeArrayBuilder<TResult>(ArrayPool<TResult>.Shared, false);
+            //var result = new List<TResult>();
+            using var result = new LargeArrayBuilder<TResult>(ArrayPool<TResult>.Shared, false);
             if(source.source is TSource[] array) {
                 var len = array.Length;
                 for(int i = 0; i < len; i++) {
@@ -133,13 +133,13 @@ namespace MetaLinq {
             } else {
                 throw new NotImplementedException();
             }
-            return result;
-            //return result.ToArray().AsList();
+            //return result;
+            return result.ToArray().AsList();
         }
 
         public static List<TSource> ToList<T1, TSource>(this SelectWhereResult<T1, TSource> source) {
-            var result = new List<TSource>();
-            //using var result = new LargeArrayBuilder<TSource>(ArrayPool<TSource>.Shared, false);
+            //var result = new List<TSource>();
+            using var result = new LargeArrayBuilder<TSource>(ArrayPool<TSource>.Shared, false);
             if(source.selectResult.source is T1[] array) {
                 var len = array.Length;
                 for(int i = 0; i < len; i++) {
@@ -151,8 +151,8 @@ namespace MetaLinq {
             } else {
                 throw new NotImplementedException();
             }
-            return result;
-            //return result.ToArray().AsList();
+            //return result;
+            return result.ToArray().AsList();
         }
     }
 }
