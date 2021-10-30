@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace MetaLinq {
-    public static class MetaEnumerable {
+    public static class Enumerable {
         public readonly struct SelectResult<TSource, TResult> : IEnumerable<TResult> {
             internal readonly IEnumerable<TSource> source;
             internal readonly Func<TSource, TResult> selector;
@@ -79,9 +79,9 @@ namespace MetaLinq {
 
 
         public readonly struct SelectWhereResult<TSource, TResult> : IEnumerable<TResult> {
-            internal readonly MetaEnumerable.SelectResult<TSource, TResult> selectResult;
+            internal readonly Enumerable.SelectResult<TSource, TResult> selectResult;
             internal readonly Func<TResult, bool> predicate;
-            public SelectWhereResult(MetaEnumerable.SelectResult<TSource, TResult> selectResult, Func<TResult, bool> predicate) {
+            public SelectWhereResult(Enumerable.SelectResult<TSource, TResult> selectResult, Func<TResult, bool> predicate) {
                 this.selectResult = selectResult;
                 this.predicate = predicate;
             }
@@ -93,7 +93,7 @@ namespace MetaLinq {
                 throw new NotImplementedException();
             }
         }
-        public static SelectWhereResult<T1, TSource> Where<T1, TSource>(this MetaEnumerable.SelectResult<T1, TSource> source, Func<TSource, bool> predicate) {
+        public static SelectWhereResult<T1, TSource> Where<T1, TSource>(this Enumerable.SelectResult<T1, TSource> source, Func<TSource, bool> predicate) {
             return new SelectWhereResult<T1, TSource>(source, predicate);
         }
 
