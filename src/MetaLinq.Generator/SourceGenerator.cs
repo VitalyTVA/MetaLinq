@@ -15,20 +15,20 @@ namespace MetaLinq.Generator {
     }
 
     class SyntaxContextReceiver : ISyntaxContextReceiver {
-        //readonly List<ClassDeclarationSyntax> classSyntaxes = new();
-        //public IEnumerable<ClassDeclarationSyntax> ClassSyntaxes { get => classSyntaxes; }
         public bool WhereFound { get; private set; }
 
+        INamedTypeSymbol? metaLinqEnumerableType;
+
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context) {
+            if(metaLinqEnumerableType == null)
+                metaLinqEnumerableType = context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Enumerable");
             if(context.Node is MemberAccessExpressionSyntax memberAccess) {
                 var symbolInfo = context.SemanticModel.GetSymbolInfo(memberAccess.Name);
-                if(symbolInfo.Symbol is IMethodSymbol methodSymbol && methodSymbol.Name == "Where") {
+                if(symbolInfo.Symbol is IMethodSymbol { Name: "Where" } methodSymbol
+                    && SymbolEqualityComparer.Default.Equals(methodSymbol.OriginalDefinition.ContainingType, metaLinqEnumerableType)) {
                     WhereFound = true;
                 }
             }
-            //if(context.Node is ClassDeclarationSyntax classDeclarationSyntax) {
-            //    classSyntaxes.Add(classDeclarationSyntax);
-            //}
         }
     }
 }

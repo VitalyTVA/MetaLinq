@@ -32,8 +32,10 @@ namespace MetaLinq {
             => new ArrayWhereEnumerable<TSource>(source, predicate);"
                 );                
             }
-            builder.AppendMultipleLines(
-@"   }
+builder.AppendLine("   }");
+            if(receiver.WhereFound) {
+                builder.AppendMultipleLines(
+    @"
     struct ArrayWhereEnumerable<T> {
         public readonly T[] source;
         public readonly Func<T, bool> predicate;
@@ -52,17 +54,14 @@ namespace MetaLinq {
             }
             return result.ToArray();
         }
-    }
-}");
+    }");
+            }
+builder.AppendLine("}");
             context.AddSource("MetaLinq.cs", SourceText.From(source.ToString(), Encoding.UTF8));
 
             //foreach(ClassDeclarationSyntax classSyntax in receiver.ClassSyntaxes) {
             //    if(context.CancellationToken.IsCancellationRequested)
             //        break;
-
-            //    string classSource = source.ToString();
-            //    source.Clear();
-            //    context.AddSource("test.cs", SourceText.From(classSource, Encoding.UTF8));
             //}
         }
     }

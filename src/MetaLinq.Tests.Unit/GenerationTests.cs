@@ -18,7 +18,7 @@ namespace MetaLinqTests.Unit {
         [Test]
         public void Array_Where_ToArray() {
             AssertGeneration(
-                "Data[] Execute() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
+                "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
                 (Data[] result) => {
                     CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
                 },
@@ -32,11 +32,23 @@ namespace MetaLinqTests.Unit {
         [Test]
         public void Array() {
             AssertGeneration(
-                "Data[] Execute() => Data.Array(5);",
+                "Data[] __() => Data.Array(5);",
                 (Data[] result) => {
                     CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
                 },
                 new MetaLinqMethodInfo[0]
+            );
+        }
+        [Test]
+        public void Array_Where_ToArray_Standard() {
+            AssertGeneration(
+                "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
+                (Data[] result) => {
+                    CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
+                },
+                new MetaLinqMethodInfo[0],
+                addMetaLinqUsing: false,
+                addStadardLinqUsing: true
             );
         }
         record StructMethod(string Name);
@@ -58,11 +70,12 @@ namespace MetaLinqTests.Unit {
             }
         }
 
-        static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods) {
+        static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = false) {
             var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location);
             var references = new[] {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
                 MetadataReference.CreateFromFile(Path.Combine(refLocation, "netstandard.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Linq.dll")),
                 MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Runtime.dll")),
                 MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Buffers.dll")),
                 MetadataReference.CreateFromFile(typeof(Data).Assembly.Location),
@@ -70,14 +83,13 @@ namespace MetaLinqTests.Unit {
             };
 
             var source =
-@"
-using MetaLinq;
+$@"
+{(addMetaLinqUsing ? "using MetaLinq;" : null)}
+{(addStadardLinqUsing ? "using System.Linq;" : null)}
 using MetaLinq.Tests;
-public static class Executer {
-static "
-+ code + 
-@"
-}
+public static class Executor {{
+static {code.Replace("__", "Execute")}
+}}
 ";
 
 
@@ -102,16 +114,23 @@ static "
             Assert.True(emitResult.Success);
 
             var assembly = Assembly.LoadFile(dllPath);
-            var result = (T)assembly.GetType("Executer").GetMethod("Execute", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
+            var executorType = assembly.GetType("Executor");
+            var result = (T)executorType.GetMethod("Execute", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
             assert(result);
 
             var extensionsType = assembly.GetType("MetaLinq.MetaEnumerable");
+
+            var allGeneratedTypes = assembly.GetTypes().Where(x => x != extensionsType && x != executorType && !x.IsNested).ToArray();
+
+            var expectedGeneratedTypes = new HashSet<Type>();
+
             Assert.False(extensionsType.IsPublic);
             var actualMethods = extensionsType
                 .GetMethods()
                 .Where(x => x.DeclaringType == extensionsType)
                 .Select(x => {
                     Assert.False(x.ReturnType.IsPublic);
+                    expectedGeneratedTypes.Add(x.ReturnType.GetGenericTypeDefinition());
                     return new MetaLinqMethodInfo(
                         x.Name, 
                         x.ReturnType
@@ -123,6 +142,7 @@ static "
                 })
                 .ToArray();
             CollectionAssert.AreEqual(methods, actualMethods);
+            CollectionAssert.AreEquivalent(expectedGeneratedTypes.ToArray(), allGeneratedTypes);
         }
     }
 }
