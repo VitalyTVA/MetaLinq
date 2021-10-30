@@ -1,0 +1,84 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MetaLinq.Generator</RootNamespace>
+    <AssemblyName>MetaLinq.Generator</AssemblyName>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>9</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <SignAssembly>true</SignAssembly>
+    <RestorePackages>true</RestorePackages>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;MVVM;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE;MVVM;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleasesTracking\AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleasesTracking\AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Title>MetaLinq.Generator</Title>
+    <Product>MetaLinq.Generator</Product>
+    <Version>0.0.1</Version>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <Company>https://github.com/VitalyTVA</Company>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>MetaLinq</PackageId>
+    <PackageVersion>$(Version)</PackageVersion>
+    <Owners>https://github.com/VitalyTVA</Owners>
+    <Authors>https://github.com/VitalyTVA</Authors>
+    <PackageProjectUrl>https://github.com/VitalyTVA/MetaLinq</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/VitalyTVA/MetaLinq</RepositoryUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Description>TODO</Description>
+    <PackageReleaseNotes>https://github.com/VitalyTVA/MetaLinq#release-notes</PackageReleaseNotes>
+    <PackageTags>linq sourcegenerator generator performance noalloc zeroalloc</PackageTags>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <Copyright>Copyright © 2021 https://github.com/VitalyTVA</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="tools\**" Pack="true" PackagePath="" />
+	<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    <None Remove="bin\\MetaLinq.Generator.dll" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" />
+  </ItemGroup>
+</Project>
