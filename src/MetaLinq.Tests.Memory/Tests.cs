@@ -21,7 +21,7 @@ namespace MetaLinqTests.Memory {
             for(int i = 0; i < 5; i++) {
                 testDataArray[i] = new TestData(new[] { i * 10, i * 10 + 1 });
             }
-            testDataList =En.ToList(testDataArray);
+            testDataList = En.ToList(testDataArray);
         }
         class TestData {
             public TestData(int[] ints) {
@@ -60,16 +60,21 @@ namespace MetaLinqTests.Memory {
             });
         }
         [Test]
-        public static void Select_Where_Meta() {
-            MemoryTestHelper.AssertDifference(() => GetResultMeta(data), ExpectedListOfIntsAllocations());
+        public static void Array_Select_Where_ToList() {
+            MemoryTestHelper.AssertDifference(() => data.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList(), ExpectedListOfIntsAllocations());
         }
         [Test]
-        public static void SelectMany_Meta_Array() {
+        public static void Array_SelectMany_ToList() {
             MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany(static x => x.IntArray).ToList(), ExpectedListOfIntsAllocations());
         }
         [Test]
-        public static void SelectMany_Meta_List() {
+        public static void List_SelectMany_ToList() {
             MemoryTestHelper.AssertDifference(() => testDataList.SelectMany(static x => x.IntArray).ToList(), ExpectedListOfIntsAllocations());
+        }
+
+        [Test]
+        public static void Array_Where_ToArray() {
+            MemoryTestHelper.AssertDifference(() => data.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
         }
 
         static (string, int)[] ExpectedListOfIntsAllocations() {
@@ -78,12 +83,10 @@ namespace MetaLinqTests.Memory {
                 ("System.Int32[]", 1),
             };
         }
-
-        static List<int> GetResultMeta(int[] data) {
-            return data.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList();
-        }
-        static List<int> GetResultStandard(int[] data) {
-            return En.ToList(En.Where(En.Select(data, static x => x * 10), static x => x % 100 == 0));
+        static (string, int)[] ExpectedArrayOfIntsAllocations() {
+            return new[] {
+                ("System.Int32[]", 1),
+            };
         }
     }
 }
