@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaLinq.Tests.Memory", "Me
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaLinq.Generator", "MetaLinq.Generator\MetaLinq.Generator.csproj", "{FB1D9BF8-201C-4112-A2DD-6EFD33B25B53}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaLinq.Tests.Unit", "MetaLinq.Tests.Unit\MetaLinq.Tests.Unit.csproj", "{8AB1FFB1-DAB5-4D24-98AC-F5CC7AE85C81}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{FB1D9BF8-201C-4112-A2DD-6EFD33B25B53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB1D9BF8-201C-4112-A2DD-6EFD33B25B53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB1D9BF8-201C-4112-A2DD-6EFD33B25B53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AB1FFB1-DAB5-4D24-98AC-F5CC7AE85C81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AB1FFB1-DAB5-4D24-98AC-F5CC7AE85C81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AB1FFB1-DAB5-4D24-98AC-F5CC7AE85C81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AB1FFB1-DAB5-4D24-98AC-F5CC7AE85C81}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
