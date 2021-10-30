@@ -20,21 +20,21 @@ namespace MetaLinq {
                 throw new NotImplementedException();
             }
         }
-        public struct WhereResult<TSource> : IEnumerable<TSource> {
-            IEnumerator<TSource> IEnumerable<TSource>.GetEnumerator() {
-                throw new NotImplementedException();
-            }
-            IEnumerator IEnumerable.GetEnumerator() {
-                throw new NotImplementedException();
-            }
-        }
         public static SelectResult<TSource, TResult> Select<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, TResult> selector) {
             return new SelectResult<TSource, TResult>(source, selector);
         }
 
-        public static WhereResult<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) {
-            throw NotImplemented();
-        }
+        //public struct WhereResult<TSource> : IEnumerable<TSource> {
+        //    IEnumerator<TSource> IEnumerable<TSource>.GetEnumerator() {
+        //        throw new NotImplementedException();
+        //    }
+        //    IEnumerator IEnumerable.GetEnumerator() {
+        //        throw new NotImplementedException();
+        //    }
+        //}
+        //public static WhereResult<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) {
+        //    throw NotImplemented();
+        //}
 
         public static List<TSource> ToList<TSource>(this IEnumerable<TSource> source) {
             throw NotImplemented();

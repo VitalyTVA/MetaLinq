@@ -22,7 +22,7 @@ namespace MetaLinqTests.Memory {
                 }
             }
             Console.WriteLine("Finished");
-            Console.ReadLine();
+            //Console.ReadLine();
         }
     }
 }

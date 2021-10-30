@@ -13,7 +13,7 @@ namespace MetaLinq {
     /// </summary>
     /// <typeparam name="T">The element type.</typeparam>
     [StructLayout(LayoutKind.Auto)]
-    struct LargeArrayBuilder<T>
+    public struct LargeArrayBuilder<T>
         : ICollection<T>
         , IDisposable {
         const int defaultMinCapacity = 4;
