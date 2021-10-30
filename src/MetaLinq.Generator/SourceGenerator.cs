@@ -15,13 +15,20 @@ namespace MetaLinq.Generator {
     }
 
     class SyntaxContextReceiver : ISyntaxContextReceiver {
-        readonly List<ClassDeclarationSyntax> classSyntaxes = new();
-        public IEnumerable<ClassDeclarationSyntax> ClassSyntaxes { get => classSyntaxes; }
+        //readonly List<ClassDeclarationSyntax> classSyntaxes = new();
+        //public IEnumerable<ClassDeclarationSyntax> ClassSyntaxes { get => classSyntaxes; }
+        public bool WhereFound { get; private set; }
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context) {
-            if(context.Node is ClassDeclarationSyntax classDeclarationSyntax) {
-                classSyntaxes.Add(classDeclarationSyntax);
+            if(context.Node is MemberAccessExpressionSyntax memberAccess) {
+                var symbolInfo = context.SemanticModel.GetSymbolInfo(memberAccess.Name);
+                if(symbolInfo.Symbol is IMethodSymbol methodSymbol && methodSymbol.Name == "Where") {
+                    WhereFound = true;
+                }
             }
+            //if(context.Node is ClassDeclarationSyntax classDeclarationSyntax) {
+            //    classSyntaxes.Add(classDeclarationSyntax);
+            //}
         }
     }
 }

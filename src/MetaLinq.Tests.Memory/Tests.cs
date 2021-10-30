@@ -33,7 +33,7 @@ namespace MetaLinqTests.Memory {
         }
         static TestData[] testDataArray;
         static List<TestData> testDataList;
-        static int[] data = En.ToArray(En.Range(0, 5));
+        static int[] intArray = En.ToArray(En.Range(0, 5));
 
         class Foo { }
         class Bar { }
@@ -61,7 +61,7 @@ namespace MetaLinqTests.Memory {
         }
         [Test]
         public static void Array_Select_Where_ToList() {
-            MemoryTestHelper.AssertDifference(() => data.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList(), ExpectedListOfIntsAllocations());
+            MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList(), ExpectedListOfIntsAllocations());
         }
         [Test]
         public static void Array_SelectMany_ToList() {
@@ -74,7 +74,7 @@ namespace MetaLinqTests.Memory {
 
         [Test]
         public static void Array_Where_ToArray() {
-            MemoryTestHelper.AssertDifference(() => data.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
+            MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
         }
 
         static (string, int)[] ExpectedListOfIntsAllocations() {

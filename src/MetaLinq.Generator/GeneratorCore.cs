@@ -17,17 +17,24 @@ namespace MetaLinq.Generator {
             Compilation compilation = context.Compilation;
 
             StringBuilder source = new();
-            CodeBuilder sourceBuilder = new(source);
+            CodeBuilder builder = new(source);
 
-            context.AddSource("MetaLinq.cs", SourceText.From(
+            builder.AppendMultipleLines(
 @"using System;
 using System.Buffers;
 namespace MetaLinq {
-    public static class MetaEnumerable {
-        public static ArrayWhereEnumerable<TSource> Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
-            => new ArrayWhereEnumerable<TSource>(source, predicate);
-    }
-    public struct ArrayWhereEnumerable<T> {
+    static class MetaEnumerable {"
+            );
+
+            if(receiver.WhereFound) { 
+                builder.AppendMultipleLines(
+@"        public static ArrayWhereEnumerable<TSource> Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+            => new ArrayWhereEnumerable<TSource>(source, predicate);"
+                );                
+            }
+            builder.AppendMultipleLines(
+@"   }
+    struct ArrayWhereEnumerable<T> {
         public readonly T[] source;
         public readonly Func<T, bool> predicate;
         public ArrayWhereEnumerable(T[] source, Func<T, bool> predicate) {
@@ -46,7 +53,8 @@ namespace MetaLinq {
             return result.ToArray();
         }
     }
-}", Encoding.UTF8));
+}");
+            context.AddSource("MetaLinq.cs", SourceText.From(source.ToString(), Encoding.UTF8));
 
             //foreach(ClassDeclarationSyntax classSyntax in receiver.ClassSyntaxes) {
             //    if(context.CancellationToken.IsCancellationRequested)

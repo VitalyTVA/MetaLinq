@@ -5,6 +5,10 @@ using System.Collections.Generic;
 
 namespace MetaLinq {
     public static class Enumerable {
+        public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) {
+            throw NotImplemented();
+        }
+
         public readonly struct SelectResult<TSource, TResult> : IEnumerable<TResult> {
             internal readonly IEnumerable<TSource> source;
             internal readonly Func<TSource, TResult> selector;
