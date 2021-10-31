@@ -30,6 +30,20 @@ namespace MetaLinqTests.Unit {
             );
         }
         [Test]
+        public void Array_Where_StandardToArray() {
+            AssertGeneration(
+                "Data[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5));",
+                (Data[] result) => {
+                    CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
+                },
+                new[] {
+                    new MetaLinqMethodInfo("Where", new StructMethod[] {
+                        new StructMethod("ToArray")
+                    })
+                }
+            );
+        }
+        [Test]
         public void Array() {
             AssertGeneration(
                 "Data[] __() => Data.Array(5);",
@@ -131,6 +145,7 @@ static {code.Replace("__", "Execute")}
                 .Where(x => x.DeclaringType == extensionsType)
                 .Select(x => {
                     Assert.False(x.ReturnType.IsPublic);
+                    x.ReturnType.GetInterfaces().Any(x => x.Name.Contains("IEnumerable"));
                     expectedGeneratedTypes.Add(x.ReturnType.GetGenericTypeDefinition());
                     return new MetaLinqMethodInfo(
                         x.Name, 

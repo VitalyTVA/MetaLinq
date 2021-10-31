@@ -21,6 +21,8 @@ namespace MetaLinq.Generator {
 
             builder.AppendMultipleLines(
 @"using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Buffers;
 namespace MetaLinq {
     static class MetaEnumerable {"
@@ -36,7 +38,7 @@ builder.AppendLine("   }");
             if(receiver.WhereFound) {
                 builder.AppendMultipleLines(
     @"
-    struct ArrayWhereEnumerable<T> {
+    struct ArrayWhereEnumerable<T> : IEnumerable<T> {
         public readonly T[] source;
         public readonly Func<T, bool> predicate;
         public ArrayWhereEnumerable(T[] source, Func<T, bool> predicate) {
@@ -53,6 +55,18 @@ builder.AppendLine("   }");
                 }
             }
             return result.ToArray();
+        }
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() {
+            var len = source.Length;
+            for(int i = 0; i < len; i++) {
+                var item = source[i];
+                if(predicate(item)) {
+                    yield return item;
+                }
+            }
+        }
+        IEnumerator IEnumerable.GetEnumerator() {
+            throw new NotImplementedException();
         }
     }");
             }

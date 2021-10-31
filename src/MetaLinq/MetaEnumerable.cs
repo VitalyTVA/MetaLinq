@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Buffers;
+using System.Collections;
+using System.Collections.Generic;
+
 namespace MetaLinq {
     //public static class MetaEnumerable {
     //    public static ArrayWhereEnumerable<TSource> Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
     //        => new ArrayWhereEnumerable<TSource>(source, predicate);
     //}
-    //public struct ArrayWhereEnumerable<T> {
+    //public struct ArrayWhereEnumerable<T> : IEnumerable<T> {
     //    public readonly T[] source;
     //    public readonly Func<T, bool> predicate;
     //    public ArrayWhereEnumerable(T[] source, Func<T, bool> predicate) {
@@ -22,6 +25,18 @@ namespace MetaLinq {
     //            }
     //        }
     //        return result.ToArray();
+    //    }
+    //    IEnumerator<T> IEnumerable<T>.GetEnumerator() {
+    //        var len = source.Length;
+    //        for(int i = 0; i < len; i++) {
+    //            var item = source[i];
+    //            if(predicate(item)) {
+    //                yield return item;
+    //            }
+    //        }
+    //    }
+    //    IEnumerator IEnumerable.GetEnumerator() {
+    //        throw new NotImplementedException();
     //    }
     //}
 }
