@@ -17,7 +17,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaLinq.Tests.Unit", "Meta
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8A778E04-8DAD-433D-80A9-8F7C420FF00D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaLinq.Tests.Data", "MetaLinq.Tests.Data\MetaLinq.Tests.Data.csproj", "{FF081F88-AB6D-46F4-B4C2-36652C090A03}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaLinq.Tests.Data", "MetaLinq.Tests.Data\MetaLinq.Tests.Data.csproj", "{FF081F88-AB6D-46F4-B4C2-36652C090A03}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5D0FF0F5-E37F-4443-80EC-9A6F91C49DE8}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

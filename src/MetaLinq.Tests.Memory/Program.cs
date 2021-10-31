@@ -18,7 +18,7 @@ namespace MetaLinqTests.Memory {
                     method.Invoke(null, null);
                 } catch(Exception e) {
                     Console.WriteLine("Error");
-                    Console.WriteLine(e.InnerException.Message);
+                    Console.WriteLine(e.InnerException!.Message);
                 }
             }
             Console.WriteLine("Finished");

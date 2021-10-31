@@ -30,7 +30,7 @@ namespace MetaLinqTests.Memory {
 					.ToDictionary(type => type.TypeFullyQualifiedName, type => type.AllocatedMemoryInfo.ObjectsCount);
 			});
 		}
-		public static void AssertDifference(Action action, (string type, int count)[] expected) {
+		public static void AssertDifference(Action action, (string type, int count)[]? expected) {
             //lock(syncRoot) {
 				Init();
 				action();
@@ -41,7 +41,7 @@ namespace MetaLinqTests.Memory {
 					var allocated = GetTrafficWithoutGarbageTypes(traffic)
 						.Select(type => {
 							int objectsCount = type.AllocatedMemoryInfo.ObjectsCount;
-							if(GarbageInstances.TryGetValue(type.TypeFullyQualifiedName, out int value))
+							if(GarbageInstances!.TryGetValue(type.TypeFullyQualifiedName, out int value))
 								objectsCount -= value;
 							if(objectsCount < 0)
 								throw new InvalidOperationException();
@@ -68,7 +68,7 @@ namespace MetaLinqTests.Memory {
                                 });
         }
 
-		static Dictionary<string, int> GarbageInstances;
+		static Dictionary<string, int>? GarbageInstances;
 
         static readonly string[] GarbageTypes = new[] {
 			"System.Threading.ContextCallback",

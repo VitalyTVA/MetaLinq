@@ -2,5 +2,7 @@
 <Project>
   <PropertyGroup>
 	<LangVersion>9</LangVersion>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	<Nullable>enable</Nullable>
   </PropertyGroup>
 </Project>

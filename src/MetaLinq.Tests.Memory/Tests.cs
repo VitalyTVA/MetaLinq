@@ -48,15 +48,14 @@ namespace MetaLinqTests.Memory {
         [Test]
         public static void AssertDifference_SomeAllocs() {
             MemoryTestHelper.AssertDifference(() => { new Foo(); new Foo(); new Bar(); }, new[] {
-                (typeof(Foo).FullName, 2),
-                (typeof(Bar).FullName, 1),
-
+                (typeof(Foo).FullName!, 2),
+                (typeof(Bar).FullName!, 1),
             });
         }
         [Test]
         public static void AssertDifference_HiddenAllocs() {
             MemoryTestHelper.AssertDifference(() => { IDisposable boxed = new DisposableStruct(); }, new[] {
-                (typeof(DisposableStruct).FullName, 1),
+                (typeof(DisposableStruct).FullName!, 1),
             });
         }
         [Test]

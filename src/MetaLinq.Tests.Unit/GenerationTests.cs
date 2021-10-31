@@ -60,7 +60,7 @@ namespace MetaLinqTests.Unit {
                 Name = name;
                 ResultMethods = resultMethods;
             }
-            public override bool Equals(object obj) {
+            public override bool Equals(object? obj) {
                 return obj is MetaLinqMethodInfo info &&
                        Name == info.Name &&
                        StructuralComparisons.StructuralEqualityComparer.Equals(ResultMethods, info.ResultMethods);
@@ -70,8 +70,9 @@ namespace MetaLinqTests.Unit {
             }
         }
 
-        static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = false) {
-            var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location);
+        static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = false)
+            where T : class {
+            var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
             var references = new[] {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
                 MetadataReference.CreateFromFile(Path.Combine(refLocation, "netstandard.dll")),
@@ -105,7 +106,7 @@ static {code.Replace("__", "Execute")}
             GeneratorRunResult generatorResult = runResult.Results[0];
             var generatedCode = generatorResult.GeneratedSources;
 
-            var location = Path.Combine(Path.GetDirectoryName(typeof(GenerationTests).Assembly.Location), "Generated");
+            var location = Path.Combine(Path.GetDirectoryName(typeof(GenerationTests).Assembly.Location)!, "Generated");
             if(!Directory.Exists(location))
                 Directory.CreateDirectory(location);
             var dllPath = Path.Combine(location, NUnit.Framework.TestContext.CurrentContext.Test.Name + ".dll");
@@ -114,11 +115,11 @@ static {code.Replace("__", "Execute")}
             Assert.True(emitResult.Success);
 
             var assembly = Assembly.LoadFile(dllPath);
-            var executorType = assembly.GetType("Executor");
-            var result = (T)executorType.GetMethod("Execute", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
-            assert(result);
+            var executorType = assembly.GetType("Executor")!;
+            var result = (T)executorType.GetMethod("Execute", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, null)!;
+            assert(result!);
 
-            var extensionsType = assembly.GetType("MetaLinq.MetaEnumerable");
+            var extensionsType = assembly.GetType("MetaLinq.MetaEnumerable")!;
 
             var allGeneratedTypes = assembly.GetTypes().Where(x => x != extensionsType && x != executorType && !x.IsNested).ToArray();
 

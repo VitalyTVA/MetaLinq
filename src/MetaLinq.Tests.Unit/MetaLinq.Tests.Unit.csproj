@@ -5,7 +5,6 @@
     <RootNamespace>MetaLinq.Tests.Unit</RootNamespace>
     <AssemblyName>MetaLinq.Tests.Unit</AssemblyName>
     <IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   
   <ItemGroup>

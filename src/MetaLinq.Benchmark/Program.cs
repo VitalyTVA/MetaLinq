@@ -19,8 +19,8 @@ namespace MetaLinqBenchmark {
     [MeanColumn]
     [MemoryDiagnoser]
     public class Benchmarks {
-        int[] ints;
-        TestData[] testData;
+        int[] ints = { };
+        TestData[] testData = { };
 
         [Params(100000)]
         public int N;

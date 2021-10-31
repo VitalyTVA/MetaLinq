@@ -8,8 +8,8 @@ using System.Text;
 namespace MetaLinq.Tests.Unit {
     [TestFixture]
     public class CodeBuilderTests {
-        StringBuilder sb;
-        CodeBuilder builder;
+        StringBuilder sb = new();
+        CodeBuilder builder = new(new StringBuilder());
 
         [SetUp]
         public void SetUp() {

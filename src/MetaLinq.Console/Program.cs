@@ -27,7 +27,7 @@ namespace MetaLinq {
         }
 
         class TestData {
-            public int[] Ints { get; set; }
+            public int[] Ints { get; set; } = { };
             public List<int> IntList => Ints.ToList();
         }
 
