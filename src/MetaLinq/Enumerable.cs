@@ -8,6 +8,9 @@ namespace MetaLinq {
         public static IEnumerable<TSource> Where<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) {
             throw NotImplemented();
         }
+        public static TSource[] ToArray<TSource>(this IEnumerable<TSource> source) {
+            throw NotImplemented();
+        }
 
         public readonly struct SelectResult<TSource, TResult> : IEnumerable<TResult> {
             internal readonly IEnumerable<TSource> source;

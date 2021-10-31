@@ -15,7 +15,7 @@ namespace MetaLinq.Generator {
     }
 
     class SyntaxContextReceiver : ISyntaxContextReceiver {
-        public bool WhereFound { get; private set; }
+        public (bool toArray, bool iEnumerable)? WhereInfo { get; private set; }
 
         INamedTypeSymbol? metaLinqEnumerableType;
 
@@ -24,9 +24,12 @@ namespace MetaLinq.Generator {
                 metaLinqEnumerableType = context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Enumerable");
             if(context.Node is MemberAccessExpressionSyntax memberAccess) {
                 var symbolInfo = context.SemanticModel.GetSymbolInfo(memberAccess.Name);
-                if(symbolInfo.Symbol is IMethodSymbol { Name: "Where" } methodSymbol
+                if(symbolInfo.Symbol is IMethodSymbol methodSymbol
                     && SymbolEqualityComparer.Default.Equals(methodSymbol.OriginalDefinition.ContainingType, metaLinqEnumerableType)) {
-                    WhereFound = true;
+                    if(methodSymbol.Name == "Where" && WhereInfo == null)
+                        WhereInfo = (false, true);
+                    if(methodSymbol.Name == "ToArray")
+                        WhereInfo = (true, false);
                 }
             }
         }

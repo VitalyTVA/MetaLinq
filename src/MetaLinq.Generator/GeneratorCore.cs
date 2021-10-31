@@ -28,24 +28,26 @@ namespace MetaLinq {
     static class MetaEnumerable {"
             );
 
-            if(receiver.WhereFound) { 
+            if(receiver.WhereInfo != null) { 
                 builder.AppendMultipleLines(
 @"        public static ArrayWhereEnumerable<TSource> Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
             => new ArrayWhereEnumerable<TSource>(source, predicate);"
                 );                
             }
 builder.AppendLine("   }");
-            if(receiver.WhereFound) {
+            if(receiver.WhereInfo is (bool toArray, bool iEnumerable)) {
                 builder.AppendMultipleLines(
-    @"
-    struct ArrayWhereEnumerable<T> : IEnumerable<T> {
+    $@"
+    struct ArrayWhereEnumerable<T> {(iEnumerable ? ": IEnumerable<T>" : null)} {{
         public readonly T[] source;
         public readonly Func<T, bool> predicate;
-        public ArrayWhereEnumerable(T[] source, Func<T, bool> predicate) {
+        public ArrayWhereEnumerable(T[] source, Func<T, bool> predicate) {{
             this.source = source;
             this.predicate = predicate;
-        }
-        public T[] ToArray() {
+        }}");
+                if(toArray)
+                    builder.AppendMultipleLines(
+@"        public T[] ToArray() {
             using var result = new LargeArrayBuilder<T>(ArrayPool<T>.Shared, false);
             var len = source.Length;
             for(int i = 0; i < len; i++) {
@@ -55,8 +57,10 @@ builder.AppendLine("   }");
                 }
             }
             return result.ToArray();
-        }
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() {
+        }");
+                if(iEnumerable)
+                    builder.AppendMultipleLines(
+@"        IEnumerator<T> IEnumerable<T>.GetEnumerator() {
             var len = source.Length;
             for(int i = 0; i < len; i++) {
                 var item = source[i];
@@ -68,7 +72,9 @@ builder.AppendLine("   }");
         IEnumerator IEnumerable.GetEnumerator() {
             throw new NotImplementedException();
         }
-    }");
+    ");
+
+                builder.AppendLine("}");
             }
 builder.AppendLine("}");
             context.AddSource("MetaLinq.cs", SourceText.From(source.ToString(), Encoding.UTF8));

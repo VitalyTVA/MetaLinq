@@ -25,7 +25,7 @@ namespace MetaLinqTests.Unit {
                 new[] {
                     new MetaLinqMethodInfo("Where", new[] { 
                         new StructMethod("ToArray")
-                    })
+                    }, implementsIEnumerable: false)
                 }
             );
         }
@@ -38,8 +38,8 @@ namespace MetaLinqTests.Unit {
                 },
                 new[] {
                     new MetaLinqMethodInfo("Where", new StructMethod[] {
-                        new StructMethod("ToArray")
-                    })
+                        //new StructMethod("ToArray")
+                    }, implementsIEnumerable: true)
                 }
             );
         }
@@ -66,18 +66,25 @@ namespace MetaLinqTests.Unit {
             );
         }
         record StructMethod(string Name);
-        class MetaLinqMethodInfo {
+        sealed class MetaLinqMethodInfo {
             public readonly string Name;
             public readonly StructMethod[] ResultMethods;
+            public readonly bool ImplementsIEnumerable;
 
-            public MetaLinqMethodInfo(string name, StructMethod[] resultMethods) {
+            public MetaLinqMethodInfo(string name, StructMethod[] resultMethods, bool implementsIEnumerable) {
                 Name = name;
                 ResultMethods = resultMethods;
+                ImplementsIEnumerable = implementsIEnumerable;
             }
             public override bool Equals(object? obj) {
                 return obj is MetaLinqMethodInfo info &&
                        Name == info.Name &&
+                       ImplementsIEnumerable == info.ImplementsIEnumerable &&
                        StructuralComparisons.StructuralEqualityComparer.Equals(ResultMethods, info.ResultMethods);
+            }
+            public override string ToString() {
+                var methods = string.Join(", ", ResultMethods.Select(x => x.Name));
+                return $"Name: {Name}, IEnumerable: {ImplementsIEnumerable}, Methods: {methods}";
             }
             public override int GetHashCode() {
                 throw new NotImplementedException();
@@ -145,7 +152,7 @@ static {code.Replace("__", "Execute")}
                 .Where(x => x.DeclaringType == extensionsType)
                 .Select(x => {
                     Assert.False(x.ReturnType.IsPublic);
-                    x.ReturnType.GetInterfaces().Any(x => x.Name.Contains("IEnumerable"));
+                    bool implementsIEnumerable = x.ReturnType.GetInterfaces().Where(x => x.Name.Contains("IEnumerable")).Count() == 2;
                     expectedGeneratedTypes.Add(x.ReturnType.GetGenericTypeDefinition());
                     return new MetaLinqMethodInfo(
                         x.Name, 
@@ -153,7 +160,8 @@ static {code.Replace("__", "Execute")}
                             .GetMethods()
                             .Where(y => y.DeclaringType == x.ReturnType)
                             .Select(y => new StructMethod(y.Name))
-                            .ToArray()
+                            .ToArray(),
+                        implementsIEnumerable: implementsIEnumerable
                     );
                 })
                 .ToArray();

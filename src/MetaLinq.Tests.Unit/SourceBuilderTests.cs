@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MetaLinq.Tests.Unit {
+namespace MetaLinqTests.Unit {
     [TestFixture]
     public class CodeBuilderTests {
         StringBuilder sb = new();
