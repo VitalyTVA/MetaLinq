@@ -38,7 +38,37 @@ namespace MetaLinqTests.Unit {
                 },
                 new[] {
                     new MetaLinqMethodInfo("Where", new StructMethod[] {
-                        //new StructMethod("ToArray")
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                }
+            );
+        }
+        [Test]
+        public void Array_Where_ToArray_And_StandardToArray_AndForeach() {
+            AssertGeneration(
+                new (string code, Action<Data[]> assert)[] { 
+                    (
+                        "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
+                        result => {
+                            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
+                        }
+                    ),
+                    (
+                        "Data[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5));",
+                        (Data[] result) => {
+                            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
+                        }
+                    ),
+                     (
+                        "Data[] __()  { List<Data> result = new(); foreach(var item in Data.Array(10).Where(x => x.Int < 5)) result.Add(item); return result.ToArray(); }",
+                        (Data[] result) => {
+                            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
+                        }
+                    ),               },
+                new[] {
+                    new MetaLinqMethodInfo("Where", new[] {
+                        new StructMethod("ToArray"),
+                        new StructMethod("GetEnumerator")
                     }, implementsIEnumerable: true)
                 }
             );
@@ -91,7 +121,12 @@ namespace MetaLinqTests.Unit {
             }
         }
 
+
         static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = false)
+            where T : class {
+            AssertGeneration(new[] { (code, assert) }, methods, addMetaLinqUsing, addStadardLinqUsing);
+        }
+        static void AssertGeneration<T>((string code, Action<T> assert)[] cases, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = false)
             where T : class {
             var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
             var references = new[] {
@@ -104,13 +139,16 @@ namespace MetaLinqTests.Unit {
                 MetadataReference.CreateFromFile(typeof(MetaLinq.Enumerable).Assembly.Location),
             };
 
+            var executeMethodsCode = string.Join(Environment.NewLine, cases.Select((x, i) => "static " + x.code.Replace("__", "Execute" + i)));
+
             var source =
 $@"
 {(addMetaLinqUsing ? "using MetaLinq;" : null)}
 {(addStadardLinqUsing ? "using System.Linq;" : null)}
 using MetaLinq.Tests;
+using System.Collections.Generic;
 public static class Executor {{
-static {code.Replace("__", "Execute")}
+{executeMethodsCode}
 }}
 ";
 
@@ -137,8 +175,16 @@ static {code.Replace("__", "Execute")}
 
             var assembly = Assembly.LoadFile(dllPath);
             var executorType = assembly.GetType("Executor")!;
-            var result = (T)executorType.GetMethod("Execute", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, null)!;
-            assert(result!);
+            var executeMethods = executorType
+                .GetMethods(BindingFlags.NonPublic | BindingFlags.Static)
+                .Where(x => x.Name.StartsWith("Execute"))
+                .OrderBy(x => x.Name)
+                .ToArray();
+            for(int i = 0; i < executeMethods.Length; i++) {
+                var result = (T)executeMethods[i].Invoke(null, null)!;
+                cases[i].assert(result);
+            }
+            
 
             var extensionsType = assembly.GetType("MetaLinq.MetaEnumerable")!;
 

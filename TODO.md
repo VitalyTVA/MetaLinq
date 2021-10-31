@@ -10,6 +10,8 @@ test NotImplemented exceptions in MetaLinq.Enumerable fake methods
 
 implement efficient ToArray/ToList direct implementation: "Data[] __() => Data.Array(10).ToArray();"
 
+rewrite where enumerator implementation like new List<T>.Enumerator
+
 ~~nullable annotations in all projects~~
 
 ~~warnings as errors in all projects~~

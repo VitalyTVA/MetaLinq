@@ -10,6 +10,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaLinq", "MetaLinq\MetaLinq.csproj", "{8F248ADD-8915-4F35-9892-24C7B6E71CD0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaLinq.Tests.Memory", "MetaLinq.Tests.Memory\MetaLinq.Tests.Memory.csproj", "{4DC5AF9F-FEE1-4140-92EC-B41DDE8418E1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FB1D9BF8-201C-4112-A2DD-6EFD33B25B53} = {FB1D9BF8-201C-4112-A2DD-6EFD33B25B53}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MetaLinq.Generator", "MetaLinq.Generator\MetaLinq.Generator.csproj", "{FB1D9BF8-201C-4112-A2DD-6EFD33B25B53}"
 EndProject

@@ -19,17 +19,23 @@ namespace MetaLinq.Generator {
 
         INamedTypeSymbol? metaLinqEnumerableType;
 
+        List<MemberAccessExpressionSyntax> visited = new();
+
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context) {
             if(metaLinqEnumerableType == null)
                 metaLinqEnumerableType = context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Enumerable");
-            if(context.Node is MemberAccessExpressionSyntax memberAccess) {
+            if(context.Node is MemberAccessExpressionSyntax memberAccess && !visited.Contains(memberAccess)) {
                 var symbolInfo = context.SemanticModel.GetSymbolInfo(memberAccess.Name);
                 if(symbolInfo.Symbol is IMethodSymbol methodSymbol
                     && SymbolEqualityComparer.Default.Equals(methodSymbol.OriginalDefinition.ContainingType, metaLinqEnumerableType)) {
-                    if(methodSymbol.Name == "Where" && WhereInfo == null)
-                        WhereInfo = (false, true);
-                    if(methodSymbol.Name == "ToArray")
-                        WhereInfo = (true, false);
+                    if(methodSymbol.Name == "Where")
+                        WhereInfo = (WhereInfo?.toArray ?? false, true);
+                    if(methodSymbol.Name == "ToArray") {
+                        WhereInfo = (true, WhereInfo?.iEnumerable ?? false);
+                        var nested = (memberAccess.Expression as InvocationExpressionSyntax)?.Expression as MemberAccessExpressionSyntax;
+                        if(nested != null)
+                            visited.Add(nested);
+                    }
                 }
             }
         }

@@ -1,12 +1,14 @@
 ﻿using MetaLinqTests.Memory;
 using NUnit.Framework;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 
 namespace MetaLinqTests.Memory {
     class Program {
         static void Main(string[] args) {
+            //Debugger.Launch();
             var type = typeof(Tests);
             var tests = type
                 .GetMethods(BindingFlags.Public | BindingFlags.Static)

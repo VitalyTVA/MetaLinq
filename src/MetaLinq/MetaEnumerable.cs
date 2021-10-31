@@ -26,6 +26,25 @@ namespace MetaLinq {
     //        }
     //        return result.ToArray();
     //    }
+    //    public struct Enumerator {
+    //        ArrayWhereEnumerable<T> source;
+    //        int index;
+    //        public Enumerator(ArrayWhereEnumerable<T> source) {
+    //            this.source = source;
+    //            index = -1;
+    //        }
+    //        public T Current => source.source[index];
+    //        public bool MoveNext() {
+    //            var len = source.source.Length;
+    //            do {
+    //                index++;
+    //                if(source.predicate(source.source[index]))
+    //                    return true;
+    //            } while(index < len);
+    //            return false;
+    //        }
+    //    }
+    //    public Enumerator GetEnumerator() => new Enumerator(this);
     //    IEnumerator<T> IEnumerable<T>.GetEnumerator() {
     //        var len = source.Length;
     //        for(int i = 0; i < len; i++) {

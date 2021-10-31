@@ -76,6 +76,22 @@ namespace MetaLinqTests.Memory {
             MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
         }
 
+        [Test]
+        public static void Array_Where_Foreach() {
+            MemoryTestHelper.AssertDifference(() => {
+                int sum = 0;
+                foreach(int item in intArray.Where(static x => x < 4)) {
+                    sum += item;
+                }
+                AssertValue(6, sum);
+            }, null);
+        }
+
+        static void AssertValue<T>(T expected, T actual) {
+            if(!EqualityComparer<T>.Default.Equals(expected, actual))
+                throw new InvalidOperationException();
+        }
+
         static (string, int)[] ExpectedListOfIntsAllocations() {
             return new[] {
                 ("System.Collections.Generic.List`1[System.Int32]", 1),

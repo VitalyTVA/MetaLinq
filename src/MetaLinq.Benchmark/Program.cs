@@ -27,7 +27,7 @@ namespace MetaLinqBenchmark {
 
         [GlobalSetup]
         public void Setup() {
-            ints = System.Linq.Enumerable.Range(0, N).ToArray();
+            ints = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Range(0, N));
             testData = new TestData[N];
             for(int i = 0; i < N; i++) {
                 testData[i] = new TestData(new[] { i * 10, i * 10 + 1 });

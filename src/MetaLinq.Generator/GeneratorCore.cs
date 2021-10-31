@@ -60,7 +60,28 @@ builder.AppendLine("   }");
         }");
                 if(iEnumerable)
                     builder.AppendMultipleLines(
-@"        IEnumerator<T> IEnumerable<T>.GetEnumerator() {
+@"        public struct Enumerator {
+            ArrayWhereEnumerable<T> source;
+            int index;
+            public Enumerator(ArrayWhereEnumerable<T> source) {
+                this.source = source;
+                index = -1;
+            }
+            public T Current => source.source[index];
+            public bool MoveNext() {
+                var len = source.source.Length;
+                while(true) {
+                    index++;
+                    if(index >= len)
+                        break;
+                    if(source.predicate(source.source[index]))
+                        return true;
+                }
+                return false;
+            }
+        }
+        public Enumerator GetEnumerator() => new Enumerator(this);
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() {
             var len = source.Length;
             for(int i = 0; i < len; i++) {
                 var item = source[i];
