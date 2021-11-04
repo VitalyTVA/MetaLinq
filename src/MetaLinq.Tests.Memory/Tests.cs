@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using MetaLinq;
-using En = System.Linq.Enumerable;
+using System.Linq;
 
 //[assembly: Apartment(System.Threading.ApartmentState.STA)]
 
@@ -21,7 +21,7 @@ namespace MetaLinqTests.Memory {
             for(int i = 0; i < 5; i++) {
                 testDataArray[i] = new TestData(new[] { i * 10, i * 10 + 1 });
             }
-            testDataList = En.ToList(testDataArray);
+            testDataList = Enumerable.ToList(testDataArray);
         }
         class TestData {
             public TestData(int[] ints) {
@@ -33,7 +33,7 @@ namespace MetaLinqTests.Memory {
         }
         static TestData[] testDataArray;
         static List<TestData> testDataList;
-        static int[] intArray = En.ToArray(En.Range(0, 5));
+        static int[] intArray = Enumerable.ToArray(Enumerable.Range(0, 5));
 
         class Foo { }
         class Bar { }

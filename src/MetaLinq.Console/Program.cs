@@ -1,15 +1,15 @@
 ﻿using System;
 using MetaLinq;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using En = System.Linq.Enumerable;
 using JetBrains.Profiler.Api;
 
 namespace MetaLinq {
     class Program {
         static void Main(string[] args) {
             //MemoryProfiler.CollectAllocations(false);
-            int[] data = data = En.ToArray(En.Range(0, 5));
+            int[] data = data = Enumerable.ToArray(Enumerable.Range(0, 5));
             GetResultMeta(data);
             GetResultMeta(data);
             GetResultStandard(data);
@@ -35,7 +35,7 @@ namespace MetaLinq {
             return data.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList();
         }
         static List<int> GetResultStandard(int[] data) {
-            return En.ToList(En.Where(En.Select(data, static x => x * 10), static x => x % 100 == 0));
+            return Enumerable.ToList(Enumerable.Where(Enumerable.Select(data, static x => x * 10), static x => x % 100 == 0));
         }
 
     }

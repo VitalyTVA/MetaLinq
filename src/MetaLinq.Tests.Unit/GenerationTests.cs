@@ -122,11 +122,11 @@ namespace MetaLinqTests.Unit {
         }
 
 
-        static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = false)
+        static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true)
             where T : class {
             AssertGeneration(new[] { (code, assert) }, methods, addMetaLinqUsing, addStadardLinqUsing);
         }
-        static void AssertGeneration<T>((string code, Action<T> assert)[] cases, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = false)
+        static void AssertGeneration<T>((string code, Action<T> assert)[] cases, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true)
             where T : class {
             var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
             var references = new[] {
@@ -136,7 +136,7 @@ namespace MetaLinqTests.Unit {
                 MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Runtime.dll")),
                 MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Buffers.dll")),
                 MetadataReference.CreateFromFile(typeof(Data).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(MetaLinq.Enumerable).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(MetaLinq.MetaEnumerable).Assembly.Location),
             };
 
             var executeMethodsCode = string.Join(Environment.NewLine, cases.Select((x, i) => "static " + x.code.Replace("__", "Execute" + i)));
