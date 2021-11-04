@@ -28,8 +28,7 @@ namespace MetaLinq.Generator {
         TypeSyntax metaEnumerableTypeSyntax = SyntaxFactory.ParseTypeName("MetaEnumerable");
 
         List<MemberAccessExpressionSyntax> visited = new();
-
-        enum SourceType { List, Array }
+        HashSet<ExpressionSyntax> visitedExpressions = new();
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context) {
             if(metaEnumerableType == null)
@@ -39,44 +38,79 @@ namespace MetaLinq.Generator {
             if(listType == null)
                 listType = context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.Generic.List`1");
 
-            if(context.Node is MemberAccessExpressionSyntax memberAccess
-                && !visited.Contains(memberAccess)
-                && memberAccess.Expression is not MemberAccessExpressionSyntax
-                && IsMetaEnumerableAccessible(context)
-            ) {
-                var symbolInfo = context.SemanticModel.GetSymbolInfo(memberAccess.Name);
-                if(symbolInfo.Symbol is IMethodSymbol methodSymbol
-                    && SymbolEqualityComparer.Default.Equals(methodSymbol.OriginalDefinition.ContainingType, enumerableType)) {
-                    if(methodSymbol.Name == "Where") {
-                        var sourceType = GetSourceType(context, memberAccess!);
-                        if(sourceType == SourceType.Array)
-                            ArrayWhereInfo = (ArrayWhereInfo?.toArray ?? false, true);
-                        else
-                            ListWhereInfo = (ListWhereInfo?.toArray ?? false, true);
-                    }
-                    if(methodSymbol.Name == "ToArray") {
-                        var nested = (memberAccess.Expression as InvocationExpressionSyntax)?.Expression as MemberAccessExpressionSyntax;
-                        if(nested != null) {
-                            var sourceType = GetSourceType(context, nested);
-                            if(sourceType == SourceType.Array)
-                                ArrayWhereInfo = (true, ArrayWhereInfo?.iEnumerable ?? false);
-                            else
-                                ListWhereInfo = (true, ListWhereInfo?.iEnumerable ?? false);
-                            visited.Add(nested);
+            if(context.Node is InvocationExpressionSyntax invocation
+                && !visitedExpressions.Contains(invocation)
+                && IsMetaEnumerableAccessible(context)) {
+                Stack<ChainElement> chain = new();
+                SourceType? source = null;
+                ExpressionSyntax? currentExpression = invocation;
+                while(currentExpression != null) {
+                    bool chained = false;
+                    if((currentExpression as InvocationExpressionSyntax)?.Expression is MemberAccessExpressionSyntax currentMemberAccess) {
+                        var currentSymbolInfo = context.SemanticModel.GetSymbolInfo(currentMemberAccess.Name);
+                        if(currentSymbolInfo.Symbol is IMethodSymbol currentMethodSymbol
+                            && SymbolEqualityComparer.Default.Equals(currentMethodSymbol.OriginalDefinition.ContainingType, enumerableType)) {
+                            if(currentMethodSymbol.Name == "Where") {
+                                chain.Push(ChainElement.Where);
+                                chained = true;
+                            }
+                            if(currentMethodSymbol.Name == "ToArray") {
+                                chain.Push(ChainElement.ToArray);
+                                chained = true;
+                            }
                         }
+                    }
+                    if(!chained) {
+                        if(chain.Count != 0)
+                            source = GetSourceType___(context, currentExpression);
+                        break;
+                    }
+                    currentExpression = ((currentExpression as InvocationExpressionSyntax)?.Expression as MemberAccessExpressionSyntax)?.Expression;
+                    if(currentExpression != null)
+                        visitedExpressions.Add(currentExpression);
+                }
+                if(source != null) {
+                    var top = chain.Pop();
+                    Debug.Assert(top == ChainElement.Where);
+                    bool toArray = false;
+                    bool iEnumerable = false;
+
+                    if(chain.Count == 0)
+                        iEnumerable = true;
+                    else {
+                        var next = chain.Pop();
+                        Debug.Assert(next == ChainElement.ToArray);
+                        toArray = true;
+                    }
+
+                    Debug.Assert(chain.Count == 0);
+                    if(source == SourceType.Array) {
+                        ArrayWhereInfo = (
+                            toArray || (ArrayWhereInfo?.toArray ?? false),
+                            iEnumerable || (ArrayWhereInfo?.iEnumerable ?? false)
+                        );
+                    }
+                    if(source == SourceType.List) {
+                        ListWhereInfo = (
+                            toArray || (ListWhereInfo?.toArray ?? false),
+                            iEnumerable || (ListWhereInfo?.iEnumerable ?? false)
+                        );
                     }
                 }
             }
         }
-        SourceType GetSourceType(GeneratorSyntaxContext context, MemberAccessExpressionSyntax memberAccess) {
-            var sourceSymbol = context.SemanticModel.GetSymbolInfo(memberAccess.Expression).Symbol;
+        SourceType? GetSourceType___(GeneratorSyntaxContext context, ExpressionSyntax expression) {
+            var sourceSymbol = context.SemanticModel.GetSymbolInfo(expression).Symbol;
             var returnType = sourceSymbol switch {
                 IMethodSymbol method => method.ReturnType,
                 ILocalSymbol local => local.Type,
                 IFieldSymbol field => field.Type,
                 IPropertySymbol property => property.Type,
+                INamedTypeSymbol => null,
                 _ => throw new InvalidOperationException()
             };
+            if(returnType == null)
+                return null;
             if(returnType.TypeKind == TypeKind.Array)
                 return SourceType.Array;
             if(SymbolEqualityComparer.Default.Equals(listType, returnType.OriginalDefinition))
@@ -88,4 +122,40 @@ namespace MetaLinq.Generator {
             return SymbolEqualityComparer.Default.Equals(typeInfo.Type, metaEnumerableType);
         }
     }
+    enum SourceType { List, Array }
+
+    enum ChainElement { Where, ToArray }
+
+    //class LinqTree {
+    //    public readonly SourceType Source;
+    //    public readonly List<LinqNode> Nodes = new List<LinqNode>();
+    //    public LinqTree(SourceType source) {
+    //        Source = source;
+    //    }
+
+    //}
+    //abstract class LinqNode { 
+    //}
+
+    //enum TerminalNodeType { ToArray, Enumerable }
+
+    //sealed class TerminalNode : LinqNode {
+    //    public static readonly TerminalNode ToArray = new TerminalNode(TerminalNodeType.ToArray);
+    //    public static readonly TerminalNode Enumerable = new TerminalNode(TerminalNodeType.Enumerable);
+    //    public readonly TerminalNodeType Type;
+    //    TerminalNode(TerminalNodeType type) {
+    //        Type = type;
+    //    }
+    //}
+
+    //abstract class IntermediateNode : LinqNode {
+    //    public readonly List<LinqNode> Nodes = new List<LinqNode>();
+    //}
+
+    //sealed class WhereNode : IntermediateNode {
+    //    public WhereNode() { }
+    //}
+
+    //sealed class SelectNode : IntermediateNode {
+    //}
 }
