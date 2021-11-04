@@ -34,6 +34,7 @@ namespace MetaLinqTests.Memory {
         static TestData[] testDataArray;
         static List<TestData> testDataList;
         static int[] intArray = Enumerable.ToArray(Enumerable.Range(0, 5));
+        static List<int> intList = Enumerable.ToList(Enumerable.Range(0, 5));
 
         class Foo { }
         class Bar { }
@@ -81,6 +82,22 @@ namespace MetaLinqTests.Memory {
             MemoryTestHelper.AssertDifference(() => {
                 int sum = 0;
                 foreach(int item in intArray.Where(static x => x < 4)) {
+                    sum += item;
+                }
+                AssertValue(6, sum);
+            }, null);
+        }
+
+        [Test]
+        public static void List_Where_ToArray() {
+            MemoryTestHelper.AssertDifference(() => intList.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
+        }
+
+        [Test]
+        public static void List_Where_Foreach() {
+            MemoryTestHelper.AssertDifference(() => {
+                int sum = 0;
+                foreach(int item in intList.Where(static x => x < 4)) {
                     sum += item;
                 }
                 AssertValue(6, sum);
