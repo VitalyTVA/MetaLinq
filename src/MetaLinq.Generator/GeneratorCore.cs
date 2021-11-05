@@ -30,35 +30,43 @@ namespace MetaLinq.Generator {
         }
 
         private static void BuildSource(SourceType source, RootNode tree, CodeBuilder builder) {
-            var where = (WhereNode)tree.GetNodes().Single();
-            var terminals = where.GetNodes().Cast<TerminalNode>();
-
-            bool toArray = terminals.SingleOrDefault(x => x.Type == TerminalNodeType.ToArray) != null;
-            bool iEnumerable = terminals.SingleOrDefault(x => x.Type == TerminalNodeType.Enumerable) != null;
-
             builder.AppendMultipleLines(
 @"using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Buffers;
-namespace MetaLinq {
-    static partial class MetaEnumerable {"
-);
+namespace MetaLinq {");
+            foreach(var node in tree.GetNodes()) {
+                switch(node) {
+                    case WhereNode where:
+                        EmitWhere(source, builder.Tab, where);
+                        break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
+            builder.AppendLine("}");
+        }
 
+        static void EmitWhere(SourceType source, CodeBuilder builder, WhereNode where) {
+            var terminals = where.GetNodes().Cast<TerminalNode>();
+            bool iEnumerable = terminals.SingleOrDefault(x => x.Type == TerminalNodeType.Enumerable) != null;
+            builder.AppendMultipleLines(
+@"static partial class MetaEnumerable {");
             var sourceName = source.ToString();
             var enumerableSourceType = source switch {
                 SourceType.List => "List<TSource>",
                 SourceType.Array => "TSource[]",
                 _ => throw new NotImplementedException(),
             };
-            builder.Tab.Tab.AppendMultipleLines(
+            builder.Tab.AppendMultipleLines(
 $@"public static {sourceName}WhereEnumerable<TSource> Where<TSource>(this {enumerableSourceType} source, Func<TSource, bool> predicate)
     => new {sourceName}WhereEnumerable<TSource>(source, predicate);");
 
-            builder.Tab.AppendLine("}");
+            builder.AppendLine("}");
 
 
-            builder.Tab.AppendMultipleLines(
+            builder.AppendMultipleLines(
 $@"
 struct {sourceName}WhereEnumerable<TSource> {(iEnumerable ? ": IEnumerable<TSource>" : null)} {{
     public readonly {enumerableSourceType} source;
@@ -67,36 +75,29 @@ struct {sourceName}WhereEnumerable<TSource> {(iEnumerable ? ": IEnumerable<TSour
         this.source = source;
         this.predicate = predicate;
     }}");
-            if(toArray) {
-                builder.Tab.Tab.AppendMultipleLines(
-@"public TSource[] ToArray() {
-    using var result = new LargeArrayBuilder<TSource>(ArrayPool<TSource>.Shared, false);");
 
-                if(source == SourceType.Array)
-                    builder.Tab.Tab.Tab.AppendMultipleLines(
-@"var len = source.Length;
-for(int i = 0; i < len; i++) {
-    var item = source[i];");
-                if(source == SourceType.List)
-                    builder.Tab.Tab.Tab.AppendMultipleLines(
-@"foreach(var item in source) {");
-
-                builder.Tab.Tab.AppendMultipleLines(
-@"        if(predicate(item)) {
-            result.Add(item);
-        }
-    }
-    return result.ToArray();
-}");
+            foreach(var node in where.GetNodes()) {
+                switch(node) {
+                    case TerminalNode { Type: TerminalNodeType.ToArray }:
+                        EmitToArray(source, builder.Tab);
+                        break;
+                    case TerminalNode { Type: TerminalNodeType.Enumerable }:
+                        EmitGetEnumerator(source, builder.Tab, sourceName);
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
             }
+            builder.AppendLine("}");
+        }
 
+        static void EmitGetEnumerator(SourceType source, CodeBuilder builder, string sourceName) {
             var countName = source switch {
                 SourceType.List => "Count",
                 SourceType.Array => "Length",
                 _ => throw new NotImplementedException(),
             };
-            if(iEnumerable)
-                builder.Tab.Tab.AppendMultipleLines(
+            builder.AppendMultipleLines(
 $@"public struct Enumerator {{
     {sourceName}WhereEnumerable<TSource> source;
     int index;
@@ -130,9 +131,29 @@ IEnumerator<TSource> IEnumerable<TSource>.GetEnumerator() {{
 IEnumerator IEnumerable.GetEnumerator() {{
     throw new NotImplementedException();
 }}");
+        }
 
-            builder.Tab.AppendLine("}");
-            builder.AppendLine("}");
+        static void EmitToArray(SourceType source, CodeBuilder builder) {
+            builder.AppendMultipleLines(
+@"public TSource[] ToArray() {
+    using var result = new LargeArrayBuilder<TSource>(ArrayPool<TSource>.Shared, false);");
+
+            if(source == SourceType.Array)
+                builder.Tab.AppendMultipleLines(
+@"var len = source.Length;
+for(int i = 0; i < len; i++) {
+    var item = source[i];");
+            if(source == SourceType.List)
+                builder.Tab.AppendMultipleLines(
+@"foreach(var item in source) {");
+
+            builder.AppendMultipleLines(
+@"        if(predicate(item)) {
+            result.Add(item);
+        }
+    }
+    return result.ToArray();
+}");
         }
     }
 }

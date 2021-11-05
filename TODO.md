@@ -8,7 +8,7 @@ implement efficient ToArray/ToList direct implementation: "Data[] __() => Data.A
 
 rewrite array where enumerator implementation like new List<T>.Enumerator
 
-rewrite list where enumerator implementation based on List<T>.GetEnumerator public no alloc method
+rewrite list where enumerator implementation based on List<T>.GetEnumerator public no alloc method instead of for(int i = 0; i < len; i++)
 
 get rid of record IsExternalInit;
 
