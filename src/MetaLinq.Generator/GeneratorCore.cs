@@ -15,54 +15,52 @@ namespace MetaLinq.Generator {
             if(context.SyntaxContextReceiver is not SyntaxContextReceiver receiver)
                 return;
 
-            (bool toArray, bool iEnumerable)? ArrayWhereInfo = default;
-            (bool toArray, bool iEnumerable)? ListWhereInfo = default;
+            Compilation compilation = context.Compilation;
+
+            StringBuilder source = new();
+            CodeBuilder builder = new(source);
 
             foreach(var (sourceType, tree) in receiver.Model.GetTrees()) {
+                if(context.CancellationToken.IsCancellationRequested)
+                    break;
                 var where = (WhereNode)tree.GetNodes().Single();
                 var terminals = where.GetNodes().Cast<TerminalNode>();
 
                 bool toArray1 = terminals.SingleOrDefault(x => x.Type == TerminalNodeType.ToArray) != null;
                 bool iEnumerable1 = terminals.SingleOrDefault(x => x.Type == TerminalNodeType.Enumerable) != null;
 
-                if(sourceType == SourceType.Array)
-                    ArrayWhereInfo = (toArray1, iEnumerable1);
-                else if(sourceType == SourceType.List)
-                    ListWhereInfo = (toArray1, iEnumerable1);
-                else
-                    throw new InvalidOperationException();
+                BuildSource(sourceType, toArray1, iEnumerable1, builder);
+                context.AddSource($"Meta_{sourceType}.cs", SourceText.From(source.ToString(), Encoding.UTF8));
+                source.Clear();
             }
+        }
 
-            Compilation compilation = context.Compilation;
-
-            StringBuilder source = new();
-            CodeBuilder builder = new(source);
-
+        private static void BuildSource(SourceType source, bool toArray, bool iEnumerable, CodeBuilder builder) {
             builder.AppendMultipleLines(
 @"using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Buffers;
 namespace MetaLinq {
-    static class MetaEnumerable {"
-            );
+    static partial class MetaEnumerable {"
+);
 
-            if(ArrayWhereInfo != null) { 
+            if(source == SourceType.Array) {
                 builder.AppendMultipleLines(
 @"        public static ArrayWhereEnumerable<TSource> Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
             => new ArrayWhereEnumerable<TSource>(source, predicate);"
-                );                
+                );
             }
-            if(ListWhereInfo != null) { 
+            if(source == SourceType.List) {
                 builder.AppendMultipleLines(
 @"        public static ListWhereEnumerable<TSource> Where<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
             => new ListWhereEnumerable<TSource>(source, predicate);"
-                );                
+                );
             }
 
 
             builder.AppendLine("   }");
-            if(ArrayWhereInfo is (bool toArray, bool iEnumerable)) {
+            if(source == SourceType.Array) {
                 builder.AppendMultipleLines(
     $@"
     struct ArrayWhereEnumerable<T> {(iEnumerable ? ": IEnumerable<T>" : null)} {{
@@ -124,17 +122,17 @@ namespace MetaLinq {
 
                 builder.AppendLine("}");
             }
-            if(ListWhereInfo is (bool toArray_, bool iEnumerable_)) {
+            if(source == SourceType.List) {
                 builder.AppendMultipleLines(
     $@"
-    struct ListWhereEnumerable<T> {(iEnumerable_ ? ": IEnumerable<T>" : null)} {{
+    struct ListWhereEnumerable<T> {(iEnumerable ? ": IEnumerable<T>" : null)} {{
         public readonly List<T> source;
         public readonly Func<T, bool> predicate;
         public ListWhereEnumerable(List<T> source, Func<T, bool> predicate) {{
             this.source = source;
             this.predicate = predicate;
         }}");
-                if(toArray_)
+                if(toArray)
                     builder.AppendMultipleLines(
 @"        public T[] ToArray() {
             using var result = new LargeArrayBuilder<T>(ArrayPool<T>.Shared, false);
@@ -145,7 +143,7 @@ namespace MetaLinq {
             }
             return result.ToArray();
         }");
-                if(iEnumerable_)
+                if(iEnumerable)
                     builder.AppendMultipleLines(
 @"        public struct Enumerator {
             ListWhereEnumerable<T> source;
@@ -185,12 +183,6 @@ namespace MetaLinq {
                 builder.AppendLine("}");
             }
             builder.AppendLine("}");
-            context.AddSource("MetaLinq.cs", SourceText.From(source.ToString(), Encoding.UTF8));
-
-            //foreach(ClassDeclarationSyntax classSyntax in receiver.ClassSyntaxes) {
-            //    if(context.CancellationToken.IsCancellationRequested)
-            //        break;
-            //}
         }
     }
 }

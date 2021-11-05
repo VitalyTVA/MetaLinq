@@ -254,7 +254,7 @@ public static class Executor {{
                                                                     new[] { CSharpSyntaxTree.ParseText(source) },
                                                                     references,
                                                                     new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-            MetaLinqGenerator generator = new ();
+            MetaLinqGenerator generator = new();
 
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
             driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation, out var diagnostics);
@@ -282,15 +282,21 @@ public static class Executor {{
                 var result = (T)executeMethods[i].Invoke(null, null)!;
                 cases[i].assert(result);
             }
-            
 
+            AssertGeneratedClasses(methods, assembly, executorType);
+        }
+
+        static void AssertGeneratedClasses(MetaLinqMethodInfo[] methods, Assembly assembly, Type executorType) {
             var extensionsType = assembly.GetType("MetaLinq.MetaEnumerable")!;
 
-            var allGeneratedTypes = assembly.GetTypes().Where(x => x != extensionsType && x != executorType && !x.IsNested).ToArray();
+            if(!methods.Any()) {
+                Assert.Null(extensionsType);
+                return;
+            }
 
             var expectedGeneratedTypes = new HashSet<Type>();
-
             Assert.False(extensionsType.IsPublic);
+            var allGeneratedTypes = assembly.GetTypes().Where(x => x != extensionsType && x != executorType && !x.IsNested).ToArray();
             var actualMethods = extensionsType
                 .GetMethods()
                 .Where(x => x.DeclaringType == extensionsType)
@@ -298,14 +304,14 @@ public static class Executor {{
                     Assert.False(x.ReturnType.IsPublic);
                     bool implementsIEnumerable = x.ReturnType.GetInterfaces().Where(x => x.Name.Contains("IEnumerable")).Count() == 2;
                     expectedGeneratedTypes.Add(x.ReturnType.GetGenericTypeDefinition());
-                    var sourceType = x.GetParameters()[0].ParameterType.Name switch { 
+                    var sourceType = x.GetParameters()[0].ParameterType.Name switch {
                         "TSource[]" => SourceType.Array,
                         "List`1" => SourceType.List,
                         _ => throw new InvalidOperationException()
                     };
                     return new MetaLinqMethodInfo(
                         sourceType,
-                        x.Name, 
+                        x.Name,
                         x.ReturnType
                             .GetMethods()
                             .Where(y => y.DeclaringType == x.ReturnType)
@@ -314,6 +320,7 @@ public static class Executor {{
                         implementsIEnumerable: implementsIEnumerable
                     );
                 })
+                .OrderBy(x => x.SourceType)
                 .ToArray();
             CollectionAssert.AreEqual(methods, actualMethods);
             CollectionAssert.AreEquivalent(expectedGeneratedTypes.ToArray(), allGeneratedTypes);
