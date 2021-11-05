@@ -261,7 +261,7 @@ public static class Executor {{
             GeneratorDriverRunResult runResult = driver.GetRunResult();
             CollectionAssert.IsEmpty(runResult.Diagnostics);
             GeneratorRunResult generatorResult = runResult.Results[0];
-            var generatedCode = generatorResult.GeneratedSources;
+            var generatedCode = generatorResult.GeneratedSources.Select(x => x.SourceText.ToString());
 
             var location = Path.Combine(Path.GetDirectoryName(typeof(GenerationTests).Assembly.Location)!, "Generated");
             if(!Directory.Exists(location))
