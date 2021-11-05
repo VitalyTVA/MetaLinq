@@ -10,6 +10,8 @@ rewrite array where enumerator implementation like new List<T>.Enumerator
 
 rewrite list where enumerator implementation based on List<T>.GetEnumerator public no alloc method
 
+get rid of record IsExternalInit;
+
 ~~nullable annotations in all projects~~
 
 ~~warnings as errors in all projects~~

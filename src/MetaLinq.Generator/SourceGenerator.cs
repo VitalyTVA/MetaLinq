@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace MetaLinq.Generator {
     [Generator]
@@ -122,40 +123,4 @@ namespace MetaLinq.Generator {
             return SymbolEqualityComparer.Default.Equals(typeInfo.Type, metaEnumerableType);
         }
     }
-    enum SourceType { List, Array }
-
-    enum ChainElement { Where, ToArray }
-
-    //class LinqTree {
-    //    public readonly SourceType Source;
-    //    public readonly List<LinqNode> Nodes = new List<LinqNode>();
-    //    public LinqTree(SourceType source) {
-    //        Source = source;
-    //    }
-
-    //}
-    //abstract class LinqNode { 
-    //}
-
-    //enum TerminalNodeType { ToArray, Enumerable }
-
-    //sealed class TerminalNode : LinqNode {
-    //    public static readonly TerminalNode ToArray = new TerminalNode(TerminalNodeType.ToArray);
-    //    public static readonly TerminalNode Enumerable = new TerminalNode(TerminalNodeType.Enumerable);
-    //    public readonly TerminalNodeType Type;
-    //    TerminalNode(TerminalNodeType type) {
-    //        Type = type;
-    //    }
-    //}
-
-    //abstract class IntermediateNode : LinqNode {
-    //    public readonly List<LinqNode> Nodes = new List<LinqNode>();
-    //}
-
-    //sealed class WhereNode : IntermediateNode {
-    //    public WhereNode() { }
-    //}
-
-    //sealed class SelectNode : IntermediateNode {
-    //}
 }
