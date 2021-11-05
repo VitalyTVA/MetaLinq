@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,6 +14,24 @@ namespace MetaLinq.Generator {
             //Debugger.Launch();
             if(context.SyntaxContextReceiver is not SyntaxContextReceiver receiver)
                 return;
+
+            (bool toArray, bool iEnumerable)? ArrayWhereInfo = default;
+            (bool toArray, bool iEnumerable)? ListWhereInfo = default;
+
+            foreach(var (sourceType, tree) in receiver.Model.GetTrees()) {
+                var where = (WhereNode)tree.GetNodes().Single();
+                var terminals = where.GetNodes().Cast<TerminalNode>();
+
+                bool toArray1 = terminals.SingleOrDefault(x => x.Type == TerminalNodeType.ToArray) != null;
+                bool iEnumerable1 = terminals.SingleOrDefault(x => x.Type == TerminalNodeType.Enumerable) != null;
+
+                if(sourceType == SourceType.Array)
+                    ArrayWhereInfo = (toArray1, iEnumerable1);
+                else if(sourceType == SourceType.List)
+                    ListWhereInfo = (toArray1, iEnumerable1);
+                else
+                    throw new InvalidOperationException();
+            }
 
             Compilation compilation = context.Compilation;
 
@@ -28,13 +47,13 @@ namespace MetaLinq {
     static class MetaEnumerable {"
             );
 
-            if(receiver.ArrayWhereInfo != null) { 
+            if(ArrayWhereInfo != null) { 
                 builder.AppendMultipleLines(
 @"        public static ArrayWhereEnumerable<TSource> Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
             => new ArrayWhereEnumerable<TSource>(source, predicate);"
                 );                
             }
-            if(receiver.ListWhereInfo != null) { 
+            if(ListWhereInfo != null) { 
                 builder.AppendMultipleLines(
 @"        public static ListWhereEnumerable<TSource> Where<TSource>(this List<TSource> source, Func<TSource, bool> predicate)
             => new ListWhereEnumerable<TSource>(source, predicate);"
@@ -43,7 +62,7 @@ namespace MetaLinq {
 
 
             builder.AppendLine("   }");
-            if(receiver.ArrayWhereInfo is (bool toArray, bool iEnumerable)) {
+            if(ArrayWhereInfo is (bool toArray, bool iEnumerable)) {
                 builder.AppendMultipleLines(
     $@"
     struct ArrayWhereEnumerable<T> {(iEnumerable ? ": IEnumerable<T>" : null)} {{
@@ -105,7 +124,7 @@ namespace MetaLinq {
 
                 builder.AppendLine("}");
             }
-            if(receiver.ListWhereInfo is (bool toArray_, bool iEnumerable_)) {
+            if(ListWhereInfo is (bool toArray_, bool iEnumerable_)) {
                 builder.AppendMultipleLines(
     $@"
     struct ListWhereEnumerable<T> {(iEnumerable_ ? ": IEnumerable<T>" : null)} {{

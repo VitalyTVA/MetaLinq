@@ -20,8 +20,7 @@ namespace MetaLinq.Generator {
     }
 
     class SyntaxContextReceiver : ISyntaxContextReceiver {
-        public (bool toArray, bool iEnumerable)? ArrayWhereInfo { get; private set; }
-        public (bool toArray, bool iEnumerable)? ListWhereInfo { get; private set; }
+        public LinqModel Model = new();
 
         INamedTypeSymbol? metaEnumerableType;
         INamedTypeSymbol? enumerableType;
@@ -71,32 +70,7 @@ namespace MetaLinq.Generator {
                         visitedExpressions.Add(currentExpression);
                 }
                 if(source != null) {
-                    var top = chain.Pop();
-                    Debug.Assert(top == ChainElement.Where);
-                    bool toArray = false;
-                    bool iEnumerable = false;
-
-                    if(chain.Count == 0)
-                        iEnumerable = true;
-                    else {
-                        var next = chain.Pop();
-                        Debug.Assert(next == ChainElement.ToArray);
-                        toArray = true;
-                    }
-
-                    Debug.Assert(chain.Count == 0);
-                    if(source == SourceType.Array) {
-                        ArrayWhereInfo = (
-                            toArray || (ArrayWhereInfo?.toArray ?? false),
-                            iEnumerable || (ArrayWhereInfo?.iEnumerable ?? false)
-                        );
-                    }
-                    if(source == SourceType.List) {
-                        ListWhereInfo = (
-                            toArray || (ListWhereInfo?.toArray ?? false),
-                            iEnumerable || (ListWhereInfo?.iEnumerable ?? false)
-                        );
-                    }
+                    Model.AddChain(source.Value, chain);
                 }
             }
         }
