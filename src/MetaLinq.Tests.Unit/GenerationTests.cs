@@ -16,10 +16,24 @@ namespace MetaLinqTests.Unit {
     [TestFixture]
     public class GenerationTests {
         [Test]
+        public void Array_Select_ToArray() {
+            AssertGeneration(
+                "Data[] __() => Data.Array(5).Select(x => x.Int).ToArray();",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("ToArray")
+                    }, implementsIEnumerable: false)
+                }
+            );
+        }
+
+
+        [Test]
         public void Array_Where_ToArray() {
             AssertGeneration(
                 "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
@@ -27,12 +41,11 @@ namespace MetaLinqTests.Unit {
                 }
             );
         }
-
         [Test]
         public void ArrayVariable_Where_ToArray() {
             AssertGeneration(
                 "Data[] __() { var data = Data.Array(10); return data.Where(x => x.Int < 5).ToArray(); }",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
@@ -44,7 +57,7 @@ namespace MetaLinqTests.Unit {
         public void ListField_Where_ToArray() {
             AssertGeneration(
                 "Data[] __() => dataField.Where(x => x.Int < 5).ToArray();",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("ToArray")
@@ -57,7 +70,7 @@ namespace MetaLinqTests.Unit {
         public void ArrayProperty_Where_ToArray() {
             AssertGeneration(
                 "Data[] __() => DataProperty.Where(x => x.Int < 5).ToArray();",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
@@ -71,7 +84,7 @@ namespace MetaLinqTests.Unit {
         public void List_Where_ToArray() {
             AssertGeneration(
                 "Data[] __() => Data.List(10).Where(x => x.Int < 5).ToArray();",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("ToArray")
@@ -83,7 +96,7 @@ namespace MetaLinqTests.Unit {
         public void Array_Where_StandardToArray() {
             AssertGeneration(
                 "Data[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5));",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new StructMethod[] {
                         new StructMethod("GetEnumerator")
@@ -95,7 +108,7 @@ namespace MetaLinqTests.Unit {
         public void List_Where_StandardToArray() {
             AssertGeneration(
                 "Data[] __() => System.Linq.Enumerable.ToArray(Data.List(10).Where(x => x.Int < 5));",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new StructMethod[] {
                         new StructMethod("GetEnumerator")
@@ -109,27 +122,27 @@ namespace MetaLinqTests.Unit {
                 new (string code, Action<Data[]> assert)[] { 
                     (
                         "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
-                        Get0To4Assert()
+                        Get0To4DataAssert()
                     ),
                     (
                         "Data[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5));",
-                        Get0To4Assert()
+                        Get0To4DataAssert()
                     ),
                      (
                         "Data[] __()  { List<Data> result = new(); foreach(var item in Data.Array(10).Where(x => x.Int < 5)) result.Add(item); return result.ToArray(); }",
-                        Get0To4Assert()
+                        Get0To4DataAssert()
                     ),
                     (
                         "Data[] __() => Data.List(10).Where(x => x.Int < 5).ToArray();",
-                        Get0To4Assert()
+                        Get0To4DataAssert()
                     ),
                     (
                         "Data[] __() => System.Linq.Enumerable.ToArray(Data.List(10).Where(x => x.Int < 5));",
-                        Get0To4Assert()
+                        Get0To4DataAssert()
                     ),
                      (
                         "Data[] __()  { List<Data> result = new(); foreach(var item in Data.List(10).Where(x => x.Int < 5)) result.Add(item); return result.ToArray(); }",
-                        Get0To4Assert()
+                        Get0To4DataAssert()
                     ),
                 },
                 new[] {
@@ -149,7 +162,7 @@ namespace MetaLinqTests.Unit {
         public void Array() {
             AssertGeneration(
                 "Data[] __() => Data.Array(5);",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new MetaLinqMethodInfo[0]
             );
         }
@@ -157,7 +170,7 @@ namespace MetaLinqTests.Unit {
         public void Array_Where_ToArray_Standard() {
             AssertGeneration(
                 "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new MetaLinqMethodInfo[0],
                 addMetaLinqUsing: false,
                 addStadardLinqUsing: true
@@ -167,7 +180,7 @@ namespace MetaLinqTests.Unit {
         public void List_Where_ToArray_Standard() {
             AssertGeneration(
                 "Data[] __() => Data.List(10).Where(x => x.Int < 5).ToArray();",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new MetaLinqMethodInfo[0],
                 addMetaLinqUsing: false,
                 addStadardLinqUsing: true
@@ -177,13 +190,18 @@ namespace MetaLinqTests.Unit {
         public void EnumerableToArray() {
             AssertGeneration(
                 "Data[] __() => Enumerable.ToArray(Data.Array(5));",
-                Get0To4Assert(),
+                Get0To4DataAssert(),
                 new MetaLinqMethodInfo[0]
             );
         }
-        static Action<Data[]> Get0To4Assert() {
+        static Action<Data[]> Get0To4DataAssert() {
             return (Data[] result) => {
                 CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
+            };
+        }
+        static Action<int[]> Get0To4IntAssert() {
+            return (int[] result) => {
+                CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.ToArray());
             };
         }
         record StructMethod(string Name);

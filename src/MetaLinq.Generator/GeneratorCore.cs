@@ -49,8 +49,6 @@ namespace MetaLinq {");
         }
 
         static void EmitWhere(SourceType source, CodeBuilder builder, WhereNode where) {
-            var terminals = where.GetNodes().Cast<TerminalNode>();
-            bool iEnumerable = terminals.SingleOrDefault(x => x.Type == TerminalNodeType.Enumerable) != null;
             builder.AppendMultipleLines(
 @"static partial class MetaEnumerable {");
             var sourceName = source.ToString();
@@ -65,10 +63,11 @@ $@"public static {sourceName}WhereEnumerable<TSource> Where<TSource>(this {enume
 
             builder.AppendLine("}");
 
+            var nodes = where.GetNodes().ToList();
 
             builder.AppendMultipleLines(
 $@"
-struct {sourceName}WhereEnumerable<TSource> {(iEnumerable ? ": IEnumerable<TSource>" : null)} {{
+struct {sourceName}WhereEnumerable<TSource> {(nodes.Contains(TerminalNode.Enumerable) ? ": IEnumerable<TSource>" : null)} {{
     public readonly {enumerableSourceType} source;
     public readonly Func<TSource, bool> predicate;
     public {sourceName}WhereEnumerable({enumerableSourceType} source, Func<TSource, bool> predicate) {{
@@ -76,7 +75,7 @@ struct {sourceName}WhereEnumerable<TSource> {(iEnumerable ? ": IEnumerable<TSour
         this.predicate = predicate;
     }}");
 
-            foreach(var node in where.GetNodes()) {
+            foreach(var node in nodes) {
                 switch(node) {
                     case TerminalNode { Type: TerminalNodeType.ToArray }:
                         EmitToArray(source, builder.Tab);

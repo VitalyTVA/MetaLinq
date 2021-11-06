@@ -61,15 +61,15 @@ namespace MetaLinqTests.Memory {
         }
         [Test]
         public static void Array_Select_Where_ToList() {
-            MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList(), ExpectedListOfIntsAllocations());
+            MemoryTestHelper.AssertDifference(() => intArray.Select_Meta(static x => x * 10).Where_Meta(static x => x % 100 == 0).ToList_Meta(), ExpectedListOfIntsAllocations());
         }
         [Test]
         public static void Array_SelectMany_ToList() {
-            MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany(static x => x.IntArray).ToList(), ExpectedListOfIntsAllocations());
+            MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany_Meta(static x => x.IntArray).ToLis_Meta(), ExpectedListOfIntsAllocations());
         }
         [Test]
         public static void List_SelectMany_ToList() {
-            MemoryTestHelper.AssertDifference(() => testDataList.SelectMany(static x => x.IntArray).ToList(), ExpectedListOfIntsAllocations());
+            MemoryTestHelper.AssertDifference(() => testDataList.SelectMany_Meta(static x => x.IntArray).ToLis_Meta(), ExpectedListOfIntsAllocations());
         }
 
         [Test]

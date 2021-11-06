@@ -54,6 +54,10 @@ namespace MetaLinq.Generator {
                                 chain.Push(ChainElement.Where);
                                 chained = true;
                             }
+                            if(currentMethodSymbol.Name == "Select") {
+                                chain.Push(ChainElement.Select);
+                                chained = true;
+                            }
                             if(currentMethodSymbol.Name == "ToArray") {
                                 chain.Push(ChainElement.ToArray);
                                 chained = true;
@@ -62,7 +66,7 @@ namespace MetaLinq.Generator {
                     }
                     if(!chained) {
                         if(chain.Count != 0)
-                            source = GetSourceType___(context, currentExpression);
+                            source = GetSourceType(context, currentExpression);
                         break;
                     }
                     currentExpression = ((currentExpression as InvocationExpressionSyntax)?.Expression as MemberAccessExpressionSyntax)?.Expression;
@@ -74,7 +78,7 @@ namespace MetaLinq.Generator {
                 }
             }
         }
-        SourceType? GetSourceType___(GeneratorSyntaxContext context, ExpressionSyntax expression) {
+        SourceType? GetSourceType(GeneratorSyntaxContext context, ExpressionSyntax expression) {
             var sourceSymbol = context.SemanticModel.GetSymbolInfo(expression).Symbol;
             var returnType = sourceSymbol switch {
                 IMethodSymbol method => method.ReturnType,

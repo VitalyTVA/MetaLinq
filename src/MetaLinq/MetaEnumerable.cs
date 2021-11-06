@@ -51,7 +51,7 @@ namespace MetaLinq {
                 throw new NotImplementedException();
             }
         }
-        public static SelectResult<TSource, TResult> Select<TSource, TResult>(this TSource[] source, Func<TSource, TResult> selector) {
+        public static SelectResult<TSource, TResult> Select_Meta<TSource, TResult>(this TSource[] source, Func<TSource, TResult> selector) {
             return new SelectResult<TSource, TResult>(source, selector);
         }
 
@@ -73,13 +73,13 @@ namespace MetaLinq {
                 throw new NotImplementedException();
             }
         }
-        public static SelectManyResult<TSource, TSource[], TResult, TResult[]> SelectMany<TSource, TResult>(this TSource[] source, Func<TSource, TResult[]> selector) {
+        public static SelectManyResult<TSource, TSource[], TResult, TResult[]> SelectMany_Meta<TSource, TResult>(this TSource[] source, Func<TSource, TResult[]> selector) {
             return new SelectManyResult<TSource, TSource[], TResult, TResult[]>(source, selector);
         }
-        public static SelectManyResult<TSource, List<TSource>, TResult, TResult[]> SelectMany<TSource, TResult>(this List<TSource> source, Func<TSource, TResult[]> selector) {
+        public static SelectManyResult<TSource, List<TSource>, TResult, TResult[]> SelectMany_Meta<TSource, TResult>(this List<TSource> source, Func<TSource, TResult[]> selector) {
             return new SelectManyResult<TSource, List<TSource>, TResult, TResult[]>(source, selector);
         }
-        public static SelectManyResult<TSource, TSource[], TResult, List<TResult>> SelectMany<TSource, TResult>(this TSource[] source, Func<TSource, List<TResult>> selector) {
+        public static SelectManyResult<TSource, TSource[], TResult, List<TResult>> SelectMany_Meta<TSource, TResult>(this TSource[] source, Func<TSource, List<TResult>> selector) {
             return new SelectManyResult<TSource, TSource[], TResult, List<TResult>>(source, selector);
         }
 
@@ -100,11 +100,11 @@ namespace MetaLinq {
                 throw new NotImplementedException();
             }
         }
-        public static SelectWhereResult<T1, TSource> Where<T1, TSource>(this SelectResult<T1, TSource> source, Func<TSource, bool> predicate) {
+        public static SelectWhereResult<T1, TSource> Where_Meta<T1, TSource>(this SelectResult<T1, TSource> source, Func<TSource, bool> predicate) {
             return new SelectWhereResult<T1, TSource>(source, predicate);
         }
 
-        public static List<TResult> ToList<TSource, TSourceEnumerable, TResult, TResultEnumerable>(this SelectManyResult<TSource, TSourceEnumerable, TResult, TResultEnumerable> source)
+        public static List<TResult> ToLis_Meta<TSource, TSourceEnumerable, TResult, TResultEnumerable>(this SelectManyResult<TSource, TSourceEnumerable, TResult, TResultEnumerable> source)
             where TResultEnumerable : IEnumerable<TResult>
             where TSourceEnumerable : IEnumerable<TSource> {
             //var result = new List<TResult>();
@@ -144,7 +144,7 @@ namespace MetaLinq {
             return result.ToArray().AsList();
         }
 
-        public static List<TSource> ToList<T1, TSource>(this SelectWhereResult<T1, TSource> source) {
+        public static List<TSource> ToList_Meta<T1, TSource>(this SelectWhereResult<T1, TSource> source) {
             //var result = new List<TSource>();
             using var result = new LargeArrayBuilder<TSource>(ArrayPool<TSource>.Shared, false);
             if(source.selectResult.source is T1[] array) {

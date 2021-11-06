@@ -22,8 +22,8 @@ namespace MetaLinq {
                 new TestData { Ints = new [] { 1, 2 } },
                 new TestData { Ints = new [] { 3, 4 } },
             };
-            var res = testData.SelectMany(x => x.Ints).ToList();
-            var res2 = testData.SelectMany(x => x.IntList);
+            var res = testData.SelectMany_Meta(x => x.Ints).ToLis_Meta();
+            var res2 = testData.SelectMany_Meta(x => x.IntList);
         }
 
         class TestData {
@@ -32,7 +32,7 @@ namespace MetaLinq {
         }
 
         static List<int> GetResultMeta(int[] data) {
-            return data.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList();
+            return data.Select_Meta(static x => x * 10).Where_Meta(static x => x % 100 == 0).ToList_Meta();
         }
         static List<int> GetResultStandard(int[] data) {
             return Enumerable.ToList(Enumerable.Where(Enumerable.Select(data, static x => x * 10), static x => x % 100 == 0));
