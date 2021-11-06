@@ -15,10 +15,11 @@ using System.Runtime.CompilerServices;
 namespace MetaLinqTests.Unit {
     [TestFixture]
     public class GenerationTests {
+        #region select
         [Test]
         public void Array_Select_ToArray() {
             AssertGeneration(
-                "Data[] __() => Data.Array(5).Select(x => x.Int).ToArray();",
+                "int[] __() => Data.Array(5).Select(x => x.Int).ToArray();",
                 Get0To4IntAssert(),
                 new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
@@ -27,8 +28,9 @@ namespace MetaLinqTests.Unit {
                 }
             );
         }
+        #endregion
 
-
+        #region where
         [Test]
         public void Array_Where_ToArray() {
             AssertGeneration(
@@ -159,14 +161,6 @@ namespace MetaLinqTests.Unit {
             );
         }
         [Test]
-        public void Array() {
-            AssertGeneration(
-                "Data[] __() => Data.Array(5);",
-                Get0To4DataAssert(),
-                new MetaLinqMethodInfo[0]
-            );
-        }
-        [Test]
         public void Array_Where_ToArray_Standard() {
             AssertGeneration(
                 "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
@@ -186,6 +180,17 @@ namespace MetaLinqTests.Unit {
                 addStadardLinqUsing: true
             );
         }
+        #endregion
+
+        #region skip
+        [Test]
+        public void Array() {
+            AssertGeneration(
+                "Data[] __() => Data.Array(5);",
+                Get0To4DataAssert(),
+                new MetaLinqMethodInfo[0]
+            );
+        }
         [Test]
         public void EnumerableToArray() {
             AssertGeneration(
@@ -194,6 +199,8 @@ namespace MetaLinqTests.Unit {
                 new MetaLinqMethodInfo[0]
             );
         }
+        #endregion
+
         static Action<Data[]> Get0To4DataAssert() {
             return (Data[] result) => {
                 CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());

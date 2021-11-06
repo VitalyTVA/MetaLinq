@@ -38,8 +38,8 @@ using System.Buffers;
 namespace MetaLinq {");
             foreach(var node in tree.GetNodes()) {
                 switch(node) {
-                    case WhereNode where:
-                        EmitWhere(source, builder.Tab, where);
+                    case IntermediateNode intermediate:
+                        EmitIntermediate(source, builder.Tab, intermediate);
                         break;
                     default:
                         throw new InvalidOperationException();
@@ -48,37 +48,59 @@ namespace MetaLinq {");
             builder.AppendLine("}");
         }
 
-        static void EmitWhere(SourceType source, CodeBuilder builder, WhereNode where) {
+        static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
             builder.AppendMultipleLines(
 @"static partial class MetaEnumerable {");
             var sourceName = source.ToString();
+
             var enumerableSourceType = source switch {
                 SourceType.List => "List<TSource>",
                 SourceType.Array => "TSource[]",
                 _ => throw new NotImplementedException(),
             };
+            var enumerableKind = intermediate switch {
+                WhereNode => "Where",
+                SelectNode => "Select",
+                _ => throw new NotImplementedException(),
+            };
+            var additionalTypeArgs = intermediate switch {
+                WhereNode => null,
+                SelectNode => ", TResult",
+                _ => throw new NotImplementedException(),
+            };
+            var argumentName = intermediate switch {
+                WhereNode => "predicate",
+                SelectNode => "selector",
+                _ => throw new NotImplementedException(),
+            };
+            var argumentType = intermediate switch {
+                WhereNode => "Func<TSource, bool>",
+                SelectNode => "Func<TSource, TResult>",
+                _ => throw new NotImplementedException(),
+            };
+
             builder.Tab.AppendMultipleLines(
-$@"public static {sourceName}WhereEnumerable<TSource> Where<TSource>(this {enumerableSourceType} source, Func<TSource, bool> predicate)
-    => new {sourceName}WhereEnumerable<TSource>(source, predicate);");
+$@"public static {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {enumerableKind}<TSource{additionalTypeArgs}>(this {enumerableSourceType} source, {argumentType} {argumentName})
+    => new {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}>(source, {argumentName});");
 
             builder.AppendLine("}");
 
-            var nodes = where.GetNodes().ToList();
+            var nodes = intermediate.GetNodes().ToList();
 
             builder.AppendMultipleLines(
 $@"
-struct {sourceName}WhereEnumerable<TSource> {(nodes.Contains(TerminalNode.Enumerable) ? ": IEnumerable<TSource>" : null)} {{
+struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nodes.Contains(TerminalNode.Enumerable) ? ": IEnumerable<TSource>" : null)} {{
     public readonly {enumerableSourceType} source;
-    public readonly Func<TSource, bool> predicate;
-    public {sourceName}WhereEnumerable({enumerableSourceType} source, Func<TSource, bool> predicate) {{
+    public readonly {argumentType} {argumentName};
+    public {sourceName}{enumerableKind}Enumerable({enumerableSourceType} source, {argumentType} {argumentName}) {{
         this.source = source;
-        this.predicate = predicate;
+        this.{argumentName} = {argumentName};
     }}");
 
             foreach(var node in nodes) {
                 switch(node) {
                     case TerminalNode { Type: TerminalNodeType.ToArray }:
-                        EmitToArray(source, builder.Tab);
+                        EmitToArray(source, builder.Tab, intermediate);
                         break;
                     case TerminalNode { Type: TerminalNodeType.Enumerable }:
                         EmitGetEnumerator(source, builder.Tab, sourceName);
@@ -132,10 +154,16 @@ IEnumerator IEnumerable.GetEnumerator() {{
 }}");
         }
 
-        static void EmitToArray(SourceType source, CodeBuilder builder) {
+        static void EmitToArray(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
+            var resultType = intermediate switch {
+                WhereNode => "TSource",
+                SelectNode => "TResult",
+                _ => throw new NotImplementedException(),
+            };
+
             builder.AppendMultipleLines(
-@"public TSource[] ToArray() {
-    using var result = new LargeArrayBuilder<TSource>(ArrayPool<TSource>.Shared, false);");
+$@"public {resultType}[] ToArray() {{
+    using var result = new LargeArrayBuilder<{resultType}>(ArrayPool<{resultType}>.Shared, false);");
 
             if(source == SourceType.Array)
                 builder.Tab.AppendMultipleLines(
@@ -146,11 +174,24 @@ for(int i = 0; i < len; i++) {
                 builder.Tab.AppendMultipleLines(
 @"foreach(var item in source) {");
 
-            builder.AppendMultipleLines(
+            switch(intermediate) {
+                case WhereNode:
+                    builder.AppendMultipleLines(
 @"        if(predicate(item)) {
             result.Add(item);
-        }
-    }
+        }");
+                    break;
+                case SelectNode:
+                    builder.AppendMultipleLines(
+@"        result.Add(selector(item));");
+                    break;
+                default:
+                    throw new NotImplementedException();
+
+            }
+
+            builder.AppendMultipleLines(
+@"    }
     return result.ToArray();
 }");
         }
