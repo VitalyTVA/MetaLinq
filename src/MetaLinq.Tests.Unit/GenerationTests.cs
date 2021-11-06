@@ -28,6 +28,54 @@ namespace MetaLinqTests.Unit {
                 }
             );
         }
+        [Test]
+        public void List_Select_ToArray() {
+            AssertGeneration(
+                "int[] __() => Data.List(5).Select(x => x.Int).ToArray();",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                        new StructMethod("ToArray")
+                    }, implementsIEnumerable: false)
+                }
+            );
+        }
+        [Test]
+        public void Array_Select_StandardToArray() {
+            AssertGeneration(
+                "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(5).Select(x => x.Int));",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new StructMethod[] {
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                }
+            );
+        }
+        [Test]
+        public void List_Select_StandardToArray() {
+            AssertGeneration(
+                "int[] __() => System.Linq.Enumerable.ToArray(Data.List(5).Select(x => x.Int));",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.List, "Select", new StructMethod[] {
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                }
+            );
+        }
+        [Test]
+        public void Array_Select_Foreach() {
+            AssertGeneration(
+                "int[] __()  { List<int> result = new(); foreach(var item in Data.Array(5).Select(x => x.Int)) result.Add(item); return result.ToArray(); }",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new StructMethod[] {
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                }
+            );
+        }
         #endregion
 
         #region where
@@ -278,7 +326,7 @@ public static class Executor {{
             Compilation inputCompilation = CSharpCompilation.Create("MyCompilation",
                                                                     new[] { CSharpSyntaxTree.ParseText(source) },
                                                                     references,
-                                                                    new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                                                                    new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
             MetaLinqGenerator generator = new();
 
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
@@ -321,7 +369,7 @@ public static class Executor {{
 
             var expectedGeneratedTypes = new HashSet<Type>();
             Assert.False(extensionsType.IsPublic);
-            var allGeneratedTypes = assembly.GetTypes().Where(x => x != extensionsType && x != executorType && !x.IsNested).ToArray();
+            var allGeneratedTypes = assembly.GetTypes().Where(x => x != extensionsType && x != executorType && !x.IsNested && !typeof(Attribute).IsAssignableFrom(x)).ToArray();
             var actualMethods = extensionsType
                 .GetMethods()
                 .Where(x => x.DeclaringType == extensionsType)

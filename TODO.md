@@ -12,6 +12,12 @@ rewrite list where enumerator implementation based on List<T>.GetEnumerator publ
 
 get rid of record IsExternalInit;
 
+Dispose/Reset/IEnumerator.Current implementation in struct enumerator (before/after enumeration, after dispose)
+
+unit-test Current implementation in struct enumerator
+
+remove #nullable disable/#nullable restore from generation
+
 ~~nullable annotations in all projects~~
 
 ~~warnings as errors in all projects~~

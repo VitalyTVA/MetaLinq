@@ -114,35 +114,35 @@ namespace MetaLinqTests.Memory {
         public static void Array_Select_ToArray() {
             MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 2).ToArray(), ExpectedArrayOfIntsAllocations());
         }
-        //[Test]
-        //public static void Array_Where_Foreach() {
-        //    MemoryTestHelper.AssertDifference(() => {
-        //        int sum = 0;
-        //        foreach(int item in intArray.Where(static x => x < 4)) {
-        //            sum += item;
-        //        }
-        //        AssertValue(6, sum);
-        //    }, null);
-        //}
-        //[Test]
-        //public static void List_Where_ToArray() {
-        //    MemoryTestHelper.AssertDifference(() => intList.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
-        //}
-        //[Test]
-        //public static void List_Where_Foreach() {
-        //    MemoryTestHelper.AssertDifference(() => {
-        //        int sum = 0;
-        //        foreach(int item in intList.Where(static x => x < 4)) {
-        //            sum += item;
-        //        }
-        //        AssertValue(6, sum);
-        //    }, null);
-        //}
+        [Test]
+        public static void Array_Select_Foreach() {
+            MemoryTestHelper.AssertDifference(() => {
+                int sum = 0;
+                foreach(int item in intArray.Select(static x => x * 10)) {
+                    sum += item;
+                }
+                AssertValue(100, sum);
+            }, null);
+        }
+        [Test]
+        public static void List_Select_ToArray() {
+            MemoryTestHelper.AssertDifference(() => intList.Select(static x => x * 2).ToArray(), ExpectedArrayOfIntsAllocations());
+        }
+        [Test]
+        public static void List_Select_Foreach() {
+            MemoryTestHelper.AssertDifference(() => {
+                int sum = 0;
+                foreach(int item in intList.Select(static x => x * 10)) {
+                    sum += item;
+                }
+                AssertValue(100, sum);
+            }, null);
+        }
         #endregion
 
         static void AssertValue<T>(T expected, T actual) {
             if(!EqualityComparer<T>.Default.Equals(expected, actual))
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Expected: {expected}, but was {actual}");
         }
 
         static (string, int)[] ExpectedListOfIntsAllocations() {

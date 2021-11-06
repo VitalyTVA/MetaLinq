@@ -51,23 +51,16 @@ namespace MetaLinq {");
         static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
             builder.AppendMultipleLines(
 @"static partial class MetaEnumerable {");
-            var sourceName = source.ToString();
+            var sourceName = source.GetEnumerableSourceName();
 
             var enumerableSourceType = source switch {
                 SourceType.List => "List<TSource>",
                 SourceType.Array => "TSource[]",
                 _ => throw new NotImplementedException(),
             };
-            var enumerableKind = intermediate switch {
-                WhereNode => "Where",
-                SelectNode => "Select",
-                _ => throw new NotImplementedException(),
-            };
-            var additionalTypeArgs = intermediate switch {
-                WhereNode => null,
-                SelectNode => ", TResult",
-                _ => throw new NotImplementedException(),
-            };
+            var enumerableKind = intermediate.GetEnumerableKind();
+            var additionalTypeArgs = intermediate.GetAdditionalTypeArgs();
+            var enumeratorType = intermediate.GetEnumeratorType();
             var argumentName = intermediate switch {
                 WhereNode => "predicate",
                 SelectNode => "selector",
@@ -89,7 +82,7 @@ $@"public static {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeAr
 
             builder.AppendMultipleLines(
 $@"
-struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nodes.Contains(TerminalNode.Enumerable) ? ": IEnumerable<TSource>" : null)} {{
+struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nodes.Contains(TerminalNode.Enumerable) ? $": IEnumerable<{enumeratorType}>" : null)} {{
     public readonly {enumerableSourceType} source;
     public readonly {argumentType} {argumentName};
     public {sourceName}{enumerableKind}Enumerable({enumerableSourceType} source, {argumentType} {argumentName}) {{
@@ -103,7 +96,7 @@ struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nod
                         EmitToArray(source, builder.Tab, intermediate);
                         break;
                     case TerminalNode { Type: TerminalNodeType.Enumerable }:
-                        EmitGetEnumerator(source, builder.Tab, sourceName);
+                        EmitGetEnumerator(source, builder.Tab, intermediate);
                         break;
                     default:
                         throw new NotImplementedException();
@@ -112,42 +105,65 @@ struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nod
             builder.AppendLine("}");
         }
 
-        static void EmitGetEnumerator(SourceType source, CodeBuilder builder, string sourceName) {
+        static void EmitGetEnumerator(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
             var countName = source switch {
                 SourceType.List => "Count",
                 SourceType.Array => "Length",
                 _ => throw new NotImplementedException(),
             };
+            var enumeratorType = intermediate.GetEnumeratorType();
+            var sourceName = source.GetEnumerableSourceName();
+            var enumerableKind = intermediate.GetEnumerableKind();
+            var additionalTypeArgs = intermediate.GetAdditionalTypeArgs();
             builder.AppendMultipleLines(
-$@"public struct Enumerator {{
-    {sourceName}WhereEnumerable<TSource> source;
+$@"#nullable disable
+public struct Enumerator : IEnumerator<{enumeratorType}> {{
+    {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> source;
     int index;
-    public Enumerator({sourceName}WhereEnumerable<TSource> source) {{
+    {enumeratorType} current;
+    public Enumerator({sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> source) {{
         this.source = source;
         index = -1;
+        current = default;
     }}
-    public TSource Current => source.source[index];
+    public {enumeratorType} Current => current;
     public bool MoveNext() {{
         var len = source.source.{countName};
         while(true) {{
             index++;
             if(index >= len)
-                break;
-            if(source.predicate(source.source[index]))
+                break;");
+
+            switch(intermediate) {
+                case WhereNode:
+                    builder.AppendMultipleLines(
+        $@"            if(source.predicate(source.source[index])) {{
+                current = source.source[index];
                 return true;
-        }}
+            }}");
+                    break;
+                case SelectNode:
+                    builder.AppendMultipleLines(
+$@"            current = source.selector(source.source[index]);
+                return true;");
+                    break;
+                default:
+                    throw new NotImplementedException();
+
+            }
+
+            builder.AppendMultipleLines(
+$@"        }}
         return false;
     }}
+    public void Dispose() {{ }}
+    public void Reset() {{ }}
+    object IEnumerator.Current => throw new NotImplementedException();
 }}
+#nullable restore
 public Enumerator GetEnumerator() => new Enumerator(this);
-IEnumerator<TSource> IEnumerable<TSource>.GetEnumerator() {{
-    var len = source.{countName};
-    for(int i = 0; i < len; i++) {{
-        var item = source[i];
-        if(predicate(item)) {{
-            yield return item;
-        }}
-    }}
+IEnumerator<{enumeratorType}> IEnumerable<{enumeratorType}>.GetEnumerator() {{
+    return new Enumerator(this);
 }}
 IEnumerator IEnumerable.GetEnumerator() {{
     throw new NotImplementedException();
@@ -194,6 +210,36 @@ for(int i = 0; i < len; i++) {
 @"    }
     return result.ToArray();
 }");
+        }
+    }
+    static class CodeGenerationTraits {
+        public static string GetEnumerableSourceName(this SourceType source) {
+            return source switch {
+                SourceType.List => "List",
+                SourceType.Array => "Array",
+                _ => throw new NotImplementedException(),
+            };
+        }
+        public static string GetEnumerableKind(this IntermediateNode intermediate) {
+            return intermediate switch {
+                WhereNode => "Where",
+                SelectNode => "Select",
+                _ => throw new NotImplementedException(),
+            };
+        }
+        public static string? GetAdditionalTypeArgs(this IntermediateNode intermediate) {
+            return intermediate switch {
+                WhereNode => null,
+                SelectNode => ", TResult",
+                _ => throw new NotImplementedException(),
+            };
+        }
+        public static string GetEnumeratorType(this IntermediateNode intermediate) {
+            return intermediate switch {
+                WhereNode => "TSource",
+                SelectNode => "TResult",
+                _ => throw new NotImplementedException(),
+            };
         }
     }
 }
