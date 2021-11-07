@@ -21,23 +21,20 @@ namespace MetaLinq.Generator {
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Buffers;
-namespace MetaLinq {");
-            foreach(var node in tree.GetNodes()) {
-                switch(node) {
-                    case IntermediateNode intermediate:
-                        EmitIntermediate(source, builder.Tab, intermediate);
-                        break;
-                    default:
-                        throw new InvalidOperationException();
+using System.Buffers;");
+            using(builder.BuildNamespace(out CodeBuilder nsBuilder, "MetaLinq")) {
+                foreach(var node in tree.GetNodes()) {
+                    switch(node) {
+                        case IntermediateNode intermediate:
+                            EmitIntermediate(source, nsBuilder, intermediate);
+                            break;
+                        default:
+                            throw new InvalidOperationException();
+                    }
                 }
             }
-            builder.AppendLine("}");
         }
-
         static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
-            builder.AppendMultipleLines(@"
-static partial class MetaEnumerable {");
             var sourceName = source.GetEnumerableSourceName();
 
             var enumerableSourceType = source switch {
@@ -59,36 +56,47 @@ static partial class MetaEnumerable {");
                 _ => throw new NotImplementedException(),
             };
 
-            builder.Tab.AppendMultipleLines($@"
-public static {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {enumerableKind}<TSource{additionalTypeArgs}>(this {enumerableSourceType} source, {argumentType} {argumentName})
-    => new {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}>(source, {argumentName});");
+            using(builder.BuildType(out CodeBuilder classBuilder, TypeModifiers.StaticClass, "MetaEnumerable", partial: true)) {
+                classBuilder.AppendMultipleLines($@"
+public static {sourceName}.{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {enumerableKind}<TSource{additionalTypeArgs}>(this {enumerableSourceType} source, {argumentType} {argumentName})
+    => new {sourceName}.{enumerableKind}Enumerable<TSource{additionalTypeArgs}>(source, {argumentName});");
+            }
 
-            builder.AppendLine("}");
 
             var nodes = intermediate.GetNodes().ToList();
 
-            builder.AppendMultipleLines($@"
-struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nodes.Contains(TerminalNode.Enumerable) ? $": IEnumerable<{enumeratorType}>" : null)} {{
-    public readonly {enumerableSourceType} source;
-    public readonly {argumentType} {argumentName};
-    public {sourceName}{enumerableKind}Enumerable({enumerableSourceType} source, {argumentType} {argumentName}) {{
-        this.source = source;
-        this.{argumentName} = {argumentName};
-    }}");
+            using(builder.BuildType(out CodeBuilder sourceTypeBuilder, TypeModifiers.StaticClass, sourceName)) {
+                bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
+                using(sourceTypeBuilder.BuildType(out CodeBuilder structBuilder, 
+                    TypeModifiers.Struct, 
+                    enumerableKind + "Enumerable", 
+                    isPublic: true, 
+                    generics: "TSource" + additionalTypeArgs, 
+                    baseType: implementIEnumerable ? $"IEnumerable<{enumeratorType}>" : null)
+                ) {
+                    structBuilder.AppendMultipleLines($@"
+readonly {enumerableSourceType} source;
+readonly {argumentType} {argumentName};
+public {enumerableKind}Enumerable({enumerableSourceType} source, {argumentType} {argumentName}) {{
+    this.source = source;
+    this.{argumentName} = {argumentName};
+}}");
 
-            foreach(var node in nodes) {
-                switch(node) {
-                    case TerminalNode { Type: TerminalNodeType.ToArray }:
-                        EmitToArray(source, builder.Tab, intermediate);
-                        break;
-                    case TerminalNode { Type: TerminalNodeType.Enumerable }:
-                        EmitGetEnumerator(source, builder.Tab, intermediate);
-                        break;
-                    default:
-                        throw new NotImplementedException();
+                    foreach(var node in nodes) {
+                        switch(node) {
+                            case TerminalNode { Type: TerminalNodeType.ToArray }:
+                                EmitToArray(source, structBuilder, intermediate);
+                                break;
+                            case TerminalNode { Type: TerminalNodeType.Enumerable }:
+                                EmitGetEnumerator(source, structBuilder, intermediate);
+                                break;
+                            default:
+                                throw new NotImplementedException();
+                        }
+                    }
+
                 }
             }
-            builder.AppendLine("}");
         }
 
         static void EmitGetEnumerator(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
@@ -98,56 +106,56 @@ struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nod
                 _ => throw new NotImplementedException(),
             };
             var enumeratorType = intermediate.GetEnumeratorType();
-            var sourceName = source.GetEnumerableSourceName();
             var enumerableKind = intermediate.GetEnumerableKind();
             var additionalTypeArgs = intermediate.GetAdditionalTypeArgs();
-            builder.AppendMultipleLines($@"
-#nullable disable
-public struct Enumerator : IEnumerator<{enumeratorType}> {{
-    {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> source;
-    int index;
-    {enumeratorType} current;
-    public Enumerator({sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> source) {{
-        this.source = source;
-        index = -1;
-        current = default;
-    }}
-    public {enumeratorType} Current => current;
-    public bool MoveNext() {{
-        var len = source.source.{countName};
-        while(true) {{
-            index++;
-            if(index >= len)
-                break;");
+            builder.AppendLine("#nullable disable");
+            using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{enumeratorType}>")) {
+                enumeratorBuilder.AppendMultipleLines($@"
+{enumerableKind}Enumerable<TSource{additionalTypeArgs}> source;
+int index;
+{enumeratorType} current;
+public Enumerator({enumerableKind}Enumerable<TSource{additionalTypeArgs}> source) {{
+    this.source = source;
+    index = -1;
+    current = default;
+}}
+public {enumeratorType} Current => current;
+public bool MoveNext() {{
+    var len = source.source.{countName};
+    while(true) {{
+        index++;
+        if(index >= len)
+            break;");
 
             switch(intermediate) {
                 case WhereNode:
-                    builder.AppendMultipleLines($@"
-            if(source.predicate(source.source[index])) {{
-                current = source.source[index];
-                return true;
-            }}");
+                    enumeratorBuilder.AppendMultipleLines($@"
+        if(source.predicate(source.source[index])) {{
+            current = source.source[index];
+            return true;
+        }}");
                     break;
                 case SelectNode:
-                    builder.AppendMultipleLines($@"
-            current = source.selector(source.source[index]);
-                return true;");
+                    enumeratorBuilder.AppendMultipleLines($@"
+        current = source.selector(source.source[index]);
+            return true;");
                     break;
                 default:
                     throw new NotImplementedException();
 
             }
 
-            builder.AppendMultipleLines($@"
-        }}
-        return false;
+                enumeratorBuilder.AppendMultipleLines($@"
     }}
-    public void Dispose() {{ }}
-    public void Reset() {{ }}
-    object IEnumerator.Current => throw new NotImplementedException();
+    return false;
 }}
-#nullable restore
-public Enumerator GetEnumerator() => new Enumerator(this);
+public void Dispose() {{ }}
+public void Reset() {{ }}
+object IEnumerator.Current => throw new NotImplementedException();");
+            }
+            builder.AppendLine("#nullable restore");
+            builder.AppendMultipleLines($@"
+            public Enumerator GetEnumerator() => new Enumerator(this);
 IEnumerator<{enumeratorType}> IEnumerable<{enumeratorType}>.GetEnumerator() {{
     return new Enumerator(this);
 }}

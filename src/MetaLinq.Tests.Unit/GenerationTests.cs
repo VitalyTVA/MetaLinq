@@ -7,6 +7,7 @@ using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -341,6 +342,11 @@ public static class Executor {{
                 Directory.CreateDirectory(location);
             var dllPath = Path.Combine(location, NUnit.Framework.TestContext.CurrentContext.Test.Name + ".dll");
             var emitResult = outputCompilation.Emit(dllPath);
+            if(!emitResult.Success) {
+                foreach(var item in generatedCode) {
+                    Debug.WriteLine(item);
+                }
+            }
             CollectionAssert.IsEmpty(emitResult.Diagnostics.Where(x => x.Severity != DiagnosticSeverity.Hidden).ToArray());
             Assert.True(emitResult.Success);
 
@@ -369,7 +375,14 @@ public static class Executor {{
 
             var expectedGeneratedTypes = new HashSet<Type>();
             Assert.False(extensionsType.IsPublic);
-            var allGeneratedTypes = assembly.GetTypes().Where(x => x != extensionsType && x != executorType && !x.IsNested && !typeof(Attribute).IsAssignableFrom(x)).ToArray();
+            var allGeneratedTypes = assembly.GetTypes()
+                .Where(x => x != extensionsType && x != executorType && !x.IsNested && !typeof(Attribute).IsAssignableFrom(x))
+                .SelectMany(x => {
+                    var nested = x.GetNestedTypes();
+                    CollectionAssert.IsNotEmpty(nested);
+                    return nested;
+                })
+                .ToArray();
             var actualMethods = extensionsType
                 .GetMethods()
                 .Where(x => x.DeclaringType == extensionsType)
@@ -382,6 +395,7 @@ public static class Executor {{
                         "List`1" => SourceType.List,
                         _ => throw new InvalidOperationException()
                     };
+                    Assert.AreEqual(sourceType.ToString(), x.ReturnType.DeclaringType!.Name);
                     return new MetaLinqMethodInfo(
                         sourceType,
                         x.Name,

@@ -142,5 +142,47 @@ namespace MetaLinqTests.Unit {
                 yield return range;
             }
         }
+
+        [Test]
+        public void BuildNamepace() {
+            using(builder.BuildNamespace(out CodeBuilder nsBuilder, "Foo.Bar")) {
+                nsBuilder.AppendLine("content");
+            }
+            AssertBuilderResult("namespace Foo.Bar {\r\n    content\r\n}\r\n");
+        }
+
+        [TestCase(TypeModifiers.Class, "class")]
+        [TestCase(TypeModifiers.StaticClass, "static class")]
+        [TestCase(TypeModifiers.Struct, "struct")]
+        [TestCase(TypeModifiers.ReadonlyStruct, "readonly struct")]
+        [Test]
+        public void BuildType(TypeModifiers modifier, string expectedModifier) {
+            using(builder.BuildType(out CodeBuilder nsBuilder, modifier, "FooBar")) {
+                nsBuilder.AppendLine("content");
+            }
+            AssertBuilderResult($"{expectedModifier} FooBar {{\r\n    content\r\n}}\r\n");
+        }
+
+        [Test]
+        public void BuildPartialClass() {
+            using(builder.BuildType(out CodeBuilder nsBuilder, TypeModifiers.StaticClass, "FooBar", partial: true)) {
+                nsBuilder.AppendLine("content");
+            }
+            AssertBuilderResult($"static partial class FooBar {{\r\n    content\r\n}}\r\n");
+        }
+        [Test]
+        public void BuildPublicClass() {
+            using(builder.BuildType(out CodeBuilder nsBuilder, TypeModifiers.StaticClass, "FooBar", isPublic: true)) {
+                nsBuilder.AppendLine("content");
+            }
+            AssertBuilderResult($"public static class FooBar {{\r\n    content\r\n}}\r\n");
+        }
+        [Test]
+        public void BuildClassWithGenericsAndBaseType() {
+            using(builder.BuildType(out CodeBuilder nsBuilder, TypeModifiers.Class, "FooBar", generics: "T1, T2", baseType : "IDisposable")) {
+                nsBuilder.AppendLine("content");
+            }
+            AssertBuilderResult($"class FooBar<T1, T2> : IDisposable {{\r\n    content\r\n}}\r\n");
+        }
     }
 }
