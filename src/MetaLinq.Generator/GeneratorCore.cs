@@ -137,7 +137,7 @@ public struct Enumerator : IEnumerator<{enumeratorType}> {{
             switch(intermediate) {
                 case WhereNode:
                     builder.AppendMultipleLines(
-        $@"            if(source.predicate(source.source[index])) {{
+$@"            if(source.predicate(source.source[index])) {{
                 current = source.source[index];
                 return true;
             }}");
