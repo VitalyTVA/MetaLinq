@@ -107,9 +107,14 @@ namespace MetaLinqTests.Unit {
             Assert.Throws<InvalidOperationException>(() => tabbed2.Append("456"));
         }
         [Test]
-        public void SourceBuilderTest_TrimLeadingWhiteSpace() {
+        public void SourceBuilderTest_AppendMultipleLines_TrimLeadingWhiteSpace() {
             builder.Tab.Tab.AppendMultipleLines("    \t   \t abc\r\n123\r\n    xyz", trimLeadingWhiteSpace: true);
             AssertBuilderResult("        abc\r\n        123\r\n        xyz\r\n");
+        }
+        [Test]
+        public void SourceBuilderTest_AppendMultipleLines_SkipEmptyLines() {
+            builder.Tab.Tab.AppendMultipleLines("\r\nabc\r\n123\r\n\r\n    xyz\r\n");
+            AssertBuilderResult("        abc\r\n        123\r\n            xyz\r\n");
         }
         [Test]
         public void LineEnumeratorTest_TrimLeadingWhiteSpace() {

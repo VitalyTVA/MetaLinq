@@ -65,7 +65,8 @@ namespace MetaLinq.Generator {
 
         public static void AppendMultipleLines(this CodeBuilder builder, string lines, bool trimLeadingWhiteSpace = false) {
             foreach((int start, int length) in new LineEnumerator(lines, trimLeadingWhiteSpace)) {
-                builder.Append(lines, start, length).AppendLine();
+                if(length != 0)
+                    builder.Append(lines, start, length).AppendLine();
             }
         }
 

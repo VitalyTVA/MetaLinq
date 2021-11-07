@@ -17,8 +17,8 @@ namespace MetaLinq.Generator {
         }
 
         private static void BuildSource(SourceType source, RootNode tree, CodeBuilder builder) {
-            builder.AppendMultipleLines(
-@"using System;
+            builder.AppendMultipleLines(@"
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Buffers;
@@ -36,8 +36,8 @@ namespace MetaLinq {");
         }
 
         static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
-            builder.AppendMultipleLines(
-@"static partial class MetaEnumerable {");
+            builder.AppendMultipleLines(@"
+static partial class MetaEnumerable {");
             var sourceName = source.GetEnumerableSourceName();
 
             var enumerableSourceType = source switch {
@@ -59,16 +59,15 @@ namespace MetaLinq {");
                 _ => throw new NotImplementedException(),
             };
 
-            builder.Tab.AppendMultipleLines(
-$@"public static {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {enumerableKind}<TSource{additionalTypeArgs}>(this {enumerableSourceType} source, {argumentType} {argumentName})
+            builder.Tab.AppendMultipleLines($@"
+public static {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {enumerableKind}<TSource{additionalTypeArgs}>(this {enumerableSourceType} source, {argumentType} {argumentName})
     => new {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}>(source, {argumentName});");
 
             builder.AppendLine("}");
 
             var nodes = intermediate.GetNodes().ToList();
 
-            builder.AppendMultipleLines(
-$@"
+            builder.AppendMultipleLines($@"
 struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nodes.Contains(TerminalNode.Enumerable) ? $": IEnumerable<{enumeratorType}>" : null)} {{
     public readonly {enumerableSourceType} source;
     public readonly {argumentType} {argumentName};
@@ -102,8 +101,8 @@ struct {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {(nod
             var sourceName = source.GetEnumerableSourceName();
             var enumerableKind = intermediate.GetEnumerableKind();
             var additionalTypeArgs = intermediate.GetAdditionalTypeArgs();
-            builder.AppendMultipleLines(
-$@"#nullable disable
+            builder.AppendMultipleLines($@"
+#nullable disable
 public struct Enumerator : IEnumerator<{enumeratorType}> {{
     {sourceName}{enumerableKind}Enumerable<TSource{additionalTypeArgs}> source;
     int index;
@@ -123,15 +122,15 @@ public struct Enumerator : IEnumerator<{enumeratorType}> {{
 
             switch(intermediate) {
                 case WhereNode:
-                    builder.AppendMultipleLines(
-$@"            if(source.predicate(source.source[index])) {{
+                    builder.AppendMultipleLines($@"
+            if(source.predicate(source.source[index])) {{
                 current = source.source[index];
                 return true;
             }}");
                     break;
                 case SelectNode:
-                    builder.AppendMultipleLines(
-$@"            current = source.selector(source.source[index]);
+                    builder.AppendMultipleLines($@"
+            current = source.selector(source.source[index]);
                 return true;");
                     break;
                 default:
@@ -139,8 +138,8 @@ $@"            current = source.selector(source.source[index]);
 
             }
 
-            builder.AppendMultipleLines(
-$@"        }}
+            builder.AppendMultipleLines($@"
+        }}
         return false;
     }}
     public void Dispose() {{ }}
@@ -154,7 +153,8 @@ IEnumerator<{enumeratorType}> IEnumerable<{enumeratorType}>.GetEnumerator() {{
 }}
 IEnumerator IEnumerable.GetEnumerator() {{
     throw new NotImplementedException();
-}}");
+}}
+");
         }
 
         static void EmitToArray(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
@@ -164,37 +164,37 @@ IEnumerator IEnumerable.GetEnumerator() {{
                 _ => throw new NotImplementedException(),
             };
 
-            builder.AppendMultipleLines(
-$@"public {resultType}[] ToArray() {{
+            builder.AppendMultipleLines($@"
+public {resultType}[] ToArray() {{
     using var result = new LargeArrayBuilder<{resultType}>(ArrayPool<{resultType}>.Shared, false);");
 
             if(source == SourceType.Array)
-                builder.Tab.AppendMultipleLines(
-@"var len = source.Length;
+                builder.Tab.AppendMultipleLines(@"
+var len = source.Length;
 for(int i = 0; i < len; i++) {
     var item = source[i];");
             if(source == SourceType.List)
-                builder.Tab.AppendMultipleLines(
-@"foreach(var item in source) {");
+                builder.Tab.AppendMultipleLines(@"
+foreach(var item in source) {");
 
             switch(intermediate) {
                 case WhereNode:
-                    builder.AppendMultipleLines(
-@"        if(predicate(item)) {
+                    builder.AppendMultipleLines(@"
+        if(predicate(item)) {
             result.Add(item);
         }");
                     break;
                 case SelectNode:
-                    builder.AppendMultipleLines(
-@"        result.Add(selector(item));");
+                    builder.AppendMultipleLines(@"
+        result.Add(selector(item));");
                     break;
                 default:
                     throw new NotImplementedException();
 
             }
 
-            builder.AppendMultipleLines(
-@"    }
+            builder.AppendMultipleLines(@"
+    }
     return result.ToArray();
 }");
         }
