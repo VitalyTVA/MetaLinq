@@ -1,30 +1,17 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
 namespace MetaLinq.Generator {
-    static class MetaLinqGeneratorCore {
-        public static void Execute(GeneratorExecutionContext context) {
-            //Debugger.Launch();
-            if(context.SyntaxContextReceiver is not SyntaxContextReceiver receiver)
-                return;
-
-            Compilation compilation = context.Compilation;
-
+    public static class SourceBuilder {
+        public static IEnumerable<(string name, string source)> BuildSource(LinqModel model) {
             StringBuilder source = new();
             CodeBuilder builder = new(source);
 
-            foreach(var (sourceType, tree) in receiver.Model.GetTrees()) {
-                if(context.CancellationToken.IsCancellationRequested)
-                    break;
+            foreach(var (sourceType, tree) in model.GetTrees()) {
                 BuildSource(sourceType, tree, builder);
-                context.AddSource($"Meta_{sourceType}.cs", SourceText.From(source.ToString(), Encoding.UTF8));
+                yield return ($"Meta_{sourceType}.cs", source.ToString());
                 source.Clear();
             }
         }

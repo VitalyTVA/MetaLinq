@@ -1,10 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace MetaLinq.Generator {
     [Generator]
@@ -15,7 +17,13 @@ namespace MetaLinq.Generator {
         }
 
         public void Execute(GeneratorExecutionContext context) {
-            MetaLinqGeneratorCore.Execute(context);
+            if(context.SyntaxContextReceiver is not SyntaxContextReceiver receiver)
+                return;
+            foreach(var (name, source) in SourceBuilder.BuildSource(receiver.Model)) {
+                if(context.CancellationToken.IsCancellationRequested)
+                    break;
+                context.AddSource(name, SourceText.From(source, Encoding.UTF8));
+            }
         }
     }
 
