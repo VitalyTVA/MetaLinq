@@ -35,91 +35,100 @@ using System.Buffers;");
             }
         }
         static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
+            EmitExtensionMethod(source, builder, intermediate);
+            using(builder.BuildType(out CodeBuilder sourceTypeBuilder, TypeModifiers.StaticClass, source.GetEnumerableSourceName())) {
+                var sourceGenericArg = "Source".GetLevelGenericType(0);
+                var enumerableSourceType = source.GetRootSourceType(sourceGenericArg);
+                var context = new EmitContext(0, enumerableSourceType, sourceGenericArg);
+                EmitStruct(source, intermediate, sourceTypeBuilder, context);
+            }
+        }
+        static void EmitExtensionMethod(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
             var sourceName = source.GetEnumerableSourceName();
-
-            var enumerableSourceType = source switch {
-                SourceType.List => "List<TSource>",
-                SourceType.Array => "TSource[]",
-                _ => throw new NotImplementedException(),
-            };
+            var argumentName = intermediate.GetArgumentName();
             var enumerableKind = intermediate.GetEnumerableKind();
-            var additionalTypeArgs = intermediate.GetAdditionalTypeArgs();
-            var enumeratorType = intermediate.GetEnumeratorType();
-            var argumentName = intermediate switch {
-                WhereNode => "predicate",
-                SelectNode => "selector",
-                _ => throw new NotImplementedException(),
-            };
-            var argumentType = intermediate switch {
+            var methodArgumentType = intermediate switch {
                 WhereNode => "Func<TSource, bool>",
                 SelectNode => "Func<TSource, TResult>",
                 _ => throw new NotImplementedException(),
             };
-
+            var methodEnumerableSourceType = source.GetRootSourceType("TSource");
+            var additionalTypeArgs = intermediate switch {
+                WhereNode => null,
+                SelectNode => ", TResult",
+                _ => throw new NotImplementedException(),
+            };
             using(builder.BuildType(out CodeBuilder classBuilder, TypeModifiers.StaticClass, "MetaEnumerable", partial: true)) {
                 classBuilder.AppendMultipleLines($@"
-public static {sourceName}.{enumerableKind}Enumerable<TSource{additionalTypeArgs}> {enumerableKind}<TSource{additionalTypeArgs}>(this {enumerableSourceType} source, {argumentType} {argumentName})
-    => new {sourceName}.{enumerableKind}Enumerable<TSource{additionalTypeArgs}>(source, {argumentName});");
+public static {sourceName}.{enumerableKind}En<TSource{additionalTypeArgs}> {enumerableKind}<TSource{additionalTypeArgs}>(this {methodEnumerableSourceType} source, {methodArgumentType} {argumentName})
+    => new {sourceName}.{enumerableKind}En<TSource{additionalTypeArgs}>(source, {argumentName});");
             }
+        }
 
-
+        static void EmitStruct(SourceType source, IntermediateNode intermediate, CodeBuilder builder, EmitContext context) {
+            var argumentName = intermediate.GetArgumentName();
+            var argumentType = intermediate switch {
+                WhereNode => $"Func<{context.GenericArg}, bool>",
+                SelectNode => $"Func<{context.GenericArg}, {"Result".GetLevelGenericType(context.Level)}>",
+                _ => throw new NotImplementedException(),
+            };
+            var additionalTypeArgs = intermediate.GetAdditionalTypeArgs(context);
+            var enumerableKind = intermediate.GetEnumerableKind();
             var nodes = intermediate.GetNodes().ToList();
-
-            using(builder.BuildType(out CodeBuilder sourceTypeBuilder, TypeModifiers.StaticClass, sourceName)) {
-                bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
-                using(sourceTypeBuilder.BuildType(out CodeBuilder structBuilder, 
-                    TypeModifiers.ReadonlyStruct, 
-                    enumerableKind + "Enumerable", 
-                    isPublic: true, 
-                    generics: "TSource" + additionalTypeArgs, 
-                    baseType: implementIEnumerable ? $"IEnumerable<{enumeratorType}>" : null)
-                ) {
-                    structBuilder.AppendMultipleLines($@"
-readonly {enumerableSourceType} source;
+            bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
+            var outputType = intermediate.GetOutputType(context);
+            using(builder.BuildType(out CodeBuilder structBuilder,
+                TypeModifiers.ReadonlyStruct,
+                enumerableKind + "En",
+                isPublic: true,
+                generics: context.GenericArg + additionalTypeArgs,
+                baseType: implementIEnumerable ? $"IEnumerable<{outputType}>" : null)
+            ) {
+                structBuilder.AppendMultipleLines($@"
+readonly {context.SourceType} source;
 readonly {argumentType} {argumentName};
-public {enumerableKind}Enumerable({enumerableSourceType} source, {argumentType} {argumentName}) {{
+public {enumerableKind}En({context.SourceType} source, {argumentType} {argumentName}) {{
     this.source = source;
     this.{argumentName} = {argumentName};
 }}");
 
-                    foreach(var node in nodes) {
-                        switch(node) {
-                            case TerminalNode { Type: TerminalNodeType.ToArray }:
-                                EmitToArray(source, structBuilder, intermediate);
-                                break;
-                            case TerminalNode { Type: TerminalNodeType.Enumerable }:
-                                EmitGetEnumerator(source, structBuilder, intermediate);
-                                break;
-                            default:
-                                throw new NotImplementedException();
-                        }
+                foreach(var node in nodes) {
+                    switch(node) {
+                        case TerminalNode { Type: TerminalNodeType.ToArray }:
+                            EmitToArray(source, structBuilder, intermediate, context);
+                            break;
+                        case TerminalNode { Type: TerminalNodeType.Enumerable }:
+                            EmitGetEnumerator(source, structBuilder, intermediate, context);
+                            break;
+                        default:
+                            throw new NotImplementedException();
                     }
-
                 }
+
             }
         }
 
-        static void EmitGetEnumerator(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
+        static void EmitGetEnumerator(SourceType source, CodeBuilder builder, IntermediateNode intermediate, EmitContext context) {
             var countName = source switch {
                 SourceType.List => "Count",
                 SourceType.Array => "Length",
                 _ => throw new NotImplementedException(),
             };
-            var enumeratorType = intermediate.GetEnumeratorType();
+            var outputType = intermediate.GetOutputType(context);
             var enumerableKind = intermediate.GetEnumerableKind();
-            var additionalTypeArgs = intermediate.GetAdditionalTypeArgs();
+            var additionalTypeArgs = intermediate.GetAdditionalTypeArgs(context);
             builder.AppendLine("#nullable disable");
-            using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{enumeratorType}>")) {
+            using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
                 enumeratorBuilder.AppendMultipleLines($@"
-{enumerableKind}Enumerable<TSource{additionalTypeArgs}> source;
+{enumerableKind}En<{context.GenericArg}{additionalTypeArgs}> source;
 int index;
-{enumeratorType} current;
-public Enumerator({enumerableKind}Enumerable<TSource{additionalTypeArgs}> source) {{
+{outputType} current;
+public Enumerator({enumerableKind}En<{context.GenericArg}{additionalTypeArgs}> source) {{
     this.source = source;
     index = -1;
     current = default;
 }}
-public {enumeratorType} Current => current;
+public {outputType} Current => current;
 public bool MoveNext() {{
     var len = source.source.{countName};
     while(true) {{
@@ -155,8 +164,8 @@ object IEnumerator.Current => throw new NotImplementedException();");
             }
             builder.AppendLine("#nullable restore");
             builder.AppendMultipleLines($@"
-            public Enumerator GetEnumerator() => new Enumerator(this);
-IEnumerator<{enumeratorType}> IEnumerable<{enumeratorType}>.GetEnumerator() {{
+public Enumerator GetEnumerator() => new Enumerator(this);
+IEnumerator<{outputType}> IEnumerable<{outputType}>.GetEnumerator() {{
     return new Enumerator(this);
 }}
 IEnumerator IEnumerable.GetEnumerator() {{
@@ -165,16 +174,12 @@ IEnumerator IEnumerable.GetEnumerator() {{
 ");
         }
 
-        static void EmitToArray(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
-            var resultType = intermediate switch {
-                WhereNode => "TSource",
-                SelectNode => "TResult",
-                _ => throw new NotImplementedException(),
-            };
+        static void EmitToArray(SourceType source, CodeBuilder builder, IntermediateNode intermediate, EmitContext context) {
+            var outputType = intermediate.GetOutputType(context);
 
             builder.AppendMultipleLines($@"
-public {resultType}[] ToArray() {{
-    using var result = new LargeArrayBuilder<{resultType}>(ArrayPool<{resultType}>.Shared, false);");
+public {outputType}[] ToArray() {{
+    using var result = new LargeArrayBuilder<{outputType}>(ArrayPool<{outputType}>.Shared, false);");
 
             if(source == SourceType.Array)
                 builder.Tab.AppendMultipleLines(@"
@@ -207,7 +212,18 @@ foreach(var item in source) {");
 }");
         }
     }
+
+    record EmitContext(int Level, string SourceType, string GenericArg/*, EmitContext parent*/);
+
     static class CodeGenerationTraits {
+        public static string GetRootSourceType(this SourceType source, string sourceGenericArg) {
+            return source switch {
+                SourceType.List => $"List<{sourceGenericArg}>",
+                SourceType.Array => $"{sourceGenericArg}[]",
+                _ => throw new NotImplementedException(),
+            };
+        }
+        public static string GetLevelGenericType(this string name, int level) => $"T{level}_{name}";
         public static string GetEnumerableSourceName(this SourceType source) {
             return source switch {
                 SourceType.List => "List",
@@ -222,17 +238,24 @@ foreach(var item in source) {");
                 _ => throw new NotImplementedException(),
             };
         }
-        public static string? GetAdditionalTypeArgs(this IntermediateNode intermediate) {
+        public static string? GetAdditionalTypeArgs(this IntermediateNode intermediate, EmitContext context) {
             return intermediate switch {
                 WhereNode => null,
-                SelectNode => ", TResult",
+                SelectNode => $", {"Result".GetLevelGenericType(context.Level)}",
                 _ => throw new NotImplementedException(),
             };
         }
-        public static string GetEnumeratorType(this IntermediateNode intermediate) {
+        public static string GetOutputType(this IntermediateNode intermediate, EmitContext context) {
             return intermediate switch {
-                WhereNode => "TSource",
-                SelectNode => "TResult",
+                WhereNode => context.GenericArg,
+                SelectNode => "Result".GetLevelGenericType(context.Level),
+                _ => throw new NotImplementedException(),
+            };
+        }
+        public static string GetArgumentName(this IntermediateNode intermediate) {
+            return intermediate switch {
+                WhereNode => "predicate",
+                SelectNode => "selector",
                 _ => throw new NotImplementedException(),
             };
         }

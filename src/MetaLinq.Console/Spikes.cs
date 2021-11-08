@@ -76,6 +76,14 @@ namespace Spike2 {
             => new Array.WhereEn<TSource>(source, predicate);
     }
     static partial class Array {
+        public readonly struct SelectEn<T0_Source, T0_Result> {
+            readonly T0_Source[] source;
+            readonly Func<T0_Source, T0_Result> selector;
+            public SelectEn(T0_Source[] source, Func<T0_Source, T0_Result> selector) {
+                this.source = source;
+                this.selector = selector;
+            }
+        }
         public readonly struct WhereEn<T0_Source> {
             readonly T0_Source[] source;
             readonly Func<T0_Source, bool> predicate;
