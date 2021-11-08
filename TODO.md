@@ -20,7 +20,7 @@ unit-test Current implementation in struct enumerator
 
 remove #nullable disable/#nullable restore from generation
 
-mark generated structs readonly
+~~mark generated structs readonly~~
 
 ~~nullable annotations in all projects~~
 

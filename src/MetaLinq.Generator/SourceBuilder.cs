@@ -68,7 +68,7 @@ public static {sourceName}.{enumerableKind}Enumerable<TSource{additionalTypeArgs
             using(builder.BuildType(out CodeBuilder sourceTypeBuilder, TypeModifiers.StaticClass, sourceName)) {
                 bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
                 using(sourceTypeBuilder.BuildType(out CodeBuilder structBuilder, 
-                    TypeModifiers.Struct, 
+                    TypeModifiers.ReadonlyStruct, 
                     enumerableKind + "Enumerable", 
                     isPublic: true, 
                     generics: "TSource" + additionalTypeArgs, 

@@ -396,6 +396,7 @@ public static class Executor {{
                         _ => throw new InvalidOperationException()
                     };
                     Assert.AreEqual(sourceType.ToString(), x.ReturnType.DeclaringType!.Name);
+                    Assert.NotNull(x.ReturnType.GetCustomAttribute(typeof(IsReadOnlyAttribute)));
                     return new MetaLinqMethodInfo(
                         sourceType,
                         x.Name,

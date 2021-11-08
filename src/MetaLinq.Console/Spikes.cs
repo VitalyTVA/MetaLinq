@@ -77,8 +77,8 @@ namespace Spike2 {
     }
     static partial class Array {
         public readonly struct WhereEn<T0_Source> {
-            public readonly T0_Source[] source;
-            public readonly Func<T0_Source, bool> predicate;
+            readonly T0_Source[] source;
+            readonly Func<T0_Source, bool> predicate;
             public WhereEn(T0_Source[] source, Func<T0_Source, bool> predicate) {
                 this.source = source;
                 this.predicate = predicate;
@@ -87,8 +87,8 @@ namespace Spike2 {
             public SelectEn<TResult> Select<TResult>(Func<T0_Source, TResult> selector) 
                 => new SelectEn<TResult>(this, selector);
             public readonly struct SelectEn<T1_Result> {
-                public readonly WhereEn<T0_Source> source;
-                public readonly Func<T0_Source, T1_Result> selector;
+                readonly WhereEn<T0_Source> source;
+                readonly Func<T0_Source, T1_Result> selector;
                 public SelectEn(WhereEn<T0_Source> source, Func<T0_Source, T1_Result> selector) {
                     this.source = source;
                     this.selector = selector;
@@ -100,8 +100,8 @@ namespace Spike2 {
 
                 public static class List {
                     public readonly struct SelectManyEn<T2_Result> {
-                        public readonly SelectEn<T1_Result> source;
-                        public readonly Func<T1_Result, List<T2_Result>> selector;
+                        readonly SelectEn<T1_Result> source;
+                        readonly Func<T1_Result, List<T2_Result>> selector;
                         public SelectManyEn(SelectEn<T1_Result> source, Func<T1_Result, List<T2_Result>> selector) {
                             this.source = source;
                             this.selector = selector;
@@ -110,8 +110,8 @@ namespace Spike2 {
                         public WhereEn Where(Func<T2_Result, bool> predicate)
                             => new WhereEn(this, predicate);
                         public readonly struct WhereEn {
-                            public readonly SelectManyEn<T2_Result> source;
-                            public readonly Func<T2_Result, bool> predicate;
+                            readonly SelectManyEn<T2_Result> source;
+                            readonly Func<T2_Result, bool> predicate;
                             public WhereEn(SelectManyEn<T2_Result> source, Func<T2_Result, bool> predicate) {
                                 this.source = source;
                                 this.predicate = predicate;
@@ -120,8 +120,8 @@ namespace Spike2 {
                             public SelectEn<TResult> Select<TResult>(Func<T2_Result, TResult> selector)
                                 => new SelectEn<TResult>(this, selector);
                             public readonly struct SelectEn<T4_Result> {
-                                public readonly WhereEn source;
-                                public readonly Func<T2_Result, T4_Result> selector;
+                                readonly WhereEn source;
+                                readonly Func<T2_Result, T4_Result> selector;
                                 public SelectEn(WhereEn source, Func<T2_Result, T4_Result> selector) {
                                     this.source = source;
                                     this.selector = selector;
@@ -145,7 +145,6 @@ namespace Spike2 {
                                     }
                                     return result.ToArray();
                                 }
-
                             }
                         }
                     }
