@@ -22,6 +22,8 @@ remove #nullable disable/#nullable restore from generation
 
 make editor.config
 
+make tests internals visible to assembly and mark all classes in generato private
+
 ~~mark generated structs readonly~~
 
 ~~nullable annotations in all projects~~

@@ -435,7 +435,7 @@ public static class Executor {{
                         "List`1" => SourceType.List,
                         _ => throw new InvalidOperationException()
                     };
-                    Assert.AreEqual(sourceType.ToString(), x.ReturnType.DeclaringType!.Name);
+                    Assert.AreEqual(CodeGenerationTraits.RootStaticTypePrefix + sourceType.ToString() + "`1", x.ReturnType.DeclaringType!.Name);
                     Assert.NotNull(x.ReturnType.GetCustomAttribute(typeof(IsReadOnlyAttribute)));
                     return new MetaLinqMethodInfo(
                         sourceType,

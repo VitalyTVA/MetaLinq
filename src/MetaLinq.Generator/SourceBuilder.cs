@@ -36,43 +36,47 @@ using System.Buffers;");
         }
         static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
             EmitExtensionMethod(source, builder, intermediate);
-            using(builder.BuildType(out CodeBuilder sourceTypeBuilder, TypeModifiers.StaticClass, source.GetEnumerableSourceName(), partial: true)) {
-                var sourceGenericArg = "Source".GetLevelGenericType(0);
+            var sourceGenericArg = "TSource";
+            using (builder.BuildType(out CodeBuilder sourceTypeBuilder, 
+                TypeModifiers.StaticClass, 
+                source.GetEnumerableSourceName(), 
+                partial: true, 
+                generics: sourceGenericArg)
+            ) {
                 var enumerableSourceType = source.GetRootSourceType(sourceGenericArg);
                 var context = new EmitContext(0, enumerableSourceType, sourceGenericArg, null);
                 EmitStruct(source, intermediate, sourceTypeBuilder, context);
             }
         }
-        static void EmitExtensionMethod(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
+        static void EmitExtensionMethod(SourceType source, CodeBuilder builder, IntermediateNode intermediate)
+        {
             var sourceName = source.GetEnumerableSourceName();
             var argumentName = intermediate.GetArgumentName();
             var enumerableKind = intermediate.GetEnumerableKind();
-            var methodArgumentType = intermediate switch {
+            var methodArgumentType = intermediate switch
+            {
                 WhereNode => "Func<TSource, bool>",
                 SelectNode => "Func<TSource, TResult>",
                 _ => throw new NotImplementedException(),
             };
             var methodEnumerableSourceType = source.GetRootSourceType("TSource");
-            var additionalTypeArgs = intermediate switch {
-                WhereNode => null,
-                SelectNode => ", TResult",
-                _ => throw new NotImplementedException(),
-            };
-            using(builder.BuildType(out CodeBuilder classBuilder, TypeModifiers.StaticClass, "MetaEnumerable", partial: true)) {
+            var ownTypeArg = intermediate.GetOwnTypeArg("TResult");
+            var ownTypeArgsList = CodeGenerationTraits.ToTypeArgsList(ownTypeArg);
+            using (builder.BuildType(out CodeBuilder classBuilder, TypeModifiers.StaticClass, "MetaEnumerable", partial: true))
+            {
                 classBuilder.AppendMultipleLines($@"
-public static {sourceName}.{enumerableKind}En<TSource{additionalTypeArgs}> {enumerableKind}<TSource{additionalTypeArgs}>(this {methodEnumerableSourceType} source, {methodArgumentType} {argumentName})
-    => new {sourceName}.{enumerableKind}En<TSource{additionalTypeArgs}>(source, {argumentName});");
+public static {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList} {enumerableKind}<TSource{(ownTypeArg != null ? ", " + ownTypeArg : null)}>(this {methodEnumerableSourceType} source, {methodArgumentType} {argumentName})
+    => new {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList}(source, {argumentName});");
             }
         }
 
         static void EmitStruct(SourceType source, IntermediateNode intermediate, CodeBuilder builder, EmitContext context) {
             var argumentName = intermediate.GetArgumentName();
             var argumentType = intermediate switch {
-                WhereNode => $"Func<{context.GenericArg}, bool>",
-                SelectNode => $"Func<{context.GenericArg}, {"Result".GetLevelGenericType(context.Level)}>",
+                WhereNode => $"Func<{context.SourceGenericArg}, bool>",
+                SelectNode => $"Func<{context.SourceGenericArg}, {"Result".GetLevelGenericType(context.Level)}>",
                 _ => throw new NotImplementedException(),
             };
-            var additionalTypeArgs = intermediate.GetAdditionalTypeArgs(context);
             var enumerableKind = intermediate.GetEnumerableKind();
             var nodes = intermediate.GetNodes().ToList();
             bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
@@ -81,7 +85,7 @@ public static {sourceName}.{enumerableKind}En<TSource{additionalTypeArgs}> {enum
                 TypeModifiers.ReadonlyStruct,
                 enumerableKind + "En",
                 isPublic: true,
-                generics: context.GenericArg + additionalTypeArgs,
+                generics: intermediate.GetOwnTypeArg(context),
                 baseType: implementIEnumerable ? $"IEnumerable<{outputType}>" : null)
             ) {
                 structBuilder.AppendMultipleLines($@"
@@ -102,7 +106,7 @@ public {enumerableKind}En({context.SourceType} source, {argumentType} {argumentN
                             break;
                         //case IntermediateNode:
                         //    //var nextContext = new EmitContext(context.Level + 1, $"{typeName}<{generics}>",  context);
-                        //    EmitGetEnumerator(source, structBuilder, intermediate, nextContext);
+                        //    EmitStruct(source, structBuilder, intermediate, nextContext);
                         //    break;
                         default:
                             throw new NotImplementedException();
@@ -120,14 +124,14 @@ public {enumerableKind}En({context.SourceType} source, {argumentType} {argumentN
             };
             var outputType = intermediate.GetOutputType(context);
             var enumerableKind = intermediate.GetEnumerableKind();
-            var additionalTypeArgs = intermediate.GetAdditionalTypeArgs(context);
+            var ownTypeArgsList = CodeGenerationTraits.ToTypeArgsList(intermediate.GetOwnTypeArg(context));
             builder.AppendLine("#nullable disable");
             using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
                 enumeratorBuilder.AppendMultipleLines($@"
-{enumerableKind}En<{context.GenericArg}{additionalTypeArgs}> source;
+{enumerableKind}En{ownTypeArgsList} source;
 int index;
 {outputType} current;
-public Enumerator({enumerableKind}En<{context.GenericArg}{additionalTypeArgs}> source) {{
+public Enumerator({enumerableKind}En{ownTypeArgsList} source) {{
     this.source = source;
     index = -1;
     current = default;
@@ -217,9 +221,12 @@ foreach(var item in source) {");
         }
     }
 
-    record EmitContext(int Level, string SourceType, string GenericArg, EmitContext? parent);
+    public record EmitContext(int Level, string SourceType, string SourceGenericArg, EmitContext? parent);
 
-    static class CodeGenerationTraits {
+    public static class CodeGenerationTraits {
+        public static string? ToTypeArgsList(string? ownTypeArg) {
+            return ownTypeArg == null ? null : $"<{ownTypeArg}>";
+        }
         public static string GetRootSourceType(this SourceType source, string sourceGenericArg) {
             return source switch {
                 SourceType.List => $"List<{sourceGenericArg}>",
@@ -228,8 +235,9 @@ foreach(var item in source) {");
             };
         }
         public static string GetLevelGenericType(this string name, int level) => $"T{level}_{name}";
+        public const string RootStaticTypePrefix = "Meta_";
         public static string GetEnumerableSourceName(this SourceType source) {
-            return source switch {
+            return RootStaticTypePrefix + source switch {
                 SourceType.List => "List",
                 SourceType.Array => "Array",
                 _ => throw new NotImplementedException(),
@@ -242,16 +250,19 @@ foreach(var item in source) {");
                 _ => throw new NotImplementedException(),
             };
         }
-        public static string? GetAdditionalTypeArgs(this IntermediateNode intermediate, EmitContext context) {
+        public static string? GetOwnTypeArg(this IntermediateNode intermediate, EmitContext context) {
+            return intermediate.GetOwnTypeArg("Result".GetLevelGenericType(context.Level));
+        }
+        public static string? GetOwnTypeArg(this IntermediateNode intermediate, string argName) {
             return intermediate switch {
                 WhereNode => null,
-                SelectNode => $", {"Result".GetLevelGenericType(context.Level)}",
+                SelectNode => argName,
                 _ => throw new NotImplementedException(),
             };
         }
         public static string GetOutputType(this IntermediateNode intermediate, EmitContext context) {
             return intermediate switch {
-                WhereNode => context.GenericArg,
+                WhereNode => context.SourceGenericArg,
                 SelectNode => "Result".GetLevelGenericType(context.Level),
                 _ => throw new NotImplementedException(),
             };
