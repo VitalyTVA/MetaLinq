@@ -83,6 +83,7 @@ namespace Spike2 {
                 this.source = source;
                 this.selector = selector;
             }
+            public WhereEn Where(Func<T1_Result, bool> predicate) => new WhereEn(this, predicate);
             public readonly struct WhereEn {
                 readonly SelectEn<T1_Result> source;
                 readonly Func<T1_Result, bool> predicate;

@@ -1,3 +1,5 @@
+kill all MetaEnumerable_Generated stuff
+
 SmallArray no alloc helper to pass several parameters to method
 
 diagnostics error if no reference to MetaLinq.dll (INamedTypeSymbol for MetaLinq.Enumerable not found in SyntaxContextReceiver)

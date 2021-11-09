@@ -257,18 +257,18 @@ namespace MetaLinqTests.Unit {
         #endregion
 
         #region select and where
-        //[Test]
-        //public void Array_Select_Where_ToArray() {
-        //    AssertGeneration(
-        //        "int[] __() => Data.Array(10).Select(x => x.Int).Where(x => x < 5).ToArray();",
-        //        Get0To4IntAssert(),
-        //        new MetaLinqMethodInfo[] {
-        //            //new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
-        //            //    new StructMethod("ToArray")
-        //            //}, implementsIEnumerable: false)
-        //        }
-        //    );
-        //}
+        [Test]
+        public void Array_Select_Where_ToArray() {
+            AssertGeneration(
+                "int[] __() => Data.Array(10).Select(x => x.Int).Where(x => x < 5).ToArray();",
+                Get0To4IntAssert(),
+                new MetaLinqMethodInfo[] {
+                    //new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    //    new StructMethod("ToArray")
+                    //}, implementsIEnumerable: false)
+                }
+            );
+        }
         #endregion
 
         #region skip

@@ -69,6 +69,14 @@ public static {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList} {enumera
     => new {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList}(source, {argumentName});");
             }
         }
+        static void EmitStructMethod(string outputType, CodeBuilder builder, IntermediateNode intermediate) {
+            if(intermediate is WhereNode) {
+                //something like EmitExtensionMethod here...
+                var nextIntermediateType = intermediate.GetEnumerableKind();
+                builder.AppendLine($"public {nextIntermediateType}En {nextIntermediateType}(Func<{outputType}, bool> predicate) => new WhereEn(this, predicate);");
+            } else
+                throw new NotImplementedException();
+        }
 
         static void EmitStruct(SourceType source, IntermediateNode intermediate, CodeBuilder builder, EmitContext context) {
             var argumentName = intermediate.GetArgumentName();
@@ -81,11 +89,13 @@ public static {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList} {enumera
             var nodes = intermediate.GetNodes().ToList();
             bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
             var outputType = intermediate.GetOutputType(context);
-            using(builder.BuildType(out CodeBuilder structBuilder,
+            string? generics = intermediate.GetOwnTypeArg(context);
+            string typeName = enumerableKind + "En";
+            using (builder.BuildType(out CodeBuilder structBuilder,
                 TypeModifiers.ReadonlyStruct,
-                enumerableKind + "En",
+                typeName,
                 isPublic: true,
-                generics: intermediate.GetOwnTypeArg(context),
+                generics: generics,
                 baseType: implementIEnumerable ? $"IEnumerable<{outputType}>" : null)
             ) {
                 structBuilder.AppendMultipleLines($@"
@@ -104,10 +114,11 @@ public {enumerableKind}En({context.SourceType} source, {argumentType} {argumentN
                         case TerminalNode { Type: TerminalNodeType.Enumerable }:
                             EmitGetEnumerator(source, structBuilder, intermediate, context);
                             break;
-                        //case IntermediateNode:
-                        //    //var nextContext = new EmitContext(context.Level + 1, $"{typeName}<{generics}>",  context);
-                        //    EmitStruct(source, structBuilder, intermediate, nextContext);
-                        //    break;
+                        case IntermediateNode nextIntermediate:
+                            EmitStructMethod(outputType, structBuilder, nextIntermediate);
+                            var nextContext = new EmitContext(context.Level + 1, $"{typeName}{CodeGenerationTraits.ToTypeArgsList(generics)}", outputType, context);
+                            EmitStruct(source, nextIntermediate, structBuilder, nextContext);
+                            break;
                         default:
                             throw new NotImplementedException();
                     }
