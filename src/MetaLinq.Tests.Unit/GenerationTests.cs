@@ -229,6 +229,31 @@ namespace MetaLinqTests.Unit {
                 }
             );
         }
+
+        [Test]
+        public void Array_SelectAndWhere_ToArray()
+        {
+            AssertGeneration(
+                new (string code, Action<Data[]> assert)[] { 
+                    (
+                        "Data[] __() => Data.Array(5).Select(x => x).ToArray();",
+                        Get0To4DataAssert()
+                    ),
+                    (
+                        "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
+                        Get0To4DataAssert()
+                    )
+                },
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("ToArray")
+                    }, implementsIEnumerable: false),
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("ToArray")
+                    }, implementsIEnumerable: false),
+                }
+            );
+        }
         #endregion
 
         #region select and where

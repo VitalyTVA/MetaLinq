@@ -36,7 +36,7 @@ using System.Buffers;");
         }
         static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
             EmitExtensionMethod(source, builder, intermediate);
-            using(builder.BuildType(out CodeBuilder sourceTypeBuilder, TypeModifiers.StaticClass, source.GetEnumerableSourceName())) {
+            using(builder.BuildType(out CodeBuilder sourceTypeBuilder, TypeModifiers.StaticClass, source.GetEnumerableSourceName(), partial: true)) {
                 var sourceGenericArg = "Source".GetLevelGenericType(0);
                 var enumerableSourceType = source.GetRootSourceType(sourceGenericArg);
                 var context = new EmitContext(0, enumerableSourceType, sourceGenericArg, null);
