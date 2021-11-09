@@ -20,6 +20,8 @@ unit-test Current implementation in struct enumerator
 
 remove #nullable disable/#nullable restore from generation
 
+make editor.config
+
 ~~mark generated structs readonly~~
 
 ~~nullable annotations in all projects~~

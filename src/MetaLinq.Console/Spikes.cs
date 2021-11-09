@@ -72,19 +72,39 @@ namespace Spike2 {
                 .Where(x => x > 2)
                 .Select(x => x.ToString());
         }
-        public static Array.WhereEn<TSource> Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
-            => new Array.WhereEn<TSource>(source, predicate);
+        public static Array<TSource>.WhereEn Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
+            => new Array<TSource>.WhereEn(source, predicate);
     }
-    static partial class Array {
-        public readonly struct SelectEn<T0_Source, T0_Result> {
+    static partial class Array<T0_Source> {
+        public readonly struct SelectEn<T1_Result> {
             readonly T0_Source[] source;
-            readonly Func<T0_Source, T0_Result> selector;
-            public SelectEn(T0_Source[] source, Func<T0_Source, T0_Result> selector) {
+            readonly Func<T0_Source, T1_Result> selector;
+            public SelectEn(T0_Source[] source, Func<T0_Source, T1_Result> selector) {
                 this.source = source;
                 this.selector = selector;
             }
+            public readonly struct WhereEn {
+                readonly SelectEn<T1_Result> source;
+                readonly Func<T1_Result, bool> predicate;
+                public WhereEn(SelectEn<T1_Result> source, Func<T1_Result, bool> predicate) {
+                    this.source = source;
+                    this.predicate = predicate;
+                }
+                public T1_Result[] ToArray() {
+                    using var result = new LargeArrayBuilder<T1_Result>(ArrayPool<T1_Result>.Shared, false);
+                    int length = source.source.Length;
+                    for(int i = 0; i < length; i++) {
+                        var itemT0 = source.source[i];
+                        var itemT1 = source.selector(itemT0);
+                        if(predicate(itemT1)) {
+                            result.Add(itemT1);
+                        }
+                    }
+                    return result.ToArray();
+                }
+            }
         }
-        public readonly struct WhereEn<T0_Source> {
+        public readonly struct WhereEn {
             readonly T0_Source[] source;
             readonly Func<T0_Source, bool> predicate;
             public WhereEn(T0_Source[] source, Func<T0_Source, bool> predicate) {
@@ -94,49 +114,49 @@ namespace Spike2 {
 
             public SelectEn<TResult> Select<TResult>(Func<T0_Source, TResult> selector) 
                 => new SelectEn<TResult>(this, selector);
-            public readonly struct SelectEn<T1_Result> {
-                readonly WhereEn<T0_Source> source;
-                readonly Func<T0_Source, T1_Result> selector;
-                public SelectEn(WhereEn<T0_Source> source, Func<T0_Source, T1_Result> selector) {
+            public readonly struct SelectEn<T2_Result> {
+                readonly WhereEn source;
+                readonly Func<T0_Source, T2_Result> selector;
+                public SelectEn(WhereEn source, Func<T0_Source, T2_Result> selector) {
                     this.source = source;
                     this.selector = selector;
                 }
 
 
-                public List.SelectManyEn<TResult> SelectMany<TResult, TResultEnumerable>(Func<T1_Result, List<TResult>> selector) 
+                public List.SelectManyEn<TResult> SelectMany<TResult, TResultEnumerable>(Func<T2_Result, List<TResult>> selector) 
                     => new List.SelectManyEn<TResult>(this, selector);
 
                 public static class List {
-                    public readonly struct SelectManyEn<T2_Result> {
-                        readonly SelectEn<T1_Result> source;
-                        readonly Func<T1_Result, List<T2_Result>> selector;
-                        public SelectManyEn(SelectEn<T1_Result> source, Func<T1_Result, List<T2_Result>> selector) {
+                    public readonly struct SelectManyEn<T3_Result> {
+                        readonly SelectEn<T2_Result> source;
+                        readonly Func<T2_Result, List<T3_Result>> selector;
+                        public SelectManyEn(SelectEn<T2_Result> source, Func<T2_Result, List<T3_Result>> selector) {
                             this.source = source;
                             this.selector = selector;
                         }
 
-                        public WhereEn Where(Func<T2_Result, bool> predicate)
+                        public WhereEn Where(Func<T3_Result, bool> predicate)
                             => new WhereEn(this, predicate);
                         public readonly struct WhereEn {
-                            readonly SelectManyEn<T2_Result> source;
-                            readonly Func<T2_Result, bool> predicate;
-                            public WhereEn(SelectManyEn<T2_Result> source, Func<T2_Result, bool> predicate) {
+                            readonly SelectManyEn<T3_Result> source;
+                            readonly Func<T3_Result, bool> predicate;
+                            public WhereEn(SelectManyEn<T3_Result> source, Func<T3_Result, bool> predicate) {
                                 this.source = source;
                                 this.predicate = predicate;
                             }
 
-                            public SelectEn<TResult> Select<TResult>(Func<T2_Result, TResult> selector)
+                            public SelectEn<TResult> Select<TResult>(Func<T3_Result, TResult> selector)
                                 => new SelectEn<TResult>(this, selector);
-                            public readonly struct SelectEn<T4_Result> {
+                            public readonly struct SelectEn<T5_Result> {
                                 readonly WhereEn source;
-                                readonly Func<T2_Result, T4_Result> selector;
-                                public SelectEn(WhereEn source, Func<T2_Result, T4_Result> selector) {
+                                readonly Func<T3_Result, T5_Result> selector;
+                                public SelectEn(WhereEn source, Func<T3_Result, T5_Result> selector) {
                                     this.source = source;
                                     this.selector = selector;
                                 }
 
-                                public T4_Result[] ToArray() {
-                                    using var result = new LargeArrayBuilder<T4_Result>(ArrayPool<T4_Result>.Shared, false);
+                                public T5_Result[] ToArray() {
+                                    using var result = new LargeArrayBuilder<T5_Result>(ArrayPool<T5_Result>.Shared, false);
                                     int length = source.source.source.source.source.Length;
                                     for(int i = 0; i < length; i++) {
                                         var itemT0 = source.source.source.source.source[i];

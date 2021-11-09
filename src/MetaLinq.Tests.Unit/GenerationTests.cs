@@ -16,69 +16,6 @@ using System.Runtime.CompilerServices;
 namespace MetaLinqTests.Unit {
     [TestFixture]
     public class GenerationTests {
-        #region select
-        [Test]
-        public void Array_Select_ToArray() {
-            AssertGeneration(
-                "int[] __() => Data.Array(5).Select(x => x.Int).ToArray();",
-                Get0To4IntAssert(),
-                new[] {
-                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
-                        new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
-                }
-            );
-        }
-        [Test]
-        public void List_Select_ToArray() {
-            AssertGeneration(
-                "int[] __() => Data.List(5).Select(x => x.Int).ToArray();",
-                Get0To4IntAssert(),
-                new[] {
-                    new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
-                        new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
-                }
-            );
-        }
-        [Test]
-        public void Array_Select_StandardToArray() {
-            AssertGeneration(
-                "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(5).Select(x => x.Int));",
-                Get0To4IntAssert(),
-                new[] {
-                    new MetaLinqMethodInfo(SourceType.Array, "Select", new StructMethod[] {
-                        new StructMethod("GetEnumerator")
-                    }, implementsIEnumerable: true)
-                }
-            );
-        }
-        [Test]
-        public void List_Select_StandardToArray() {
-            AssertGeneration(
-                "int[] __() => System.Linq.Enumerable.ToArray(Data.List(5).Select(x => x.Int));",
-                Get0To4IntAssert(),
-                new[] {
-                    new MetaLinqMethodInfo(SourceType.List, "Select", new StructMethod[] {
-                        new StructMethod("GetEnumerator")
-                    }, implementsIEnumerable: true)
-                }
-            );
-        }
-        [Test]
-        public void Array_Select_Foreach() {
-            AssertGeneration(
-                "int[] __()  { List<int> result = new(); foreach(var item in Data.Array(5).Select(x => x.Int)) result.Add(item); return result.ToArray(); }",
-                Get0To4IntAssert(),
-                new[] {
-                    new MetaLinqMethodInfo(SourceType.Array, "Select", new StructMethod[] {
-                        new StructMethod("GetEnumerator")
-                    }, implementsIEnumerable: true)
-                }
-            );
-        }
-        #endregion
-
         #region where
         [Test]
         public void Array_Where_ToArray() {
@@ -229,6 +166,84 @@ namespace MetaLinqTests.Unit {
                 addStadardLinqUsing: true
             );
         }
+        #endregion
+
+        #region select
+        [Test]
+        public void Array_Select_ToArray() {
+            AssertGeneration(
+                "int[] __() => Data.Array(5).Select(x => x.Int).ToArray();",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("ToArray")
+                    }, implementsIEnumerable: false)
+                }
+            );
+        }
+        [Test]
+        public void List_Select_ToArray() {
+            AssertGeneration(
+                "int[] __() => Data.List(5).Select(x => x.Int).ToArray();",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                        new StructMethod("ToArray")
+                    }, implementsIEnumerable: false)
+                }
+            );
+        }
+        [Test]
+        public void Array_Select_StandardToArray() {
+            AssertGeneration(
+                "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(5).Select(x => x.Int));",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new StructMethod[] {
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                }
+            );
+        }
+        [Test]
+        public void List_Select_StandardToArray() {
+            AssertGeneration(
+                "int[] __() => System.Linq.Enumerable.ToArray(Data.List(5).Select(x => x.Int));",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.List, "Select", new StructMethod[] {
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                }
+            );
+        }
+        [Test]
+        public void Array_Select_Foreach() {
+            AssertGeneration(
+                "int[] __()  { List<int> result = new(); foreach(var item in Data.Array(5).Select(x => x.Int)) result.Add(item); return result.ToArray(); }",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new StructMethod[] {
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                }
+            );
+        }
+        #endregion
+
+        #region select and where
+        //[Test]
+        //public void Array_Select_Where_ToArray() {
+        //    AssertGeneration(
+        //        "int[] __() => Data.Array(10).Select(x => x.Int).Where(x => x < 5).ToArray();",
+        //        Get0To4IntAssert(),
+        //        new MetaLinqMethodInfo[] {
+        //            //new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+        //            //    new StructMethod("ToArray")
+        //            //}, implementsIEnumerable: false)
+        //        }
+        //    );
+        //}
         #endregion
 
         #region skip

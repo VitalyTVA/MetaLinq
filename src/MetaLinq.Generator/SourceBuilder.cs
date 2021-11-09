@@ -39,7 +39,7 @@ using System.Buffers;");
             using(builder.BuildType(out CodeBuilder sourceTypeBuilder, TypeModifiers.StaticClass, source.GetEnumerableSourceName())) {
                 var sourceGenericArg = "Source".GetLevelGenericType(0);
                 var enumerableSourceType = source.GetRootSourceType(sourceGenericArg);
-                var context = new EmitContext(0, enumerableSourceType, sourceGenericArg);
+                var context = new EmitContext(0, enumerableSourceType, sourceGenericArg, null);
                 EmitStruct(source, intermediate, sourceTypeBuilder, context);
             }
         }
@@ -100,6 +100,10 @@ public {enumerableKind}En({context.SourceType} source, {argumentType} {argumentN
                         case TerminalNode { Type: TerminalNodeType.Enumerable }:
                             EmitGetEnumerator(source, structBuilder, intermediate, context);
                             break;
+                        //case IntermediateNode:
+                        //    //var nextContext = new EmitContext(context.Level + 1, $"{typeName}<{generics}>",  context);
+                        //    EmitGetEnumerator(source, structBuilder, intermediate, nextContext);
+                        //    break;
                         default:
                             throw new NotImplementedException();
                     }
@@ -213,7 +217,7 @@ foreach(var item in source) {");
         }
     }
 
-    record EmitContext(int Level, string SourceType, string GenericArg/*, EmitContext parent*/);
+    record EmitContext(int Level, string SourceType, string GenericArg, EmitContext? parent);
 
     static class CodeGenerationTraits {
         public static string GetRootSourceType(this SourceType source, string sourceGenericArg) {
