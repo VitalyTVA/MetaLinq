@@ -10,8 +10,8 @@ namespace MetaLinq {
         static void Main(string[] args) {
             //MemoryProfiler.CollectAllocations(false);
             int[] data = data = Enumerable.ToArray(Enumerable.Range(0, 5));
-            GetResultMeta(data);
-            GetResultMeta(data);
+            //GetResultMeta(data);
+            //GetResultMeta(data);
             GetResultStandard(data);
             GetResultStandard(data);
             //MemoryProfiler.CollectAllocations(true);
@@ -31,9 +31,9 @@ namespace MetaLinq {
             public List<int> IntList => Ints.ToList();
         }
 
-        static List<int> GetResultMeta(int[] data) {
-            return data.Select_Meta(static x => x * 10).Where_Meta(static x => x % 100 == 0).ToList_Meta();
-        }
+        //static List<int> GetResultMeta(int[] data) {
+        //    return data.Select_Meta(static x => x * 10).Where_Meta(static x => x % 100 == 0).ToList_Meta();
+        //}
         static List<int> GetResultStandard(int[] data) {
             return Enumerable.ToList(Enumerable.Where(Enumerable.Select(data, static x => x * 10), static x => x % 100 == 0));
         }

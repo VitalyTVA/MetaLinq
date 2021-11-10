@@ -55,6 +55,19 @@ namespace MetaLinqTests.Unit {
             );
         }
         [Test]
+        public void ListParameter_Where_ToArray() {
+            AssertGeneration(
+                "Data[] __() => GetData(Data.List(10));",
+                Get0To4DataAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                        new StructMethod("ToArray")
+                    }, implementsIEnumerable: false)
+                },
+                additionalClassCode: "static Data[] GetData(List<Data> list) => list.Where(x => x.Int < 5).ToArray();"
+            );
+        }
+        [Test]
         public void ArrayProperty_Where_ToArray() {
             AssertGeneration(
                 "Data[] __() => DataProperty.Where(x => x.Int < 5).ToArray();",
@@ -107,7 +120,7 @@ namespace MetaLinqTests.Unit {
         [Test]
         public void ArrayAndList_Where_ToArray_And_StandardToArray_AndForeach() {
             AssertGeneration(
-                new (string code, Action<Data[]> assert)[] { 
+                new (string code, Action<Data[]> assert)[] {
                     (
                         "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
                         Get0To4DataAssert()
@@ -231,10 +244,9 @@ namespace MetaLinqTests.Unit {
         }
 
         [Test]
-        public void Array_SelectAndWhere_ToArray()
-        {
+        public void Array_SelectAndWhere_ToArray() {
             AssertGeneration(
-                new (string code, Action<Data[]> assert)[] { 
+                new (string code, Action<Data[]> assert)[] {
                     (
                         "Data[] __() => Data.Array(5).Select(x => x).ToArray();",
                         Get0To4DataAssert()
@@ -262,13 +274,21 @@ namespace MetaLinqTests.Unit {
             AssertGeneration(
                 "int[] __() => Data.Array(10).Select(x => x.Int).Where(x => x < 5).ToArray();",
                 Get0To4IntAssert(),
-                new MetaLinqMethodInfo[] {
-                    //new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
-                    //    new StructMethod("ToArray")
-                    //}, implementsIEnumerable: false)
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("ToArray")
+                        })
+                    }, implementsIEnumerable: false)
                 }
             );
         }
+        //List_Select_Where_ToArray
+        //Array_Where_Select_ToArray
+        //Enumerators
+        //Where_Select
+        //Long mixed chains with
+        //terminal nodes on different levels
         #endregion
 
         #region skip
@@ -300,30 +320,43 @@ namespace MetaLinqTests.Unit {
                 CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.ToArray());
             };
         }
-        record StructMethod(string Name);
-        enum SourceType { Array, List }
-        sealed class MetaLinqMethodInfo {
-            public readonly SourceType SourceType;
+        class StructMethod {
             public readonly string Name;
             public readonly StructMethod[] ResultMethods;
             public readonly bool ImplementsIEnumerable;
-
-            public MetaLinqMethodInfo(SourceType sourceType, string name, StructMethod[] resultMethods, bool implementsIEnumerable) {
-                SourceType = sourceType;
+            public StructMethod(string name, StructMethod[]? resultMethods = null, bool implementsIEnumerable = false) {
                 Name = name;
-                ResultMethods = resultMethods;
+                ResultMethods = resultMethods ?? new StructMethod[0];
                 ImplementsIEnumerable = implementsIEnumerable;
             }
             public override bool Equals(object? obj) {
-                return obj is MetaLinqMethodInfo info &&
-                       SourceType == info.SourceType &&
-                       Name == info.Name &&
-                       ImplementsIEnumerable == info.ImplementsIEnumerable &&
-                       StructuralComparisons.StructuralEqualityComparer.Equals(ResultMethods, info.ResultMethods);
+                return obj is StructMethod method &&
+                       Name == method.Name &&
+                       ImplementsIEnumerable == method.ImplementsIEnumerable &&
+                       StructuralComparisons.StructuralEqualityComparer.Equals(ResultMethods, method.ResultMethods);
+            }
+            public override int GetHashCode() {
+                throw new NotImplementedException();
             }
             public override string ToString() {
-                var methods = string.Join(", ", ResultMethods.Select(x => x.Name));
-                return $"SourceType: {SourceType}, Name: {Name}, IEnumerable: {ImplementsIEnumerable}, Methods: {methods}";
+                var methods = string.Join(", ", ResultMethods.Select(x => x.ToString()));
+                return $"Name: {Name}, IEnumerable: {ImplementsIEnumerable}, Methods: [ {methods} ]";
+            }
+        }
+        enum SourceType { Array, List }
+        sealed class MetaLinqMethodInfo : StructMethod {
+            public readonly SourceType SourceType;
+
+            public MetaLinqMethodInfo(SourceType sourceType, string name, StructMethod[] resultMethods, bool implementsIEnumerable)
+                : base(name, resultMethods, implementsIEnumerable) {
+                SourceType = sourceType;
+            }
+            public override bool Equals(object? obj) {
+                return base.Equals(obj) && obj is MetaLinqMethodInfo info &&
+                       SourceType == info.SourceType;
+            }
+            public override string ToString() {
+                return $"SourceType: {SourceType}, {base.ToString()}";
             }
             public override int GetHashCode() {
                 throw new NotImplementedException();
@@ -383,7 +416,16 @@ public static class Executor {{
             var dllPath = Path.Combine(location, NUnit.Framework.TestContext.CurrentContext.Test.Name + ".dll");
             var emitResult = outputCompilation.Emit(dllPath);
             if(!emitResult.Success) {
-                foreach(var item in generatedCode) {
+                foreach(var code in generatedCode) {
+                    var split = code.Split(Environment.NewLine);
+                    int line = 1;
+                    foreach(var item in split) {
+                        Debug.Write(line);
+                        Debug.WriteLine(item);
+                        line++;
+                    }
+                }
+                foreach(var item in emitResult.Diagnostics) {
                     Debug.WriteLine(item);
                 }
             }
@@ -418,7 +460,7 @@ public static class Executor {{
             var allGeneratedTypes = assembly.GetTypes()
                 .Where(x => x != extensionsType && x != executorType && !x.IsNested && !typeof(Attribute).IsAssignableFrom(x))
                 .SelectMany(x => {
-                    var nested = x.GetNestedTypes();
+                    var nested = Extensions.Flatten(x.GetNestedTypes(), x => x.GetNestedTypes().Where(x => x.Name != CodeGenerationTraits.EnumeratorTypeName));
                     CollectionAssert.IsNotEmpty(nested);
                     return nested;
                 })
@@ -443,7 +485,7 @@ public static class Executor {{
                         x.ReturnType
                             .GetMethods()
                             .Where(y => y.DeclaringType == x.ReturnType)
-                            .Select(y => new StructMethod(y.Name))
+                            .Select(y => CollectMethods(expectedGeneratedTypes, y))
                             .ToArray(),
                         implementsIEnumerable: implementsIEnumerable
                     );
@@ -452,6 +494,26 @@ public static class Executor {{
                 .ToArray();
             CollectionAssert.AreEqual(methods, actualMethods);
             CollectionAssert.AreEquivalent(expectedGeneratedTypes.ToArray(), allGeneratedTypes);
+        }
+        static StructMethod CollectMethods(HashSet<Type> expectedGeneratedTypes, MethodInfo method) {
+            //TODO uncomment all here
+            bool implementsIEnumerable = false;// x.ReturnType.GetInterfaces().Where(x => x.Name.Contains("IEnumerable")).Count() == 2;
+            if(method is { ReturnType: { IsValueType: true, IsNested: true } } && method.ReturnType.Name != CodeGenerationTraits.EnumeratorTypeName) {
+                expectedGeneratedTypes.Add(method.ReturnType.IsGenericType ? method.ReturnType.GetGenericTypeDefinition() : method.ReturnType);
+                Assert.True(method.ReturnType.IsNestedPublic);
+                Assert.NotNull(method.ReturnType.GetCustomAttribute(typeof(IsReadOnlyAttribute)));
+                return new StructMethod(
+                    method.Name,
+                    method.ReturnType
+                        .GetMethods()
+                        .Where(y => y.DeclaringType == method.ReturnType)
+                        .Select(y => CollectMethods(expectedGeneratedTypes, y))
+                        .ToArray(),
+                    implementsIEnumerable: implementsIEnumerable
+                );
+            } else {
+                return new StructMethod(method.Name);
+            }
         }
     }
 }

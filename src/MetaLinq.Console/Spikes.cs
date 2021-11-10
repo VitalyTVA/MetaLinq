@@ -75,24 +75,24 @@ namespace Spike2 {
         public static Array<TSource>.WhereEn Where<TSource>(this TSource[] source, Func<TSource, bool> predicate)
             => new Array<TSource>.WhereEn(source, predicate);
     }
-    static partial class Array<T0_Source> {
-        public readonly struct SelectEn<T1_Result> {
-            readonly T0_Source[] source;
-            readonly Func<T0_Source, T1_Result> selector;
-            public SelectEn(T0_Source[] source, Func<T0_Source, T1_Result> selector) {
+    static partial class Array<TSource> {
+        public readonly struct SelectEn<T0_Result> { //SourceGenericArg: "TSource" SourceType: "TSource[]"
+            readonly TSource[] source;
+            readonly Func<TSource, T0_Result> selector;
+            public SelectEn(TSource[] source, Func<TSource, T0_Result> selector) {
                 this.source = source;
                 this.selector = selector;
             }
-            public WhereEn Where(Func<T1_Result, bool> predicate) => new WhereEn(this, predicate);
-            public readonly struct WhereEn {
-                readonly SelectEn<T1_Result> source;
-                readonly Func<T1_Result, bool> predicate;
-                public WhereEn(SelectEn<T1_Result> source, Func<T1_Result, bool> predicate) {
+            public WhereEn Where(Func<T0_Result, bool> predicate) => new WhereEn(this, predicate);
+            public readonly struct WhereEn { //SourceGenericArg: "0_Result" SourceType: "SelectEn<T0_Result>"
+                readonly SelectEn<T0_Result> source;
+                readonly Func<T0_Result, bool> predicate;
+                public WhereEn(SelectEn<T0_Result> source, Func<T0_Result, bool> predicate) {
                     this.source = source;
                     this.predicate = predicate;
                 }
-                public T1_Result[] ToArray() {
-                    using var result = new LargeArrayBuilder<T1_Result>(ArrayPool<T1_Result>.Shared, false);
+                public T0_Result[] ToArray() {
+                    using var result = new LargeArrayBuilder<T0_Result>(ArrayPool<T0_Result>.Shared, false);
                     int length = source.source.Length;
                     for(int i = 0; i < length; i++) {
                         var itemT0 = source.source[i];
@@ -106,19 +106,19 @@ namespace Spike2 {
             }
         }
         public readonly struct WhereEn {
-            readonly T0_Source[] source;
-            readonly Func<T0_Source, bool> predicate;
-            public WhereEn(T0_Source[] source, Func<T0_Source, bool> predicate) {
+            readonly TSource[] source;
+            readonly Func<TSource, bool> predicate;
+            public WhereEn(TSource[] source, Func<TSource, bool> predicate) {
                 this.source = source;
                 this.predicate = predicate;
             }
 
-            public SelectEn<TResult> Select<TResult>(Func<T0_Source, TResult> selector) 
+            public SelectEn<TResult> Select<TResult>(Func<TSource, TResult> selector) 
                 => new SelectEn<TResult>(this, selector);
             public readonly struct SelectEn<T2_Result> {
                 readonly WhereEn source;
-                readonly Func<T0_Source, T2_Result> selector;
-                public SelectEn(WhereEn source, Func<T0_Source, T2_Result> selector) {
+                readonly Func<TSource, T2_Result> selector;
+                public SelectEn(WhereEn source, Func<TSource, T2_Result> selector) {
                     this.source = source;
                     this.selector = selector;
                 }

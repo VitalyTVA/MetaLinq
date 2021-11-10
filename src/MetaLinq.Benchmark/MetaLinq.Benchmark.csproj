@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Analyzer Include="..\MetaLinq.Generator\bin\MetaLinq.Generator.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
     <PackageReference Include="LinqAF" Version="3.0.0" />
     <PackageReference Include="NetFabric.Hyperlinq" Version="3.0.0-beta48" />

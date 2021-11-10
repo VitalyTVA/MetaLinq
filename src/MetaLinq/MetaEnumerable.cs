@@ -32,29 +32,10 @@ namespace MetaLinq {
         //    throw NotImplemented();
         //}
 
-        static NotImplementedException NotImplemented() => new NotImplementedException();
+        //static NotImplementedException NotImplemented() => new NotImplementedException();
     }
 
     public static class MetaEnumerable_Generated {
-        public readonly struct SelectResult<TSource, TResult> : IEnumerable<TResult> {
-            internal readonly IEnumerable<TSource> source;
-            internal readonly Func<TSource, TResult> selector;
-            public SelectResult(IEnumerable<TSource> source, Func<TSource, TResult> selector) {
-                this.source = source;
-                this.selector = selector;
-            }
-
-            IEnumerator<TResult> IEnumerable<TResult>.GetEnumerator() {
-                throw new NotImplementedException();
-            }
-            IEnumerator IEnumerable.GetEnumerator() {
-                throw new NotImplementedException();
-            }
-        }
-        public static SelectResult<TSource, TResult> Select_Meta<TSource, TResult>(this TSource[] source, Func<TSource, TResult> selector) {
-            return new SelectResult<TSource, TResult>(source, selector);
-        }
-
         public readonly struct SelectManyResult<TSource, TSourceEnumerable, TResult, TResultEnumerable> : IEnumerable<TResult> 
             where TResultEnumerable : IEnumerable<TResult>
             where TSourceEnumerable : IEnumerable<TSource> {
@@ -84,25 +65,6 @@ namespace MetaLinq {
         }
 
 
-
-        public readonly struct SelectWhereResult<TSource, TResult> : IEnumerable<TResult> {
-            internal readonly SelectResult<TSource, TResult> selectResult;
-            internal readonly Func<TResult, bool> predicate;
-            public SelectWhereResult(SelectResult<TSource, TResult> selectResult, Func<TResult, bool> predicate) {
-                this.selectResult = selectResult;
-                this.predicate = predicate;
-            }
-
-            IEnumerator<TResult> IEnumerable<TResult>.GetEnumerator() {
-                throw new NotImplementedException();
-            }
-            IEnumerator IEnumerable.GetEnumerator() {
-                throw new NotImplementedException();
-            }
-        }
-        public static SelectWhereResult<T1, TSource> Where_Meta<T1, TSource>(this SelectResult<T1, TSource> source, Func<TSource, bool> predicate) {
-            return new SelectWhereResult<T1, TSource>(source, predicate);
-        }
 
         public static List<TResult> ToLis_Meta<TSource, TSourceEnumerable, TResult, TResultEnumerable>(this SelectManyResult<TSource, TSourceEnumerable, TResult, TResultEnumerable> source)
             where TResultEnumerable : IEnumerable<TResult>
@@ -136,24 +98,6 @@ namespace MetaLinq {
                     } else {
                         throw new NotImplementedException();
                     }
-                }
-            } else {
-                throw new NotImplementedException();
-            }
-            //return result;
-            return result.ToArray().AsList();
-        }
-
-        public static List<TSource> ToList_Meta<T1, TSource>(this SelectWhereResult<T1, TSource> source) {
-            //var result = new List<TSource>();
-            using var result = new LargeArrayBuilder<TSource>(ArrayPool<TSource>.Shared, false);
-            if(source.selectResult.source is T1[] array) {
-                var len = array.Length;
-                for(int i = 0; i < len; i++) {
-                    var item = array[i];
-                    var selectResult = source.selectResult.selector(item);
-                    if(source.predicate(selectResult))
-                        result.Add(selectResult);
                 }
             } else {
                 throw new NotImplementedException();

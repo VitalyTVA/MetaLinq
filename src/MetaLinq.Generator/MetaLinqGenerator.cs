@@ -93,6 +93,7 @@ namespace MetaLinq.Generator {
                 ILocalSymbol local => local.Type,
                 IFieldSymbol field => field.Type,
                 IPropertySymbol property => property.Type,
+                IParameterSymbol parameter => parameter.Type,
                 INamedTypeSymbol => null,
                 _ => throw new InvalidOperationException()
             };

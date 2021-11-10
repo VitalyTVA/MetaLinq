@@ -1,3 +1,5 @@
+uncomment all in CollectMethods
+
 kill all MetaEnumerable_Generated stuff
 
 SmallArray no alloc helper to pass several parameters to method
@@ -19,6 +21,8 @@ get rid of record IsExternalInit;
 Dispose/Reset/IEnumerator.Current implementation in struct enumerator (before/after enumeration, after dispose)
 
 unit-test Current implementation in struct enumerator
+
+unit-test Flatten method
 
 remove #nullable disable/#nullable restore from generation
 

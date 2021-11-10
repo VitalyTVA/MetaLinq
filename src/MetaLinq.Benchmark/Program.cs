@@ -42,13 +42,13 @@ namespace MetaLinqBenchmark {
         public List<int> SelectMany_AF() => AF.SelectMany(testData);
 
         [Benchmark]
-        public List<int> Select_Where_Meta() => Meta.Select_Where(ints);
+        public int[] Select_Where_Meta() => Meta.Select_Where(ints);
         [Benchmark]
-        public List<int> Select_Where_Standard() => Standard.Select_Where(ints);
+        public int[] Select_Where_Standard() => Standard.Select_Where(ints);
         [Benchmark]
-        public List<int> Select_Where_Hyper() => Hyper.Select_Where(ints);
+        public int[] Select_Where_Hyper() => Hyper.Select_Where(ints);
         [Benchmark]
-        public List<int> Select_Where_AF() => AF.Select_Where(ints);
+        public int[] Select_Where_AF() => AF.Select_Where(ints);
     }
     class TestData {
         public TestData(int[] ints) {
