@@ -306,7 +306,35 @@ public class GenerationTests {
             }
         );
     }
-    //Enumerators
+
+    [Test]
+    public void Array_Select_Where_StandardToArray() {
+        AssertGeneration(
+            "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Select(x => x.Int).Where(x => x < 5));",
+            Get0To4IntAssert(),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("GetEnumerator")
+                        }, implementsIEnumerable: true)
+                    }, implementsIEnumerable: false)
+            }
+        );
+    }
+    [Test]
+    public void List_Select_Where_ForEach() {
+        AssertGeneration(
+            "int[] __()  { List<int> result = new(); foreach(var item in Data.List(10).Select(x => x.Int).Where(x => x < 5)) result.Add(item); return result.ToArray(); }",
+            Get0To4IntAssert(),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("GetEnumerator")
+                        }, implementsIEnumerable: true)
+                    }, implementsIEnumerable: false)
+            }
+        );
+    }
     //Long mixed chains with
     //terminal nodes on different levels
     #endregion
