@@ -1,11 +1,4 @@
-﻿using System;
-using MetaLinq;
-using System.Linq;
-using System.Collections;
-using System.Collections.Generic;
-using JetBrains.Profiler.Api;
-
-namespace MetaLinq {
+﻿namespace MetaLinq {
     class Program {
         static void Main(string[] args) {
             //MemoryProfiler.CollectAllocations(false);

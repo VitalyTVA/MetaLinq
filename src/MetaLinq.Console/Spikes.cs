@@ -1,9 +1,6 @@
 ﻿using MetaLinq;
 using MetaLinq.Tests;
-using System;
 using System.Buffers;
-using System.Collections;
-using System.Collections.Generic;
 
 namespace Spike1 {
     public static class MetaEnumerable {
