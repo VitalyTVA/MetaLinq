@@ -283,10 +283,35 @@ namespace MetaLinqTests.Unit {
                 }
             );
         }
-        //List_Select_Where_ToArray
-        //Array_Where_Select_ToArray
+        [Test]
+        public void List_Select_Where_ToArray() {
+            AssertGeneration(
+                "int[] __() => Data.List(10).Select(x => x.Int).Where(x => x < 5).ToArray();",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("ToArray")
+                        })
+                    }, implementsIEnumerable: false)
+                }
+            );
+        }
+        [Test]
+        public void Array_Where_Select_ToArray() {
+            AssertGeneration(
+                "int[] __() => Data.Array(10).Where(x => x.Int < 5).Select(x => x.Int).ToArray();",
+                Get0To4IntAssert(),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("Select", new[] {
+                            new StructMethod("ToArray")
+                        })
+                    }, implementsIEnumerable: false)
+                }
+            );
+        }
         //Enumerators
-        //Where_Select
         //Long mixed chains with
         //terminal nodes on different levels
         #endregion
@@ -470,7 +495,7 @@ public static class Executor {{
                 .Where(x => x.DeclaringType == extensionsType)
                 .Select(x => {
                     Assert.False(x.ReturnType.IsPublic);
-                    bool implementsIEnumerable = x.ReturnType.GetInterfaces().Where(x => x.Name.Contains("IEnumerable")).Count() == 2;
+                    bool implementsIEnumerable = ImplementsIEnumerable(x);
                     expectedGeneratedTypes.Add(x.ReturnType.GetGenericTypeDefinition());
                     var sourceType = x.GetParameters()[0].ParameterType.Name switch {
                         "TSource[]" => SourceType.Array,
@@ -497,7 +522,7 @@ public static class Executor {{
         }
         static StructMethod CollectMethods(HashSet<Type> expectedGeneratedTypes, MethodInfo method) {
             //TODO uncomment all here
-            bool implementsIEnumerable = false;// x.ReturnType.GetInterfaces().Where(x => x.Name.Contains("IEnumerable")).Count() == 2;
+            bool implementsIEnumerable = ImplementsIEnumerable(method);
             if(method is { ReturnType: { IsValueType: true, IsNested: true } } && method.ReturnType.Name != CodeGenerationTraits.EnumeratorTypeName) {
                 expectedGeneratedTypes.Add(method.ReturnType.IsGenericType ? method.ReturnType.GetGenericTypeDefinition() : method.ReturnType);
                 Assert.True(method.ReturnType.IsNestedPublic);
@@ -514,6 +539,10 @@ public static class Executor {{
             } else {
                 return new StructMethod(method.Name);
             }
+        }
+
+        static bool ImplementsIEnumerable(MethodInfo method) {
+            return method.ReturnType.GetInterfaces().Where(x => x.Name.Contains("IEnumerable")).Count() == 2;
         }
     }
 }

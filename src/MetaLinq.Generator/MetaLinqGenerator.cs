@@ -16,19 +16,33 @@ namespace MetaLinq.Generator {
             context.RegisterForSyntaxNotifications(() => new SyntaxContextReceiver());
         }
 
+
+        static readonly DiagnosticDescriptor ExceptionDiagnosticDescriptor = CreateDiagnosticDescriptor("ML9999", "Exception", "Exception {0}");
+        static DiagnosticDescriptor CreateDiagnosticDescriptor(string id, string title, string messageFormat, DiagnosticSeverity diagnosticSeverity = DiagnosticSeverity.Error) =>
+            new DiagnosticDescriptor(id, title, messageFormat, "MetaLinq", DiagnosticSeverity.Error, true);
+
+
         public void Execute(GeneratorExecutionContext context) {
             if(context.SyntaxContextReceiver is not SyntaxContextReceiver receiver)
                 return;
-            foreach(var (name, source) in SourceBuilder.BuildSource(receiver.Model)) {
-                if(context.CancellationToken.IsCancellationRequested)
-                    break;
-                context.AddSource(name, SourceText.From(source, Encoding.UTF8));
+            if(receiver.Exception is (var error, var location)) {
+                context.ReportDiagnostic(Diagnostic.Create(ExceptionDiagnosticDescriptor, location, error));
+                return;
+            }
+            try {
+                foreach(var (name, source) in SourceBuilder.BuildSource(receiver.Model)) {
+                    if(context.CancellationToken.IsCancellationRequested)
+                        break;
+                    context.AddSource(name, SourceText.From(source, Encoding.UTF8));
+                }
+            } catch(Exception e) {
+                context.ReportDiagnostic(Diagnostic.Create(ExceptionDiagnosticDescriptor, null, e));
             }
         }
     }
 
     class SyntaxContextReceiver : ISyntaxContextReceiver {
-        public LinqModel Model = new();
+        public readonly LinqModel Model = new();
 
         INamedTypeSymbol? metaEnumerableType;
         INamedTypeSymbol? enumerableType;
@@ -38,7 +52,18 @@ namespace MetaLinq.Generator {
         List<MemberAccessExpressionSyntax> visited = new();
         HashSet<ExpressionSyntax> visitedExpressions = new();
 
+        public (Exception error, Location locaton)? Exception { get; private set; }
+
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context) {
+            if(Exception != null)
+                return;
+            try {
+                OnVisitSyntaxNodeCore(context);
+            } catch(Exception e) {
+                Exception = (e, context.Node.GetLocation());
+            }
+        }
+        void OnVisitSyntaxNodeCore(GeneratorSyntaxContext context) {
             if(metaEnumerableType == null)
                 metaEnumerableType = context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.MetaEnumerable");
             if(enumerableType == null)

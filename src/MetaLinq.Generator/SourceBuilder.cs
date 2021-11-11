@@ -53,8 +53,7 @@ using System.Buffers;");
             var sourceName = source.GetEnumerableSourceName();
             var argumentName = intermediate.GetArgumentName();
             var enumerableKind = intermediate.GetEnumerableKind();
-            var methodArgumentType = intermediate switch
-            {
+            var methodArgumentType = intermediate switch {
                 WhereNode => "Func<TSource, bool>",
                 SelectNode => "Func<TSource, TResult>",
                 _ => throw new NotImplementedException(),
@@ -70,12 +69,16 @@ public static {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList} {enumera
             }
         }
         static void EmitStructMethod(string outputType, CodeBuilder builder, IntermediateNode intermediate) {
-            if(intermediate is WhereNode) {
-                //something like EmitExtensionMethod here...
-                var nextIntermediateType = intermediate.GetEnumerableKind();
-                builder.AppendLine($"public {nextIntermediateType}En {nextIntermediateType}(Func<{outputType}, bool> predicate) => new WhereEn(this, predicate);");
-            } else
-                throw new NotImplementedException();
+            var argumentName = intermediate.GetArgumentName();
+            var enumerableKind = intermediate.GetEnumerableKind();
+            var ownTypeArg = intermediate.GetOwnTypeArg("TResult");
+            var ownTypeArgsList = CodeGenerationTraits.ToTypeArgsList(ownTypeArg);
+            var methodArgumentType = intermediate switch {
+                WhereNode => $"Func<{outputType}, bool>",
+                SelectNode => $"Func<{outputType}, TResult>",
+                _ => throw new NotImplementedException(),
+            };
+            builder.AppendLine($"public {enumerableKind}En{ownTypeArgsList} {enumerableKind}{ownTypeArgsList}({methodArgumentType} {argumentName}) => new {enumerableKind}En{ownTypeArgsList}(this, {argumentName});");
         }
 
         static void EmitStruct(SourceType source, CodeBuilder builder, EmitContext context) {
