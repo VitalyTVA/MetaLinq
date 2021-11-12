@@ -31,9 +31,6 @@ public class LinqModel {
     }
 }
 
-public enum SourceType { List, Array }
-
-public enum ChainElement { Where, Select, ToArray, ToList }
 public abstract class LinqNode {
 }
 
@@ -52,43 +49,58 @@ public sealed class TerminalNode : LinqNode {
     }
 }
 
-public abstract class IntermediateNode : LinqNode {
-    enum NodeType {
-        Where,
-        Select,
-        Terminal,
-    }
-    readonly Dictionary<(NodeType type, TerminalNodeType? terminal), LinqNode> Nodes = new();
-    static (NodeType type, TerminalNodeType? terminal) WhereKey => (NodeType.Where, null);
-    static (NodeType type, TerminalNodeType? terminal) SelectKey => (NodeType.Select, null);
-    static (NodeType type, TerminalNodeType? terminal) ToArrayKey => (NodeType.Terminal, TerminalNodeType.ToArray);
-    static (NodeType type, TerminalNodeType? terminal) ToListKey => (NodeType.Terminal, TerminalNodeType.ToList);
-    static (NodeType type, TerminalNodeType? terminal) EnumeralbeKey => (NodeType.Terminal, TerminalNodeType.Enumerable);
+public enum NodeType {
+    Where,
+    Select,
+    SelectMany,
+    Terminal,
+}
+public record struct NodeKey(NodeType type, TerminalNodeType? terminal, SourceType? source) : IComparable<NodeKey> {
+    public static NodeKey Simple(NodeType type) => new NodeKey(type, null, null);
+    public static NodeKey Terminal(TerminalNodeType type) => new NodeKey(NodeType.Terminal, type, null);
+    public static NodeKey SelectMany(SourceType type) => new NodeKey(NodeType.SelectMany, null, type);
 
+    public int CompareTo(NodeKey other) {
+        int typeResult = Comparer<NodeType>.Default.Compare(type, other.type);
+        if(typeResult != 0)
+            return typeResult;
+        int terminalResult = Extensions.CompareNullable(terminal, other.terminal);
+        if(terminalResult != 0)
+            return terminalResult;
+        int sourceResult = Extensions.CompareNullable(source, other.source);
+        if(sourceResult != 0)
+            return sourceResult;
+        return 0;
+    }
+}
+
+public abstract class IntermediateNode : LinqNode {
+    readonly Dictionary<NodeKey, LinqNode> Nodes = new();
 
     public IntermediateNode? AddElement(ChainElement element) {
         switch(element) {
-            case ChainElement.Where:
-                return (IntermediateNode)Nodes.GetOrAdd(WhereKey, static () => new WhereNode());
-            case ChainElement.Select:
-                return (IntermediateNode)Nodes.GetOrAdd(SelectKey, static () => new SelectNode());
-            case ChainElement.ToArray:
-                Nodes.GetOrAdd(ToArrayKey, static () => TerminalNode.ToArray);
+            case WhereChainElement:
+                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.Where), static () => new WhereNode());
+            case SelectChainElement:
+                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.Select), static () => new SelectNode());
+            case SelectManyChainElement selectManyNode:
+                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.SelectMany(selectManyNode.SourceType), () => new SelectManyNode(selectManyNode.SourceType));
+            case ToArrayChainElement:
+                Nodes.GetOrAdd(NodeKey.Terminal(TerminalNodeType.ToArray) , static () => TerminalNode.ToArray);
                 return null;
-            case ChainElement.ToList:
-                Nodes.GetOrAdd(ToListKey, static () => TerminalNode.ToList);
+            case ToListChainElement:
+                Nodes.GetOrAdd(NodeKey.Terminal(TerminalNodeType.ToList), static () => TerminalNode.ToList);
                 return null;
             default:
                 throw new InvalidOperationException();
         }
     }
     public void AddEnumerableNode() {
-        Nodes.GetOrAdd(EnumeralbeKey, static () => TerminalNode.Enumerable);
+        Nodes.GetOrAdd(NodeKey.Terminal(TerminalNodeType.Enumerable), static () => TerminalNode.Enumerable);
     }
     public IEnumerable<LinqNode> GetNodes() {
         return Nodes
-            .OrderBy(x => x.Key.type)
-            .ThenBy(x => x.Key.terminal)
+            .OrderBy(x => x.Key)
             .Select(x => x.Value);
     }
     public sealed override string ToString() {
@@ -115,4 +127,11 @@ public sealed class WhereNode : IntermediateNode {
 public sealed class SelectNode : IntermediateNode {
     public SelectNode() { }
     protected override string Type => "Select";
+}
+public sealed class SelectManyNode : IntermediateNode {
+    public readonly SourceType SourceType;
+    public SelectManyNode(SourceType sourceType) {
+        SourceType = sourceType;
+    }
+    protected override string Type => "SelectMany " + SourceType;
 }

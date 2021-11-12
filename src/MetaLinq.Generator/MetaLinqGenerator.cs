@@ -8,7 +8,7 @@ namespace MetaLinq.Generator;
 [Generator]
 public class MetaLinqGenerator : ISourceGenerator {
     public void Initialize(GeneratorInitializationContext context) {
-        //Debugger.Launch();
+        //System.Diagnostics.Debugger.Launch();
         context.RegisterForSyntaxNotifications(() => new SyntaxContextReceiver());
     }
 

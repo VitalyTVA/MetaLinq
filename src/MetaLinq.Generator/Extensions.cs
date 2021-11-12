@@ -52,4 +52,13 @@ public static class Extensions {
                 enumAndLevel.En.Dispose();
         }
     }
+    public static int CompareNullable<T>(T? value1, T? value2) where T : struct {
+        if(value1 == null && value2 == null)
+            return 0;
+        if(value1 != null && value2 == null)
+            throw new NotImplementedException();
+        if(value1 == null && value2 != null)
+            throw new NotImplementedException();
+        return Comparer<T>.Default.Compare(value1!.Value, value2!.Value);
+    }
 }

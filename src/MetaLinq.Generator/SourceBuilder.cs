@@ -64,21 +64,22 @@ using System.Buffers;");
             using (builder.BuildType(out CodeBuilder classBuilder, TypeModifiers.StaticClass, "MetaEnumerable", partial: true))
             {
                 classBuilder.AppendMultipleLines($@"
-public static {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList} {enumerableKind}<TSource{(ownTypeArg != null ? ", " + ownTypeArg : null)}>(this {methodEnumerableSourceType} source, {methodArgumentType} {argumentName})
-    => new {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList}(source, {argumentName});");
+public static {sourceName}<TSource>.{enumerableKind}En0{ownTypeArgsList} {enumerableKind}<TSource{(ownTypeArg != null ? ", " + ownTypeArg : null)}>(this {methodEnumerableSourceType} source, {methodArgumentType} {argumentName})
+    => new {sourceName}<TSource>.{enumerableKind}En0{ownTypeArgsList}(source, {argumentName});");
             }
         }
-        static void EmitStructMethod(string outputType, CodeBuilder builder, IntermediateNode intermediate) {
-            var argumentName = intermediate.GetArgumentName();
+        static void EmitStructMethod(CodeBuilder builder, EmitContext context) {
+            var intermediate = context.Node;
+            var argumentName = context.Node.GetArgumentName();
             var enumerableKind = intermediate.GetEnumerableKind();
             var ownTypeArg = intermediate.GetOwnTypeArg("TResult");
             var ownTypeArgsList = CodeGenerationTraits.ToTypeArgsList(ownTypeArg);
             var methodArgumentType = intermediate switch {
-                WhereNode => $"Func<{outputType}, bool>",
-                SelectNode => $"Func<{outputType}, TResult>",
+                WhereNode => $"Func<{context.SourceGenericArg}, bool>",
+                SelectNode => $"Func<{context.SourceGenericArg}, TResult>",
                 _ => throw new NotImplementedException(),
             };
-            builder.AppendLine($"public {enumerableKind}En{ownTypeArgsList} {enumerableKind}{ownTypeArgsList}({methodArgumentType} {argumentName}) => new {enumerableKind}En{ownTypeArgsList}(this, {argumentName});");
+            builder.AppendLine($"public {enumerableKind}En{context.Level}{ownTypeArgsList} {enumerableKind}{ownTypeArgsList}({methodArgumentType} {argumentName}) => new {enumerableKind}En{context.Level}{ownTypeArgsList}(this, {argumentName});");
         }
 
         static void EmitStruct(SourceType source, CodeBuilder builder, EmitContext context) {
@@ -94,7 +95,7 @@ public static {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList} {enumera
             bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
             var outputType = context.GetOutputType();
             string? generics = context.GetOwnTypeArg();
-            string typeName = enumerableKind + "En";
+            string typeName = enumerableKind + "En" + context.Level;
             using (builder.BuildType(out CodeBuilder structBuilder,
                 TypeModifiers.ReadonlyStruct,
                 typeName,
@@ -105,7 +106,7 @@ public static {sourceName}<TSource>.{enumerableKind}En{ownTypeArgsList} {enumera
                 structBuilder.AppendMultipleLines($@"
 readonly {context.SourceType} source;
 readonly {argumentType} {argumentName};
-public {enumerableKind}En({context.SourceType} source, {argumentType} {argumentName}) {{
+public {enumerableKind}En{context.Level}({context.SourceType} source, {argumentType} {argumentName}) {{
     this.source = source;
     this.{argumentName} = {argumentName};
 }}");
@@ -119,8 +120,8 @@ public {enumerableKind}En({context.SourceType} source, {argumentType} {argumentN
                             EmitGetEnumerator(source, structBuilder, context);
                             break;
                         case IntermediateNode nextIntermediate:
-                            EmitStructMethod(outputType, structBuilder, nextIntermediate);
                             var nextContext = new EmitContext(context.Level + 1, nextIntermediate, $"{typeName}{CodeGenerationTraits.ToTypeArgsList(generics)}", outputType, context);
+                            EmitStructMethod(structBuilder, nextContext);
                             EmitStruct(source, structBuilder, nextContext);
                             break;
                         default:
@@ -146,10 +147,10 @@ public {enumerableKind}En({context.SourceType} source, {argumentType} {argumentN
             builder.AppendLine("#nullable disable");
             using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
                 enumeratorBuilder.AppendMultipleLines($@"
-{enumerableKind}En{ownTypeArgsList} source;
+{enumerableKind}En{context.Level}{ownTypeArgsList} source;
 int index;
 {outputType} current;
-public {CodeGenerationTraits.EnumeratorTypeName}({enumerableKind}En{ownTypeArgsList} source) {{
+public {CodeGenerationTraits.EnumeratorTypeName}({enumerableKind}En{context.Level}{ownTypeArgsList} source) {{
     this.source = source;
     index = -1;
     current = default;

@@ -322,21 +322,55 @@ public class GenerationTests {
         );
     }
     [Test]
-    public void List_Select_Where_ForEach() {
+    public void List_Where_Select_ForEach() {
         AssertGeneration(
-            "int[] __()  { List<int> result = new(); foreach(var item in Data.List(10).Select(x => x.Int).Where(x => x < 5)) result.Add(item); return result.ToArray(); }",
+            "int[] __()  { List<int> result = new(); foreach(var item in Data.List(10).Where(x => x.Int < 5).Select(x => x.Int)) result.Add(item); return result.ToArray(); }",
             Get0To4IntAssert(),
             new[] {
-                    new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
-                        new StructMethod("Where", new[] {
+                    new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                        new StructMethod("Select", new[] {
                             new StructMethod("GetEnumerator")
                         }, implementsIEnumerable: true)
                     }, implementsIEnumerable: false)
             }
         );
     }
-    //Long mixed chains with
-    //terminal nodes on different levels
+    [Test]
+    public void SelectAndWhere_LongMixedChains() {
+        AssertGeneration(
+            new (string code, Action<int[]> assert)[] {
+                (
+                    "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 7).Select(x => x.Int - 2).Where(x => x >= 0));",
+                    Get0To4IntAssert()
+                ),
+                (
+                    "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5).Select(x => x.Int));",
+                    Get0To4IntAssert()
+                ),
+                (
+                    "int[] __() => Data.List(10).Where(x => x.Int < 7).Select(x => x.Int - 2).Where(x => x >= 0).ToArray();",
+                    Get0To4IntAssert()
+                ),
+            },
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("Select", new[] {
+                            new StructMethod("Where", new[] {
+                                new StructMethod("GetEnumerator")
+                            }, implementsIEnumerable: true),
+                            new StructMethod("GetEnumerator"),
+                        }, implementsIEnumerable: true)
+                    }, implementsIEnumerable: false),
+                    new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                        new StructMethod("Select", new[] {
+                            new StructMethod("Where", new[] {
+                                new StructMethod("ToArray")
+                            })
+                        })
+                    }, implementsIEnumerable: false)
+            }
+        );
+    }
     #endregion
 
     #region skip
