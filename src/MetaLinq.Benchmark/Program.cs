@@ -34,11 +34,11 @@ public class Benchmarks {
     }
 
     [Benchmark]
-    public List<int> SelectMany_Meta() => Meta.SelectMany(testData);
+    public int[] SelectMany_Meta() => Meta.SelectMany(testData);
     [Benchmark]
-    public List<int> SelectMany_Standard() => Standard.SelectMany(testData);
+    public int[] SelectMany_Standard() => Standard.SelectMany(testData);
     [Benchmark]
-    public List<int> SelectMany_AF() => AF.SelectMany(testData);
+    public int[] SelectMany_AF() => AF.SelectMany(testData);
 
     [Benchmark]
     public int[] Select_Where_Meta() => Meta.Select_Where(ints);

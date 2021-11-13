@@ -71,11 +71,11 @@ public class Tests {
     #region temp
     [Test]
     public static void Array_SelectMany_ToList() {
-        MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany_Meta(static x => x.IntArray).ToLis_Meta(), ExpectedListOfIntsAllocations());
+        MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany(static x => x.IntArray).ToArray(), ExpectedArrayOfIntsAllocations());
     }
     [Test]
     public static void List_SelectMany_ToList() {
-        MemoryTestHelper.AssertDifference(() => testDataList.SelectMany_Meta(static x => x.IntArray).ToLis_Meta(), ExpectedListOfIntsAllocations());
+        MemoryTestHelper.AssertDifference(() => testDataList.SelectMany(static x => x.IntArray).ToArray(), ExpectedArrayOfIntsAllocations());
     }
     #endregion
 

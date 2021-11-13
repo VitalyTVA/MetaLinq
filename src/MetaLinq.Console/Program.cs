@@ -15,8 +15,8 @@
                 new TestData { Ints = new [] { 1, 2 } },
                 new TestData { Ints = new [] { 3, 4 } },
             };
-            var res = testData.SelectMany_Meta(x => x.Ints).ToLis_Meta();
-            var res2 = testData.SelectMany_Meta(x => x.IntList);
+            //var res = testData.SelectMany_Meta(x => x.Ints).ToLis_Meta();
+            //var res2 = testData.SelectMany_Meta(x => x.IntList);
         }
 
         class TestData {
