@@ -1,4 +1,4 @@
-uncomment all in CollectMethods
+emit SelectMany body loop via for or foreach for List<T>??  for(int i1 = 0; i1 < len1; i1++) { (now there is duplicate code with root loop emit code)
 
 kill all MetaEnumerable_Generated stuff
 
@@ -29,6 +29,8 @@ remove #nullable disable/#nullable restore from generation
 make editor.config
 
 make tests internals visible to assembly and mark all classes in generato private
+
+incomplete (non-compilable) LINQ statements tests like "ints.Select(static x => )"
 
 ~~mark generated structs readonly~~
 

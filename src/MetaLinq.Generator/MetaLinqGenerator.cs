@@ -75,7 +75,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             ExpressionSyntax? currentExpression = invocation;
             while(currentExpression != null) {
                 bool chained = false;
-                if((currentExpression as InvocationExpressionSyntax)?.Expression is MemberAccessExpressionSyntax currentMemberAccess) {
+                if(currentExpression is InvocationExpressionSyntax currentInvocation && currentInvocation.Expression is MemberAccessExpressionSyntax currentMemberAccess) {
                     var currentSymbolInfo = context.SemanticModel.GetSymbolInfo(currentMemberAccess.Name);
                     if(currentSymbolInfo.Symbol is IMethodSymbol currentMethodSymbol
                         && SymbolEqualityComparer.Default.Equals(currentMethodSymbol.OriginalDefinition.ContainingType, enumerableType)) {
@@ -85,6 +85,12 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                         }
                         if(currentMethodSymbol.Name == "Select") {
                             chain.Push(ChainElement.Select);
+                            chained = true;
+                        }
+                        if(currentMethodSymbol.Name == "SelectMany") {
+                            var lambda = ((LambdaExpressionSyntax)currentInvocation.ArgumentList.Arguments[0].Expression).ExpressionBody!;
+                            var soruceType = GetSourceType(context, lambda);
+                            chain.Push(ChainElement.SelectMany(soruceType!.Value));
                             chained = true;
                         }
                         if(currentMethodSymbol.Name == "ToArray") {
@@ -131,3 +137,12 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         return SymbolEqualityComparer.Default.Equals(typeInfo.Type, metaEnumerableType);
     }
 }
+
+/*
++		currentInvocation.ArgumentList.Arguments[0]	ArgumentSyntax Argument x => x.IntList	Microsoft.CodeAnalysis.CSharp.Syntax.ArgumentSyntax
++		currentInvocation.ArgumentList.Arguments[0].Expression	SimpleLambdaExpressionSyntax SimpleLambdaExpression x => x.IntList	Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax {Microsoft.CodeAnalysis.CSharp.Syntax.SimpleLambdaExpressionSyntax}
++		((Microsoft.CodeAnalysis.CSharp.Syntax.SimpleLambdaExpressionSyntax)currentInvocation.ArgumentList.Arguments[0].Expression).ExpressionBody	MemberAccessExpressionSyntax SimpleMemberAccessExpression x.IntList	Microsoft.CodeAnalysis.CSharp.Syntax.ExpressionSyntax {Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax}
++		((IPropertySymbol)info.Symbol).Type	{System.Collections.Generic.List<int>}	Microsoft.CodeAnalysis.ITypeSymbol {Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol}
+((IPropertySymbol)info.Symbol).Type.TypeKind	Class	Microsoft.CodeAnalysis.TypeKind
++		((IPropertySymbol)info.Symbol).Type.OriginalDefinition	{System.Collections.Generic.List<T>}	Microsoft.CodeAnalysis.ITypeSymbol {Microsoft.CodeAnalysis.CSharp.Symbols.PublicModel.NonErrorNamedTypeSymbol}
+ */
