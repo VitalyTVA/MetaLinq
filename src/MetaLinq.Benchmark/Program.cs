@@ -13,7 +13,7 @@ class Program {
     }
 }
 
-[SimpleJob(RuntimeMoniker.Net50, warmupCount: 2, targetCount: 10)]
+[SimpleJob(RuntimeMoniker.Net60, warmupCount: 2, targetCount: 10)]
 //[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MeanColumn]
 [MemoryDiagnoser]

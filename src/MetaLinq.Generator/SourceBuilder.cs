@@ -151,7 +151,7 @@ public bool MoveNext() {{
     var len = rootSource.{countName};
     while(true) {{
         index++;
-        if(index >= len)
+        if(index == len)
             break;
         var item0 = rootSource[index];");
                 EmitLoopBody(0, enumeratorBuilder.Tab.Tab, contexts, (b, level) => {
@@ -247,7 +247,7 @@ if(source{sourcePath}.predicate(item{level + 1})) {{");
         public static string GetEnumerableTypeName(this IntermediateNode intermediate, int level) {
             var enumerableKind = intermediate.GetEnumerableKind();
             var sourceTypePart = intermediate switch {
-                SelectManyNode selectMany => "_" + selectMany.SourceType.GetEnumerableSourceName(),
+                SelectManyNode selectMany => "_" + selectMany.SourceType.GetEnumerableSourceNameShort(),
                 _ => null
             };
             return enumerableKind + "En" + sourceTypePart + level;
@@ -277,7 +277,10 @@ if(source{sourcePath}.predicate(item{level + 1})) {{");
         public static string GetLevelGenericType(this string name, int level) => $"T{level}_{name}";
         public const string RootStaticTypePrefix = "Meta_";
         public static string GetEnumerableSourceName(this SourceType source) {
-            return RootStaticTypePrefix + source switch {
+            return RootStaticTypePrefix + source.GetEnumerableSourceNameShort();
+        }
+        public static string GetEnumerableSourceNameShort(this SourceType source) {
+            return source switch {
                 SourceType.List => "List",
                 SourceType.Array => "Array",
                 _ => throw new NotImplementedException(),

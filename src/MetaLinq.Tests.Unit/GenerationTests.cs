@@ -311,7 +311,18 @@ public class GenerationTests {
             }
         );
     }
-    //enumerator test
+    [Test, Ignore("TODO")]
+    public void Array_SelectManyArray_StandardToArray() {
+        AssertGeneration(
+            "int[] __() => Enumerable.ToArray(Data.Array(3).SelectMany(x => x.IntArray));",
+            Get0ToNIntAssert(5),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("GetEnumerator")
+                }, implementsIEnumerable: false)
+            }
+        );
+    }    //enumerator test
     //chains test
     #endregion
 
@@ -549,7 +560,8 @@ public static class Executor {{
             Directory.CreateDirectory(location);
         var dllPath = Path.Combine(location, NUnit.Framework.TestContext.CurrentContext.Test.Name + ".dll");
         var emitResult = outputCompilation.Emit(dllPath);
-        if(!emitResult.Success) {
+        var severeDiagnostics = emitResult.Diagnostics.Where(x => x.Severity != DiagnosticSeverity.Hidden).ToArray();
+        if(!emitResult.Success || severeDiagnostics.Any()) {
             foreach(var code in generatedCode) {
                 var split = code.Split(Environment.NewLine);
                 int line = 1;
@@ -563,7 +575,7 @@ public static class Executor {{
                 Debug.WriteLine(item);
             }
         }
-        CollectionAssert.IsEmpty(emitResult.Diagnostics.Where(x => x.Severity != DiagnosticSeverity.Hidden).ToArray());
+        CollectionAssert.IsEmpty(severeDiagnostics);
         Assert.True(emitResult.Success);
 
         var assembly = Assembly.LoadFile(dllPath);

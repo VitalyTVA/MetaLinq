@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-
-namespace MetaLinq;
+﻿namespace MetaLinq;
 
 public static class MetaEnumerable {
 }
