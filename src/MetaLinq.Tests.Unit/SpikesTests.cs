@@ -127,9 +127,9 @@ public struct Enumerator2<TSource, TResult1, TResult2> {
 }
 public struct Enumerator1<TSource, TResult> {
     TSource[] source;
-    Func<TSource, TResult[]> selector;
+    Func<TSource, TResult[]> source_selector;
 
-    TResult[] nested;
+    TResult[] source1;
     int i0;
     int i1;
     TResult current;
@@ -137,8 +137,8 @@ public struct Enumerator1<TSource, TResult> {
 
     public Enumerator1(TSource[] source, Func<TSource, TResult[]> selector) : this() {
         this.source = source;
-        this.selector = selector;
-        nested = null;
+        this.source_selector = selector;
+        source1 = null;
         i0 = -1;
         i1 = 0;
         state = -1;
@@ -153,18 +153,22 @@ public struct Enumerator1<TSource, TResult> {
             goto next0;
         return false; //finished
     next0:
+        var source0 = source;
         i0++;
-        if(i0 == source.Length) {
+        if(i0 == source0.Length) {
             state = 1;
             return false;
         }
-        nested = selector(source[i0]);
+        var item0 = source0[i0];
+
+        source1 = source_selector(item0);
         i1 = -1;
     next1:
         i1++;
-        if(i1 == nested.Length)
+        if(i1 == source1.Length)
             goto next0;
-        current = nested[i1];
+        current = source1[i1];
+
         state = 0;
         return true;
     }

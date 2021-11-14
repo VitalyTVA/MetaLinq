@@ -37,9 +37,9 @@ public abstract class LinqNode {
 public enum TerminalNodeType { ToArray, ToList, Enumerable }
 
 public sealed class TerminalNode : LinqNode {
-    public static readonly TerminalNode ToArray = new TerminalNode(TerminalNodeType.ToArray);
-    public static readonly TerminalNode ToList = new TerminalNode(TerminalNodeType.ToList);
-    public static readonly TerminalNode Enumerable = new TerminalNode(TerminalNodeType.Enumerable);
+    public static readonly TerminalNode ToArray = new(TerminalNodeType.ToArray);
+    public static readonly TerminalNode ToList = new (TerminalNodeType.ToList);
+    public static readonly TerminalNode Enumerable = new (TerminalNodeType.Enumerable);
     public readonly TerminalNodeType Type;
     TerminalNode(TerminalNodeType type) {
         Type = type;

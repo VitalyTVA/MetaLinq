@@ -311,7 +311,7 @@ public class GenerationTests {
             }
         );
     }
-    [Test, Ignore("TODO")]
+    [Test]
     public void Array_SelectManyArray_StandardToArray() {
         AssertGeneration(
             "int[] __() => Enumerable.ToArray(Data.Array(3).SelectMany(x => x.IntArray));",
@@ -319,7 +319,7 @@ public class GenerationTests {
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("GetEnumerator")
-                }, implementsIEnumerable: false)
+                }, implementsIEnumerable: true)
             }
         );
     }    //enumerator test

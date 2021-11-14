@@ -2,8 +2,7 @@
 
 public static class Extensions {
     public static TValue GetOrAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valueCreator) {
-        TValue value;
-        if(!dictionary.TryGetValue(key, out value)) {
+        if(!dictionary.TryGetValue(key, out TValue value)) {
             value = valueCreator();
             dictionary.Add(key, value);
         }
