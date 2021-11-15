@@ -135,27 +135,28 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
             var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(context.Level)}{ownTypeArgsList}";
             //var source = this{ CodeGenerationTraits.GetSourcePath(contexts.Length + 1)}
             builder.AppendLine("#nullable disable");
-            var indices = contexts.Select((x, i) => (x, i)).Where(x => x.x.Node is SelectManyNode).Select(x => x.i + 1);
+            var selectManyLevels = contexts.Select((x, i) => (x, i)).Where(x => x.x.Node is SelectManyNode).Select(x => x.i + 1);
             using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
                 enumeratorBuilder.AppendMultipleLines($@"
 readonly {enumerableTypeName} source;
 int i0;
-{string.Concat(indices.Select(i => $"int i{i};\r\n"))}
+{string.Concat(selectManyLevels.Select(i => $"int i{i};\r\n"))}
 {source.GetSourceTypeName(contexts[0].SourceGenericArg)} source0 => source{CodeGenerationTraits.GetSourcePath(contexts.Length)};
+{string.Concat(selectManyLevels.Select(i => $"{outputType + "[]"/*contexts[i - 1].SourceType*/} source{i};"))}
 {contexts[0].SourceGenericArg} item0 => source0[i0];
 {outputType} current;
 int state;
 public {CodeGenerationTraits.EnumeratorTypeName}({enumerableTypeName} source) {{
     this.source = source;
     i0 = -1;
-{string.Concat(indices.Select(i => $"    i{i} = -1;"))}
+{string.Concat(selectManyLevels.Select(i => $"    i{i} = -1;\r\n    source{i} = default;"))}
     current = default;
     state = -1;
 }}
 public {outputType} Current => current;
 public bool MoveNext() {{
     if(state == 0) //in progress
-        goto next{(indices.Any() ? indices.Last() : 0)};
+        goto next{(selectManyLevels.Any() ? selectManyLevels.Last() : 0)};
     if(state == -1) //start
         goto next0;
     return false; //finished
@@ -166,9 +167,7 @@ next0:
         return false;
     }}");
 
-    EmitEnumeratorBody(0, enumeratorBuilder.Tab, contexts, (b, level) => {
-        b.AppendLine($"current = item{level};");
-                });
+    EmitEnumeratorBody(0, enumeratorBuilder.Tab, contexts);
     enumeratorBuilder.AppendMultipleLines($@"
     state = 0;
     return true;
@@ -188,9 +187,12 @@ IEnumerator IEnumerable.GetEnumerator() {{
 }}
 ");
         }
-        static void EmitEnumeratorBody(int level, CodeBuilder builder, EmitContext[] contexts, Action<CodeBuilder, int> finish) {
+        static void EmitEnumeratorBody(int level, CodeBuilder builder, EmitContext[] contexts) {
+            void Finish(int l) { 
+                builder.AppendLine($"current = item{l};");
+            }
             if(level >= contexts.Length) {
-                finish(builder, level);
+                Finish(level);
                 return;
             }
             var intermediate = contexts[level].Node;
@@ -201,23 +203,22 @@ IEnumerator IEnumerable.GetEnumerator() {{
 var item{level + 1} = item{level};
 if(!source{sourcePath}.predicate(item{level + 1}))
     goto next0;");
-                    EmitEnumeratorBody(level + 1, builder, contexts, finish);
+                    EmitEnumeratorBody(level + 1, builder, contexts);
                     break;
                 case SelectNode:
                     builder.AppendLine($@"var item{level + 1} = source{sourcePath}.selector(item{level});");
-                    EmitEnumeratorBody(level + 1, builder, contexts, finish);
+                    EmitEnumeratorBody(level + 1, builder, contexts);
                     break;
                 case SelectManyNode selectMany:
                     builder.Return!.AppendMultipleLines($@"
-    
+    source{level + 1} = source{sourcePath}.selector(item{level});
     i{level + 1} = -1;
 next{level + 1}:
     i{level + 1}++;
-    var source{level + 1} = source{sourcePath}.selector(item{level});
     if(i{level + 1} == source{level + 1}.Length)
         goto next{level};
     var item{level + 1} = source{level + 1}[i{level + 1}];");
-                    finish(builder, level + 1);
+                    Finish(level + 1);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -249,15 +250,15 @@ public {outputType}[] ToArray() {{
             builder.Tab.AppendLine($"var source = this;");
 
             EmitLoop(source, builder.Tab, 0, "this" + CodeGenerationTraits.GetSourcePath(contexts.Length),
-                bodyBuilder => EmitLoopBody(0, bodyBuilder, contexts, (b, level) => b.AppendLine($"result.Add(item{level});")));
+                bodyBuilder => EmitLoopBody(0, bodyBuilder, contexts));
 
             builder.AppendMultipleLines(@"
     return result.ToArray();
 }");
         }
-        static void EmitLoopBody(int level, CodeBuilder builder, EmitContext[] contexts, Action<CodeBuilder, int> finish) {
+        static void EmitLoopBody(int level, CodeBuilder builder, EmitContext[] contexts) {
             if(level >= contexts.Length) {
-                finish(builder, level);
+                builder.AppendLine($"result.Add(item{level});");
                 return;
             }
             var intermediate = contexts[level].Node;
@@ -268,15 +269,15 @@ public {outputType}[] ToArray() {{
 var item{level + 1} = item{level};
 if(!source{sourcePath}.predicate(item{level + 1}))
     continue;");
-                    EmitLoopBody(level + 1, builder, contexts, finish);
+                    EmitLoopBody(level + 1, builder, contexts);
                     break;
                 case SelectNode:
                     builder.AppendLine($@"var item{level + 1} = source{sourcePath}.selector(item{level});");
-                    EmitLoopBody(level + 1, builder, contexts, finish);
+                    EmitLoopBody(level + 1, builder, contexts);
                     break;
                 case SelectManyNode selectMany:
                     EmitLoop(selectMany.SourceType, builder, level + 1, $"source{sourcePath}.selector(item{level})",
-                        bodyBuilder => EmitLoopBody(level + 1, bodyBuilder.Tab, contexts, finish));
+                        bodyBuilder => EmitLoopBody(level + 1, bodyBuilder.Tab, contexts));
                     break;
                 default:
                     throw new NotImplementedException();

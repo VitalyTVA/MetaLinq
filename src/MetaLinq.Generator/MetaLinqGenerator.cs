@@ -114,19 +114,11 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         }
     }
     SourceType? GetSourceType(GeneratorSyntaxContext context, ExpressionSyntax expression) {
+        var returnType = context.SemanticModel.GetTypeInfo(expression).Type;
         var sourceSymbol = context.SemanticModel.GetSymbolInfo(expression).Symbol;
-        var returnType = sourceSymbol switch {
-            IMethodSymbol method => method.ReturnType,
-            ILocalSymbol local => local.Type,
-            IFieldSymbol field => field.Type,
-            IPropertySymbol property => property.Type,
-            IParameterSymbol parameter => parameter.Type,
-            INamedTypeSymbol => null,
-            _ => throw new InvalidOperationException()
-        };
-        if(returnType == null)
+        if(/*returnType == null || */sourceSymbol is INamedTypeSymbol)
             return null;
-        if(returnType.TypeKind == TypeKind.Array)
+        if(returnType!.TypeKind == TypeKind.Array)
             return SourceType.Array;
         if(SymbolEqualityComparer.Default.Equals(listType, returnType.OriginalDefinition))
             return SourceType.List;

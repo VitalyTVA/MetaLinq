@@ -25,6 +25,18 @@ public class GenerationTests {
         );
     }
     [Test]
+    public void ArrayNewExpression_Where_ToArray() {
+        AssertGeneration(
+            "int[] __() => new [] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }.Where(x => x < 5).ToArray();",
+            Get0ToNIntAssert(4),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("ToArray")
+                    }, implementsIEnumerable: false)
+            }
+        );
+    }
+    [Test]
     public void ArrayVariable_Where_ToArray() {
         AssertGeneration(
             "Data[] __() { var data = Data.Array(10); return data.Where(x => x.Int < 5).ToArray(); }",
@@ -267,9 +279,26 @@ public class GenerationTests {
     [Test]
     public void Array_SelectManyArray_ToArray() {
         AssertGeneration(
-            "int[] __() => Data.Array(3).SelectMany(x => x.IntArray).ToArray();",
+@"int[] __() {{
+    var result = source.SelectMany(x => x.IntArray).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.IntArray_GetCount));
+    return result;
+}}
+static Data[] source = Data.Array(3);",
             Get0ToNIntAssert(5),
             new [] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("ToArray")
+                }, implementsIEnumerable: false)
+            }
+        );
+    }
+    [Test]
+    public void Array_SelectManyArrayNewArrayExpression_ToArray() {
+        AssertGeneration(
+            @"int[] __() => Data.Array(3).SelectMany(x => new[] { 2 * x.Int, 2 * x.Int + 1 }).ToArray();",
+            Get0ToNIntAssert(5),
+            new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("ToArray")
                 }, implementsIEnumerable: false)
@@ -314,7 +343,12 @@ public class GenerationTests {
     [Test]
     public void Array_SelectManyArray_StandardToArray() {
         AssertGeneration(
-            "int[] __() => Enumerable.ToArray(Data.Array(3).SelectMany(x => x.IntArray));",
+@"int[] __() {{
+    var result = Enumerable.ToArray(source.SelectMany(x => x.IntArray));;
+    source.AssertAll(x => Assert.AreEqual(1, x.IntArray_GetCount));
+    return result;
+}}
+static Data[] source = Data.Array(3);",
             Get0ToNIntAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
@@ -358,6 +392,18 @@ public class GenerationTests {
             additionalClassCode: "static int[] SelectMany(int[][] ints) => Enumerable.ToArray(ints.SelectMany(static x => x));"
         );
     }
+    //[Test]
+    //public void Array_SelectManyArray_SelectManyList_ToArray() {
+    //    AssertGeneration(
+    //        "int[] __() => Data.Array(3).SelectMany(x => x.IntArray).SelectMany(x => new int[] { 2 * x, 2 * x + 1 }).ToArray();",
+    //        Get0ToNIntAssert(5),
+    //        new[] {
+    //            new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+    //                new StructMethod("ToArray")
+    //            }, implementsIEnumerable: false)
+    //        }
+    //    );
+    //}
     //excesive selector and indexer calls
     //enumerator test for double-nested select many
     //chains test
@@ -564,6 +610,7 @@ public class GenerationTests {
                 MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Buffers.dll")),
                 MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Collections.dll")),
                 MetadataReference.CreateFromFile(typeof(Data).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Assert).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(MetaLinq.MetaEnumerable).Assembly.Location),
             };
 
@@ -574,6 +621,7 @@ $@"
 {(addMetaLinqUsing ? "using MetaLinq;" : null)}
 {(addStadardLinqUsing ? "using System.Linq;" : null)}
 using MetaLinq.Tests;
+using NUnit.Framework;
 using System.Collections.Generic;
 public static class Executor {{
 {additionalClassCode}

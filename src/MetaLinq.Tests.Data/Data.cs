@@ -12,11 +12,43 @@ public class Data {
     }
 
     public Data(int @int, int[] intArray) {
-        Int = @int;
-        IntArray = intArray;
-        IntList = intArray.ToList();
+        this.@int = @int;
+        this.intArray = intArray;
+        intList = intArray.ToList();
     }
-    public int Int { get; }
-    public int[] IntArray { get; }
-    public List<int> IntList { get; }
+
+    public int Int_GetCount { get; private set; }
+    readonly int @int;
+    public int Int {
+        get {
+            Int_GetCount++;
+            return @int;
+        }
+    }
+
+    public int IntArray_GetCount { get; private set; }
+    readonly int[] intArray;
+    public int[] IntArray {
+        get {
+            IntArray_GetCount++;
+            return intArray;
+        }
+    }
+
+    public int IntList_GetCount { get; private set; }
+    readonly List<int> intList;
+    public List<int> IntList {
+        get {
+            IntList_GetCount++;
+            return intList;
+        }
+    }
+}
+
+public static class DataAssertions {
+    public static void AssertAll(this IEnumerable<Data> source, Action<Data> assertion) {
+        foreach(var item in source) {
+            assertion(item);
+        }
+    }
 }
