@@ -322,7 +322,44 @@ public class GenerationTests {
                 }, implementsIEnumerable: true)
             }
         );
-    }    //enumerator test
+    }
+    [Test]
+    public void List_SelectManyArray_StandardToArray() {
+        AssertGeneration(
+            "int[] __() => Enumerable.ToArray(Data.List(3).SelectMany(x => x.IntArray));",
+            Get0ToNIntAssert(5),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "SelectMany", new[] {
+                    new StructMethod("GetEnumerator")
+                }, implementsIEnumerable: true)
+            }
+        );
+    }
+    [Test]
+    public void SelectMany_EnumeratorTests() {
+        AssertGeneration(
+            new (string code, Action<int[]> assert)[] {
+                ("int[] __() => SelectMany(new[] { new[] { 0, 1 }, new[] { 2, 3, 4 } });",
+                 Get0ToNIntAssert(4)),
+                ("int[] __() => SelectMany(new int[][] { new int[] { } });",
+                 Get0ToNIntAssert(-1)),
+                ("int[] __() => SelectMany(new[] {  new int[0], new[] { 0, 1, 2 } });",
+                 Get0ToNIntAssert(2)),
+                ("int[] __() => SelectMany(new[] { new[] { 0, 1 }, new int[0] });",
+                 Get0ToNIntAssert(1)),
+                ("int[] __() => SelectMany(new[] { new[] { 0 }, new[] { 1 } });",
+                 Get0ToNIntAssert(1)),
+            },
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("GetEnumerator")
+                }, implementsIEnumerable: true)
+            },
+            additionalClassCode: "static int[] SelectMany(int[][] ints) => Enumerable.ToArray(ints.SelectMany(static x => x));"
+        );
+    }
+    //excesive selector and indexer calls
+    //enumerator test for double-nested select many
     //chains test
     #endregion
 
@@ -461,8 +498,11 @@ public class GenerationTests {
         };
     }
     static Action<int[]> Get0ToNIntAssert(int n = 4) {
+        return GetIntAssert(Enumerable.Range(0, n + 1).ToArray());
+    }
+    static Action<int[]> GetIntAssert(int[] expected) {
         return (int[] result) => {
-            CollectionAssert.AreEqual(Enumerable.Range(0, n + 1).ToArray(), result.ToArray());
+            CollectionAssert.AreEqual(expected, result.ToArray());
         };
     }
     class StructMethod {
@@ -604,7 +644,7 @@ public static class Executor {{
         var expectedGeneratedTypes = new HashSet<Type>();
         Assert.False(extensionsType.IsPublic);
         var allGeneratedTypes = assembly.GetTypes()
-            .Where(x => x != extensionsType && x != executorType && !x.IsNested && !typeof(Attribute).IsAssignableFrom(x))
+            .Where(x => x != extensionsType && x != executorType && !x.IsNested && !typeof(Attribute).IsAssignableFrom(x) && x.GetCustomAttribute<CompilerGeneratedAttribute>() == null)
             .SelectMany(x => {
                 var nested = Extensions.Flatten(x.GetNestedTypes(), x => x.GetNestedTypes().Where(x => x.Name != CodeGenerationTraits.EnumeratorTypeName));
                 CollectionAssert.IsNotEmpty(nested);

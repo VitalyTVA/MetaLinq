@@ -77,6 +77,16 @@ public class Tests {
     public static void List_SelectMany_ToList() {
         MemoryTestHelper.AssertDifference(() => testDataList.SelectMany(static x => x.IntArray).ToArray(), ExpectedArrayOfIntsAllocations());
     }
+    [Test]
+    public static void Array_SelectMany_ForEach() {
+        MemoryTestHelper.AssertDifference(() => {
+            int sum = 0;
+            foreach(int item in testDataArray.SelectMany(static x => x.IntArray)) {
+                sum += item;
+            }
+            AssertValue(205, sum);
+        }, null);
+    }
     #endregion
 
     #region where
