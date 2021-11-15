@@ -344,8 +344,25 @@ static Data[] source = Data.Array(3);",
     public void Array_SelectManyArray_StandardToArray() {
         AssertGeneration(
 @"int[] __() {{
-    var result = Enumerable.ToArray(source.SelectMany(x => x.IntArray));;
+    var result = Enumerable.ToArray(source.SelectMany(x => x.IntArray));
     source.AssertAll(x => Assert.AreEqual(1, x.IntArray_GetCount));
+    return result;
+}}
+static Data[] source = Data.Array(3);",
+            Get0ToNIntAssert(5),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("GetEnumerator")
+                }, implementsIEnumerable: true)
+            }
+        );
+    }
+    [Test]
+    public void Array_SelectManyList_StandardToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var result = Enumerable.ToArray(source.SelectMany(x => x.IntList));
+    source.AssertAll(x => Assert.AreEqual(1, x.IntList_GetCount));
     return result;
 }}
 static Data[] source = Data.Array(3);",

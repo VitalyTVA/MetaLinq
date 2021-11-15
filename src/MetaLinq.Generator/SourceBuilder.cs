@@ -123,11 +123,7 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
 
         static void EmitGetEnumerator(SourceType source, CodeBuilder builder, EmitContext context) {
             IntermediateNode intermediate = context.Node;
-            var countName = source switch {
-                SourceType.List => "Count",
-                SourceType.Array => "Length",
-                _ => throw new NotImplementedException(),
-            };
+            var countName = source.GetCountName();
             var outputType = context.GetOutputType();
             var enumerableKind = intermediate.GetEnumerableKind();
             var ownTypeArgsList = context.GetOwnTypeArgsList();
@@ -141,9 +137,7 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
 readonly {enumerableTypeName} source;
 int i0;
 {string.Concat(selectManyLevels.Select(i => $"int i{i};\r\n"))}
-{source.GetSourceTypeName(contexts[0].SourceGenericArg)} source0 => source{CodeGenerationTraits.GetSourcePath(contexts.Length)};
-{string.Concat(selectManyLevels.Select(i => $"{outputType + "[]"/*contexts[i - 1].SourceType*/} source{i};"))}
-{contexts[0].SourceGenericArg} item0 => source0[i0];
+{string.Concat(selectManyLevels.Select(i => $"{((SelectManyNode)contexts[i - 1].Node).SourceType.GetSourceTypeName(outputType)} source{i};"))}
 {outputType} current;
 int state;
 public {CodeGenerationTraits.EnumeratorTypeName}({enumerableTypeName} source) {{
@@ -162,13 +156,14 @@ public bool MoveNext() {{
     return false; //finished
 next0:
     i0++;
+    var source0 = this.source{CodeGenerationTraits.GetSourcePath(contexts.Length)};
     if(i0 == source0.{countName}) {{
         state = 1;
         return false;
-    }}");
-
-    EmitEnumeratorBody(0, enumeratorBuilder.Tab, contexts);
-    enumeratorBuilder.AppendMultipleLines($@"
+    }}
+    var item0 = source0[i0];");
+                EmitEnumeratorBody(0, enumeratorBuilder.Tab, contexts);
+                enumeratorBuilder.AppendMultipleLines($@"
     state = 0;
     return true;
 }}
@@ -187,6 +182,7 @@ IEnumerator IEnumerable.GetEnumerator() {{
 }}
 ");
         }
+
         static void EmitEnumeratorBody(int level, CodeBuilder builder, EmitContext[] contexts) {
             void Finish(int l) { 
                 builder.AppendLine($"current = item{l};");
@@ -215,7 +211,7 @@ if(!source{sourcePath}.predicate(item{level + 1}))
     i{level + 1} = -1;
 next{level + 1}:
     i{level + 1}++;
-    if(i{level + 1} == source{level + 1}.Length)
+    if(i{level + 1} == source{level + 1}.{selectMany.SourceType.GetCountName()})
         goto next{level};
     var item{level + 1} = source{level + 1}[i{level + 1}];");
                     Finish(level + 1);
@@ -366,6 +362,13 @@ if(!source{sourcePath}.predicate(item{level + 1}))
             return intermediate switch {
                 WhereNode => "predicate",
                 SelectNode or SelectManyNode => "selector",
+                _ => throw new NotImplementedException(),
+            };
+        }
+        public static string GetCountName(this SourceType source) {
+            return source switch {
+                SourceType.List => "Count",
+                SourceType.Array => "Length",
                 _ => throw new NotImplementedException(),
             };
         }
