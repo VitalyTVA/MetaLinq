@@ -582,24 +582,35 @@ public static class Executor {{
 ";
 
 
+        var location = Path.Combine(Path.GetDirectoryName(typeof(GenerationTests).Assembly.Location)!, "Generated");
+        if(!Directory.Exists(location))
+            Directory.CreateDirectory(location);
+        var filesPath = Path.Combine(location, NUnit.Framework.TestContext.CurrentContext.Test.Name);
+        if(!Directory.Exists(filesPath))
+            Directory.CreateDirectory(filesPath);
+        var dllPath = filesPath + ".dll";
+
         Compilation inputCompilation = CSharpCompilation.Create("MyCompilation",
-                                                                new[] { CSharpSyntaxTree.ParseText(source) },
+                                                                new[] { CSharpSyntaxTree.ParseText(source, path: "Source.cs", encoding: Encoding.UTF8) },
                                                                 references,
                                                                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
         MetaLinqGenerator generator = new();
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
         driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation, out var diagnostics);
+        foreach(var tree in outputCompilation.SyntaxTrees.ToArray()) {
+            if(!File.Exists(tree.FilePath)) {
+                var newPath = Path.Combine(filesPath, Path.GetFileName(tree.FilePath));
+                outputCompilation = outputCompilation.ReplaceSyntaxTree(tree, tree.WithFilePath(newPath));
+                File.WriteAllText(newPath, tree.GetText().ToString(), Encoding.UTF8);
+            }
+        }
         GeneratorDriverRunResult runResult = driver.GetRunResult();
         CollectionAssert.IsEmpty(runResult.Diagnostics);
         GeneratorRunResult generatorResult = runResult.Results[0];
         var generatedCode = generatorResult.GeneratedSources.Select(x => x.SourceText.ToString());
 
-        var location = Path.Combine(Path.GetDirectoryName(typeof(GenerationTests).Assembly.Location)!, "Generated");
-        if(!Directory.Exists(location))
-            Directory.CreateDirectory(location);
-        var dllPath = Path.Combine(location, NUnit.Framework.TestContext.CurrentContext.Test.Name + ".dll");
-        var emitResult = outputCompilation.Emit(dllPath);
+        var emitResult = outputCompilation.Emit(dllPath, pdbPath: Path.ChangeExtension(dllPath, "pdb"));
         var severeDiagnostics = emitResult.Diagnostics.Where(x => x.Severity != DiagnosticSeverity.Hidden).ToArray();
         if(!emitResult.Success || severeDiagnostics.Any()) {
             foreach(var code in generatedCode) {
