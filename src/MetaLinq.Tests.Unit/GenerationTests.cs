@@ -409,18 +409,28 @@ static Data[] source = Data.Array(3);",
             additionalClassCode: "static int[] SelectMany(int[][] ints) => Enumerable.ToArray(ints.SelectMany(static x => x));"
         );
     }
-    //[Test]
-    //public void Array_SelectManyArray_SelectManyList_ToArray() {
-    //    AssertGeneration(
-    //        "int[] __() => Data.Array(3).SelectMany(x => x.IntArray).SelectMany(x => new int[] { 2 * x, 2 * x + 1 }).ToArray();",
-    //        Get0ToNIntAssert(5),
-    //        new[] {
-    //            new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
-    //                new StructMethod("ToArray")
-    //            }, implementsIEnumerable: false)
-    //        }
-    //    );
-    //}
+    [Test]
+    public void Array_SelectManyList_SelectManyArray_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var result = source.SelectMany(x => x.DataList).SelectMany(x => x.IntArray).ToArray();;
+    source.AssertAll(x => {
+        Assert.AreEqual(1, x.DataList_GetCount);
+        x.DataList.AssertAll(y => Assert.AreEqual(1, y.IntArray_GetCount));
+    });
+    return result;
+}}
+static Data[] source = Data.Array(3);",
+            Get0ToNIntAssert(11),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("SelectMany", new[] {
+                        new StructMethod("ToArray")
+                    })
+                }, implementsIEnumerable: false)
+            }
+        );
+    }
     //excesive selector and indexer calls
     //enumerator test for double-nested select many
     //chains test

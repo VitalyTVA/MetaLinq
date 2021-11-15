@@ -8,13 +8,25 @@ public class Data {
         return IEnumerable(count).ToList();
     }
     public static IEnumerable<Data> IEnumerable(int count) {
-        return Enumerable.Range(0, count).Select(x => new Data(x, new[] {  2 * x, 2 * x + 1 }));
+        return Enumerable.Range(0, count).Select(x => new Data(x, new[] {  2 * x, 2 * x + 1 }, true));
     }
 
-    public Data(int @int, int[] intArray) {
+    public Data(int @int, int[] intArray, bool isRoot) {
         this.@int = @int;
         this.intArray = intArray;
         intList = intArray.ToList();
+        dataList = isRoot 
+            ? intArray.Select(x => new Data(x, new[] { 2 * x, 2 * x + 1 }, false)).ToList()
+            : new List<Data>();
+    }
+
+    public int DataList_GetCount { get; private set; }
+    readonly List<Data> dataList;
+    public List<Data> DataList {
+        get {
+            DataList_GetCount++;
+            return dataList;
+        }
     }
 
     public int Int_GetCount { get; private set; }
