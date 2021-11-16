@@ -184,6 +184,7 @@ public class LinqModelTests {
     Root
         Where
             Select
+                -ToArray
                 -ToList");
     }
 
@@ -202,6 +203,7 @@ public class LinqModelTests {
     Root
         Where
             Where
+                -ToArray
                 -ToList
                 -Enumerable
             Select

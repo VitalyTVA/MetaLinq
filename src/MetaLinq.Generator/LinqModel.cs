@@ -99,9 +99,14 @@ public abstract class IntermediateNode : LinqNode {
         Nodes.GetOrAdd(NodeKey.Terminal(TerminalNodeType.Enumerable), static () => TerminalNode.Enumerable);
     }
     public IEnumerable<LinqNode> GetNodes() {
-        return Nodes
+        IEnumerable<KeyValuePair<NodeKey, LinqNode>> pairs = Nodes;
+        if(Nodes.ContainsKey(NodeKey.Terminal(TerminalNodeType.ToList))
+            && !Nodes.ContainsKey(NodeKey.Terminal(TerminalNodeType.ToArray)))
+            pairs = pairs.Concat(new[] { new KeyValuePair<NodeKey, LinqNode>(NodeKey.Terminal(TerminalNodeType.ToArray), TerminalNode.ToArray) });
+        var nodes = pairs
             .OrderBy(x => x.Key)
             .Select(x => x.Value);
+        return nodes;
     }
     public sealed override string ToString() {
         var sb = new StringBuilder();

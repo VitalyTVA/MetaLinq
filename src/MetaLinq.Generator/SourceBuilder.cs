@@ -84,7 +84,6 @@ public static {sourceName}<TSource>.{enumerableTypeName} {enumerableKind}<TSourc
             var argumentName = intermediate.GetArgumentName();
             var argumentType = intermediate.GetArgumentType(context.SourceGenericArg, "Result".GetLevelGenericType(context.Level));
             var nodes = intermediate.GetNodes().ToList();
-            bool hasToArray = nodes.Any(x => x is TerminalNode { Type : TerminalNodeType.ToArray });
             bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
             var outputType = context.GetOutputType();
             string typeName = intermediate.GetEnumerableTypeName(context.Level) + context.GetOwnTypeArgsList();
@@ -108,8 +107,6 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
                             EmitToArray(source, structBuilder, context);
                             break;
                         case TerminalNode { Type: TerminalNodeType.ToList }:
-                            if(!hasToArray)
-                                EmitToArray(source, structBuilder, context);
                             EmitToList(source, structBuilder, context);
                             break;
                         case TerminalNode { Type: TerminalNodeType.Enumerable }:
