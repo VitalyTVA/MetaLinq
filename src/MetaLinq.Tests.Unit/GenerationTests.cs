@@ -453,9 +453,81 @@ static Data[] source = Data.Array(3);",
             }
         );
     }
-    //excesive selector and indexer calls
-    //enumerator test for double-nested select many
-    //chains test
+    [Test]
+    public void SelectMany_SelectMany_EnumeratorTests() {
+        AssertGeneration(
+            new (string code, Action<int[]> assert)[] {
+                ("int[] __() => SelectMany(new int[][][] { } );",
+                 Get0ToNIntAssert(-1)),
+                ("int[] __() => SelectMany(new [] { new int[][] { } });",
+                 Get0ToNIntAssert(-1)),
+                ("int[] __() => SelectMany(new[] { new [] { new int[] { } } });",
+                 Get0ToNIntAssert(-1)),
+                ("int[] __() => SelectMany(new[] { new[] { new [] { 0 } } });",
+                 Get0ToNIntAssert(0)),
+                ("int[] __() => SelectMany(new[] { new[] { new[] { 0 } }, new[] { new[] { 1 } } });",
+                 Get0ToNIntAssert(1)),
+                ("int[] __() => SelectMany(new[] { new[] { new[] { 0, 1 }, new[] { 2 } }, new[] { new[] { 3, 4, 5 }, new int[] {}, new[] { 6, 7 } } });",
+                 Get0ToNIntAssert(7)),
+            },
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("SelectMany", new[] {
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                })
+            },
+            additionalClassCode: "static int[] SelectMany(int[][][] ints) => Enumerable.ToArray(ints.SelectMany(static x => x).SelectMany(static x => x));"
+        );
+    }
+
+    [Test]
+    public void SelectMany_LongChains() {
+        AssertGeneration(
+            new (string code, Action<int[]> assert)[] {
+                ("int[] __() => Enumerable.ToArray(Data.List(5).Where(x => x.Int < 3).SelectMany(x => x.DataList).SelectMany(x => x.IntArray));",
+                 Get0ToNIntAssert(11)),
+                ("int[] __() => Data.List(5).Where(x => x.Int < 3).SelectMany(x => x.DataList).SelectMany(x => x.IntArray).ToArray();",
+                 Get0ToNIntAssert(11)),
+
+                ("int[] __() => Enumerable.ToArray(Data.List(6).SelectMany(x => x.DataList).Where(x => x.Int % 2 == 1).Where(x => x.Int < 5).SelectMany(x => x.IntArray).Select(x => x + 1));",
+                 GetIntAssert(new[] { 3, 4, 7, 8 })),
+                ("int[] __() => Data.List(6).SelectMany(x => x.DataList).Where(x => x.Int % 2 == 1).Where(x => x.Int < 5).SelectMany(x => x.IntArray).Select(x => x + 1).ToArray();",
+                 GetIntAssert(new[] { 3, 4, 7, 8 })),
+
+                ("int[] __() => Enumerable.ToArray(Data.List(6).SelectMany(x => x.DataList).Where(x => x.Int % 2 == 1).SelectMany(x => x.IntArray));",
+                 GetIntAssert(new[] { 2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23 })),
+                ("int[] __() => Data.List(6).SelectMany(x => x.DataList).Where(x => x.Int % 2 == 1).SelectMany(x => x.IntArray).ToArray();",
+                 GetIntAssert(new[] { 2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23 })),
+            },
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                    new StructMethod("SelectMany", new[] {
+                        new StructMethod("SelectMany", new[] {
+                            new StructMethod("ToArray"),
+                            new StructMethod("GetEnumerator"),
+                        }, implementsIEnumerable: true)
+                    })
+                }),
+                new MetaLinqMethodInfo(SourceType.List, "SelectMany", new[] {
+                    new StructMethod("Where", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("SelectMany", new[] {
+                                new StructMethod("Select", new[] {
+                                    new StructMethod("ToArray"),
+                                    new StructMethod("GetEnumerator"),
+                                }, implementsIEnumerable: true),
+                            })
+                        }),
+                        new StructMethod("SelectMany", new[] {
+                            new StructMethod("ToArray"),
+                            new StructMethod("GetEnumerator"),
+                        }, implementsIEnumerable: true)
+                    })
+                })
+            }
+        );
+    }
     #endregion
 
     #region select and where
@@ -597,7 +669,7 @@ static Data[] source = Data.Array(3);",
     }
     static Action<int[]> GetIntAssert(int[] expected) {
         return (int[] result) => {
-            CollectionAssert.AreEqual(expected, result.ToArray());
+            CollectionAssert.AreEqual(expected, result);
         };
     }
     class StructMethod {

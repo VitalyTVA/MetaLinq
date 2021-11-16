@@ -127,7 +127,7 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
             var outputType = context.GetOutputType();
             var enumerableKind = intermediate.GetEnumerableKind();
             var ownTypeArgsList = context.GetOwnTypeArgsList();
-            var contexts = context.GetReversedContexts();
+            var contexts = context.GetReversedContexts().ToArray();
             var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(context.Level)}{ownTypeArgsList}";
             //var source = this{ CodeGenerationTraits.GetSourcePath(contexts.Length + 1)}
             builder.AppendLine("#nullable disable");
@@ -199,7 +199,7 @@ IEnumerator IEnumerable.GetEnumerator() {{
                     builder.AppendMultipleLines($@"
 var item{level + 1} = item{level};
 if(!source{sourcePath}.predicate(item{level + 1}))
-    goto next0;");
+    goto next{context.GetLabelIndex(skip: 0)};");
                     break;
                 case SelectNode:
                     builder.AppendLine($@"var item{level + 1} = source{sourcePath}.selector(item{level});");
@@ -211,7 +211,7 @@ if(!source{sourcePath}.predicate(item{level + 1}))
 next{level + 1}:
     i{level + 1}++;
     if(i{level + 1} == source{level + 1}.{selectMany.SourceType.GetCountName()})
-        goto next{level};
+        goto next{context.GetLabelIndex(skip: 1)};
     var item{level + 1} = source{level + 1}[i{level + 1}];");
                     break;
                 default:
@@ -219,6 +219,7 @@ next{level + 1}:
 
             }
         }
+
         static void EmitLoop(SourceType source, CodeBuilder builder, int level, string sourceExpression, Action<CodeBuilder> emitBody) {
             builder.AppendLine($"var source{level} = {sourceExpression};");
             if(source == SourceType.Array)
@@ -240,7 +241,7 @@ foreach(var item{level} in source{level}) {{");
             builder.AppendMultipleLines($@"
 public {outputType}[] ToArray() {{
     using var result = new LargeArrayBuilder<{outputType}>(ArrayPool<{outputType}>.Shared, false);");
-            var contexts = context.GetReversedContexts();
+            var contexts = context.GetReversedContexts().ToArray();
             builder.Tab.AppendLine($"var source = this;");
 
             EmitLoop(source, builder.Tab, 0, "this" + CodeGenerationTraits.GetSourcePath(contexts.Length),
@@ -291,8 +292,11 @@ if(!source{sourcePath}.predicate(item{level + 1}))
             };
             return enumerableKind + "En" + sourceTypePart + level;
         }
-        public static EmitContext[] GetReversedContexts(this EmitContext context) {
-            return Extensions.Unfold(context, x => x.Parent).Reverse().ToArray();
+        public static IEnumerable<EmitContext> GetReversedContexts(this EmitContext context) {
+            return context.GetContexts().Reverse();
+        }
+        public static IEnumerable<EmitContext> GetContexts(this EmitContext context) {
+            return Extensions.Unfold(context, x => x.Parent);
         }
 
         public const string EnumeratorTypeName = "Enumerator";
@@ -369,6 +373,9 @@ if(!source{sourcePath}.predicate(item{level + 1}))
                 SourceType.Array => "Length",
                 _ => throw new NotImplementedException(),
             };
+        }
+        public static int GetLabelIndex(this EmitContext context, int skip) {
+            return context.GetContexts().Where(x => x.Node is SelectManyNode).Skip(skip).FirstOrDefault()?.Level + 1 ?? 0;
         }
     }
 }
