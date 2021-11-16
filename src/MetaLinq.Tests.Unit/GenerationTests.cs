@@ -20,7 +20,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -32,7 +32,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -44,7 +44,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -56,7 +56,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             },
             additionalClassCode: "static List<Data> dataField = Data.List(10);"
         );
@@ -69,7 +69,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             },
             additionalClassCode: "static Data[] GetData(List<Data> list) => list.Where(x => x.Int < 5).ToArray();"
         );
@@ -82,7 +82,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             },
             additionalClassCode: "static Data[] DataProperty => Data.Array(10);"
         );
@@ -96,7 +96,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -197,7 +197,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -209,7 +209,7 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -266,10 +266,10 @@ public class GenerationTests {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false),
+                    }),
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                         new StructMethod("ToArray")
-                    }, implementsIEnumerable: false),
+                    }),
             }
         );
     }
@@ -289,7 +289,7 @@ static Data[] source = Data.Array(3);",
             new [] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("ToArray")
-                }, implementsIEnumerable: false)
+                })
             }
         );
     }
@@ -301,7 +301,7 @@ static Data[] source = Data.Array(3);",
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("ToArray")
-                }, implementsIEnumerable: false)
+                })
             }
         );
     }
@@ -313,7 +313,7 @@ static Data[] source = Data.Array(3);",
             new[] {
                 new MetaLinqMethodInfo(SourceType.List, "SelectMany", new[] {
                     new StructMethod("ToArray")
-                }, implementsIEnumerable: false)
+                })
             }
         );
     }
@@ -333,10 +333,10 @@ static Data[] source = Data.Array(3);",
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("ToArray")
-                }, implementsIEnumerable: false),
+                }),
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("ToArray")
-                }, implementsIEnumerable: false)
+                })
             }
         );
     }
@@ -413,7 +413,7 @@ static Data[] source = Data.Array(3);",
     public void Array_SelectManyList_SelectManyArray_ToArray() {
         AssertGeneration(
 @"int[] __() {{
-    var result = source.SelectMany(x => x.DataList).SelectMany(x => x.IntArray).ToArray();;
+    var result = source.SelectMany(x => x.DataList).SelectMany(x => x.IntArray).ToArray();
     source.AssertAll(x => {
         Assert.AreEqual(1, x.DataList_GetCount);
         x.DataList.AssertAll(y => Assert.AreEqual(1, y.IntArray_GetCount));
@@ -427,7 +427,29 @@ static Data[] source = Data.Array(3);",
                     new StructMethod("SelectMany", new[] {
                         new StructMethod("ToArray")
                     })
-                }, implementsIEnumerable: false)
+                })
+            }
+        );
+    }
+    [Test]
+    public void Array_SelectManyList_SelectManyArray_StandardToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var result = Enumerable.ToArray(source.SelectMany(x => x.DataList).SelectMany(x => x.IntArray));
+    source.AssertAll(x => {
+        Assert.AreEqual(1, x.DataList_GetCount);
+        x.DataList.AssertAll(y => Assert.AreEqual(1, y.IntArray_GetCount));
+    });
+    return result;
+}}
+static Data[] source = Data.Array(3);",
+            Get0ToNIntAssert(11),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("SelectMany", new[] {
+                        new StructMethod("GetEnumerator")
+                    }, implementsIEnumerable: true)
+                })
             }
         );
     }
@@ -447,7 +469,7 @@ static Data[] source = Data.Array(3);",
                         new StructMethod("Where", new[] {
                             new StructMethod("ToArray")
                         })
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -461,7 +483,7 @@ static Data[] source = Data.Array(3);",
                         new StructMethod("Where", new[] {
                             new StructMethod("ToArray")
                         })
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -475,7 +497,7 @@ static Data[] source = Data.Array(3);",
                         new StructMethod("Select", new[] {
                             new StructMethod("ToArray")
                         })
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -490,7 +512,7 @@ static Data[] source = Data.Array(3);",
                         new StructMethod("Where", new[] {
                             new StructMethod("GetEnumerator")
                         }, implementsIEnumerable: true)
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -504,7 +526,7 @@ static Data[] source = Data.Array(3);",
                         new StructMethod("Select", new[] {
                             new StructMethod("GetEnumerator")
                         }, implementsIEnumerable: true)
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -533,14 +555,14 @@ static Data[] source = Data.Array(3);",
                             }, implementsIEnumerable: true),
                             new StructMethod("GetEnumerator"),
                         }, implementsIEnumerable: true)
-                    }, implementsIEnumerable: false),
+                    }),
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("Select", new[] {
                             new StructMethod("Where", new[] {
                                 new StructMethod("ToArray")
                             })
                         })
-                    }, implementsIEnumerable: false)
+                    })
             }
         );
     }
@@ -605,7 +627,7 @@ static Data[] source = Data.Array(3);",
     sealed class MetaLinqMethodInfo : StructMethod {
         public readonly SourceType SourceType;
 
-        public MetaLinqMethodInfo(SourceType sourceType, string name, StructMethod[] resultMethods, bool implementsIEnumerable)
+        public MetaLinqMethodInfo(SourceType sourceType, string name, StructMethod[] resultMethods, bool implementsIEnumerable = false)
             : base(name, resultMethods, implementsIEnumerable) {
             SourceType = sourceType;
         }

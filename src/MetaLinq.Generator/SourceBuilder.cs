@@ -131,26 +131,30 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
             var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(context.Level)}{ownTypeArgsList}";
             //var source = this{ CodeGenerationTraits.GetSourcePath(contexts.Length + 1)}
             builder.AppendLine("#nullable disable");
-            var selectManyLevels = contexts.Select((x, i) => (x, i)).Where(x => x.x.Node is SelectManyNode).Select(x => x.i + 1);
+            var selectManyLevels = contexts
+                .Select((x, i) => (x, i))
+                .Where(x => x.x.Node is SelectManyNode)
+                .Select(x => (index: x.i + 1, node: (SelectManyNode)x.x.Node, outputType: x.x.GetOutputType()))
+                .ToArray();
             using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
                 enumeratorBuilder.AppendMultipleLines($@"
 readonly {enumerableTypeName} source;
 int i0;
-{string.Concat(selectManyLevels.Select(i => $"int i{i};\r\n"))}
-{string.Concat(selectManyLevels.Select(i => $"{((SelectManyNode)contexts[i - 1].Node).SourceType.GetSourceTypeName(outputType)} source{i};"))}
+{string.Concat(selectManyLevels.Select(x => $"int i{x.index};\r\n"))}
+{string.Concat(selectManyLevels.Select(x => $"{x.node.SourceType.GetSourceTypeName(x.outputType)} source{x.index};\r\n"))}
 {outputType} current;
 int state;
 public {CodeGenerationTraits.EnumeratorTypeName}({enumerableTypeName} source) {{
     this.source = source;
     i0 = -1;
-{string.Concat(selectManyLevels.Select(i => $"    i{i} = -1;\r\n    source{i} = default;"))}
+{string.Concat(selectManyLevels.Select(x => $"    i{x.index} = -1;\r\n    source{x.index} = default;"))}
     current = default;
     state = -1;
 }}
 public {outputType} Current => current;
 public bool MoveNext() {{
     if(state == 0) //in progress
-        goto next{(selectManyLevels.Any() ? selectManyLevels.Last() : 0)};
+        goto next{(selectManyLevels.Any() ? selectManyLevels.Last().index : 0)};
     if(state == -1) //start
         goto next0;
     return false; //finished
@@ -162,7 +166,10 @@ next0:
         return false;
     }}
     var item0 = source0[i0];");
-                EmitEnumeratorBody(0, enumeratorBuilder.Tab, contexts);
+                foreach(var item in contexts) {
+                    EmitEnumeratorLevel(enumeratorBuilder.Tab, item, contexts.Length);
+                }
+                builder.Tab.Tab.AppendLine($"current = item{contexts.Length};");
                 enumeratorBuilder.AppendMultipleLines($@"
     state = 0;
     return true;
@@ -183,27 +190,19 @@ IEnumerator IEnumerable.GetEnumerator() {{
 ");
         }
 
-        static void EmitEnumeratorBody(int level, CodeBuilder builder, EmitContext[] contexts) {
-            void Finish(int l) { 
-                builder.AppendLine($"current = item{l};");
-            }
-            if(level >= contexts.Length) {
-                Finish(level);
-                return;
-            }
-            var intermediate = contexts[level].Node;
-            var sourcePath = CodeGenerationTraits.GetSourcePath(contexts.Length - 1 - level);
+        static void EmitEnumeratorLevel(CodeBuilder builder, EmitContext context, int totalLevels) {
+            var level = context.Level;
+            var intermediate = context.Node;
+            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels - 1 - level);
             switch(intermediate) {
                 case WhereNode:
                     builder.AppendMultipleLines($@"
 var item{level + 1} = item{level};
 if(!source{sourcePath}.predicate(item{level + 1}))
     goto next0;");
-                    EmitEnumeratorBody(level + 1, builder, contexts);
                     break;
                 case SelectNode:
                     builder.AppendLine($@"var item{level + 1} = source{sourcePath}.selector(item{level});");
-                    EmitEnumeratorBody(level + 1, builder, contexts);
                     break;
                 case SelectManyNode selectMany:
                     builder.Return!.AppendMultipleLines($@"
@@ -214,7 +213,6 @@ next{level + 1}:
     if(i{level + 1} == source{level + 1}.{selectMany.SourceType.GetCountName()})
         goto next{level};
     var item{level + 1} = source{level + 1}[i{level + 1}];");
-                    Finish(level + 1);
                     break;
                 default:
                     throw new NotImplementedException();
