@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace MetaLinq;
+namespace MetaLinq.Internal;
 
 /// <summary>
 /// Helper type for building dynamically-sized arrays while minimizing allocations and copying.
@@ -181,7 +181,7 @@ public struct LargeArrayBuilder<T>
     readonly bool ICollection<T>.Remove(T item)
         => throw new NotSupportedException();
 }
-static partial class Utils {
+public static partial class Utils {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T[] AllocateUninitializedArray<T>(int count)
@@ -193,7 +193,7 @@ static partial class Utils {
 #endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static List<TSource> AsList<TSource>(this TSource[] source) {
+    public static List<TSource> AsList<TSource>(TSource[] source) {
         return source switch {
             // ReSharper disable once HeapView.ObjectAllocation.Evident
             { Length: 0 } => new List<TSource>(),
@@ -206,6 +206,7 @@ static partial class Utils {
             var layout = Unsafe.As<List<TSource>, ListLayout<TSource>>(ref result);
             layout.items = source;
             layout.size = source.Length;
+            layout.version = 0;
             result.Capacity = source.Length;
             return result;
         }
@@ -214,13 +215,14 @@ static partial class Utils {
     class ListLayout<TSource> {
         public TSource[]? items;
 
-#if !NETCOREAPP3_0_OR_GREATER
-#pragma warning disable IDE0051 // Remove unused private members
-#pragma warning disable 169
-        readonly object? syncRoot;
-#pragma warning restore 169
-#pragma warning restore IDE0051 // Remove unused private members
-#endif
+//#if !NETCOREAPP3_0_OR_GREATER
+//#pragma warning disable IDE0051 // Remove unused private members
+//#pragma warning disable 169
+//        readonly object? syncRoot;
+//#pragma warning restore 169
+//#pragma warning restore IDE0051 // Remove unused private members
+//#endif
         public int size;
+        public int version;
     }
 }

@@ -16,7 +16,7 @@ public class GenerationTests {
     public void Array_Where_ToArray() {
         AssertGeneration(
             "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
@@ -25,10 +25,44 @@ public class GenerationTests {
         );
     }
     [Test]
+    public void Array_Where_ToList() {
+        AssertGeneration(
+            "List<Data> __() => Data.Array(10).Where(x => x.Int < 5).ToList();",
+            (List<Data> result) => {
+                Assert.AreEqual(5, result.Count);
+                Assert.AreEqual(5, result.Capacity);
+                Get0To4DataListAssert()(result);
+            },
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("ToArray"),
+                        new StructMethod("ToList")
+                    })
+            }
+        );
+    }
+    [Test]
+    public void Array_Where_ToListAndToArray() {
+        AssertGeneration(
+            "List<Data> __() { var array = Data.Array(10).Where(x => x.Int < 8).ToArray(); return array.Where(x => x.Int < 5).ToList(); }",
+            (List<Data> result) => {
+                Assert.AreEqual(5, result.Count);
+                Assert.AreEqual(5, result.Capacity);
+                Get0To4DataListAssert()(result);
+            },
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("ToArray"),
+                        new StructMethod("ToList")
+                    })
+            }
+        );
+    }
+    [Test]
     public void ArrayNewExpression_Where_ToArray() {
         AssertGeneration(
             "int[] __() => new [] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }.Where(x => x < 5).ToArray();",
-            Get0ToNIntAssert(4),
+            Get0ToNIntArrayAssert(4),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
@@ -40,7 +74,7 @@ public class GenerationTests {
     public void ArrayVariable_Where_ToArray() {
         AssertGeneration(
             "Data[] __() { var data = Data.Array(10); return data.Where(x => x.Int < 5).ToArray(); }",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
@@ -52,7 +86,7 @@ public class GenerationTests {
     public void ListField_Where_ToArray() {
         AssertGeneration(
             "Data[] __() => dataField.Where(x => x.Int < 5).ToArray();",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("ToArray")
@@ -65,7 +99,7 @@ public class GenerationTests {
     public void ListParameter_Where_ToArray() {
         AssertGeneration(
             "Data[] __() => GetData(Data.List(10));",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("ToArray")
@@ -78,7 +112,7 @@ public class GenerationTests {
     public void ArrayProperty_Where_ToArray() {
         AssertGeneration(
             "Data[] __() => DataProperty.Where(x => x.Int < 5).ToArray();",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
@@ -92,7 +126,7 @@ public class GenerationTests {
     public void List_Where_ToArray() {
         AssertGeneration(
             "Data[] __() => Data.List(10).Where(x => x.Int < 5).ToArray();",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("ToArray")
@@ -104,7 +138,7 @@ public class GenerationTests {
     public void Array_Where_StandardToArray() {
         AssertGeneration(
             "Data[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5));",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new StructMethod[] {
                         new StructMethod("GetEnumerator")
@@ -116,7 +150,7 @@ public class GenerationTests {
     public void List_Where_StandardToArray() {
         AssertGeneration(
             "Data[] __() => System.Linq.Enumerable.ToArray(Data.List(10).Where(x => x.Int < 5));",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new StructMethod[] {
                         new StructMethod("GetEnumerator")
@@ -130,27 +164,27 @@ public class GenerationTests {
             new (string code, Action<Data[]> assert)[] {
                     (
                         "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
-                        Get0To4DataAssert()
+                        Get0To4DataArrayAssert()
                     ),
                     (
                         "Data[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5));",
-                        Get0To4DataAssert()
+                        Get0To4DataArrayAssert()
                     ),
                      (
                         "Data[] __()  { List<Data> result = new(); foreach(var item in Data.Array(10).Where(x => x.Int < 5)) result.Add(item); return result.ToArray(); }",
-                        Get0To4DataAssert()
+                        Get0To4DataArrayAssert()
                     ),
                     (
                         "Data[] __() => Data.List(10).Where(x => x.Int < 5).ToArray();",
-                        Get0To4DataAssert()
+                        Get0To4DataArrayAssert()
                     ),
                     (
                         "Data[] __() => System.Linq.Enumerable.ToArray(Data.List(10).Where(x => x.Int < 5));",
-                        Get0To4DataAssert()
+                        Get0To4DataArrayAssert()
                     ),
                      (
                         "Data[] __()  { List<Data> result = new(); foreach(var item in Data.List(10).Where(x => x.Int < 5)) result.Add(item); return result.ToArray(); }",
-                        Get0To4DataAssert()
+                        Get0To4DataArrayAssert()
                     ),
             },
             new[] {
@@ -170,7 +204,7 @@ public class GenerationTests {
     public void Array_Where_ToArray_Standard() {
         AssertGeneration(
             "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new MetaLinqMethodInfo[0],
             addMetaLinqUsing: false,
             addStadardLinqUsing: true
@@ -180,7 +214,7 @@ public class GenerationTests {
     public void List_Where_ToArray_Standard() {
         AssertGeneration(
             "Data[] __() => Data.List(10).Where(x => x.Int < 5).ToArray();",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new MetaLinqMethodInfo[0],
             addMetaLinqUsing: false,
             addStadardLinqUsing: true
@@ -193,7 +227,7 @@ public class GenerationTests {
     public void Array_Select_ToArray() {
         AssertGeneration(
             "int[] __() => Data.Array(5).Select(x => x.Int).ToArray();",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                         new StructMethod("ToArray")
@@ -205,7 +239,7 @@ public class GenerationTests {
     public void List_Select_ToArray() {
         AssertGeneration(
             "int[] __() => Data.List(5).Select(x => x.Int).ToArray();",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
                         new StructMethod("ToArray")
@@ -217,7 +251,7 @@ public class GenerationTests {
     public void Array_Select_StandardToArray() {
         AssertGeneration(
             "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(5).Select(x => x.Int));",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new StructMethod[] {
                         new StructMethod("GetEnumerator")
@@ -229,7 +263,7 @@ public class GenerationTests {
     public void List_Select_StandardToArray() {
         AssertGeneration(
             "int[] __() => System.Linq.Enumerable.ToArray(Data.List(5).Select(x => x.Int));",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Select", new StructMethod[] {
                         new StructMethod("GetEnumerator")
@@ -241,7 +275,7 @@ public class GenerationTests {
     public void Array_Select_Foreach() {
         AssertGeneration(
             "int[] __()  { List<int> result = new(); foreach(var item in Data.Array(5).Select(x => x.Int)) result.Add(item); return result.ToArray(); }",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new StructMethod[] {
                         new StructMethod("GetEnumerator")
@@ -256,11 +290,11 @@ public class GenerationTests {
             new (string code, Action<Data[]> assert)[] {
                     (
                         "Data[] __() => Data.Array(5).Select(x => x).ToArray();",
-                        Get0To4DataAssert()
+                        Get0To4DataArrayAssert()
                     ),
                     (
                         "Data[] __() => Data.Array(10).Where(x => x.Int < 5).ToArray();",
-                        Get0To4DataAssert()
+                        Get0To4DataArrayAssert()
                     )
             },
             new[] {
@@ -285,7 +319,7 @@ public class GenerationTests {
     return result;
 }}
 static Data[] source = Data.Array(3);",
-            Get0ToNIntAssert(5),
+            Get0ToNIntArrayAssert(5),
             new [] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("ToArray")
@@ -297,7 +331,7 @@ static Data[] source = Data.Array(3);",
     public void Array_SelectManyArrayNewArrayExpression_ToArray() {
         AssertGeneration(
             @"int[] __() => Data.Array(3).SelectMany(x => new[] { 2 * x.Int, 2 * x.Int + 1 }).ToArray();",
-            Get0ToNIntAssert(5),
+            Get0ToNIntArrayAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("ToArray")
@@ -309,7 +343,7 @@ static Data[] source = Data.Array(3);",
     public void List_SelectManyList_ToArray() {
         AssertGeneration(
             "int[] __() => Data.List(3).SelectMany(x => x.IntList).ToArray();",
-            Get0ToNIntAssert(5),
+            Get0ToNIntArrayAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.List, "SelectMany", new[] {
                     new StructMethod("ToArray")
@@ -323,11 +357,11 @@ static Data[] source = Data.Array(3);",
             new (string code, Action<int[]> assert)[] {
                 (
                     "int[] __() => Data.Array(3).SelectMany(x => x.IntArray).ToArray();",
-                    Get0ToNIntAssert(5)
+                    Get0ToNIntArrayAssert(5)
                 ),
                 (
                     "int[] __() => Data.Array(3).SelectMany(x => x.IntList).ToArray();",
-                    Get0ToNIntAssert(5)
+                    Get0ToNIntArrayAssert(5)
                 )
             },
             new[] {
@@ -349,7 +383,7 @@ static Data[] source = Data.Array(3);",
     return result;
 }}
 static Data[] source = Data.Array(3);",
-            Get0ToNIntAssert(5),
+            Get0ToNIntArrayAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("GetEnumerator")
@@ -366,7 +400,7 @@ static Data[] source = Data.Array(3);",
     return result;
 }}
 static Data[] source = Data.Array(3);",
-            Get0ToNIntAssert(5),
+            Get0ToNIntArrayAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("GetEnumerator")
@@ -378,7 +412,7 @@ static Data[] source = Data.Array(3);",
     public void List_SelectManyArray_StandardToArray() {
         AssertGeneration(
             "int[] __() => Enumerable.ToArray(Data.List(3).SelectMany(x => x.IntArray));",
-            Get0ToNIntAssert(5),
+            Get0ToNIntArrayAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.List, "SelectMany", new[] {
                     new StructMethod("GetEnumerator")
@@ -391,15 +425,15 @@ static Data[] source = Data.Array(3);",
         AssertGeneration(
             new (string code, Action<int[]> assert)[] {
                 ("int[] __() => SelectMany(new[] { new[] { 0, 1 }, new[] { 2, 3, 4 } });",
-                 Get0ToNIntAssert(4)),
+                 Get0ToNIntArrayAssert(4)),
                 ("int[] __() => SelectMany(new int[][] { new int[] { } });",
-                 Get0ToNIntAssert(-1)),
+                 Get0ToNIntArrayAssert(-1)),
                 ("int[] __() => SelectMany(new[] {  new int[0], new[] { 0, 1, 2 } });",
-                 Get0ToNIntAssert(2)),
+                 Get0ToNIntArrayAssert(2)),
                 ("int[] __() => SelectMany(new[] { new[] { 0, 1 }, new int[0] });",
-                 Get0ToNIntAssert(1)),
+                 Get0ToNIntArrayAssert(1)),
                 ("int[] __() => SelectMany(new[] { new[] { 0 }, new[] { 1 } });",
-                 Get0ToNIntAssert(1)),
+                 Get0ToNIntArrayAssert(1)),
             },
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
@@ -421,7 +455,7 @@ static Data[] source = Data.Array(3);",
     return result;
 }}
 static Data[] source = Data.Array(3);",
-            Get0ToNIntAssert(11),
+            Get0ToNIntArrayAssert(11),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("SelectMany", new[] {
@@ -443,7 +477,7 @@ static Data[] source = Data.Array(3);",
     return result;
 }}
 static Data[] source = Data.Array(3);",
-            Get0ToNIntAssert(11),
+            Get0ToNIntArrayAssert(11),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("SelectMany", new[] {
@@ -458,17 +492,17 @@ static Data[] source = Data.Array(3);",
         AssertGeneration(
             new (string code, Action<int[]> assert)[] {
                 ("int[] __() => SelectMany(new int[][][] { } );",
-                 Get0ToNIntAssert(-1)),
+                 Get0ToNIntArrayAssert(-1)),
                 ("int[] __() => SelectMany(new [] { new int[][] { } });",
-                 Get0ToNIntAssert(-1)),
+                 Get0ToNIntArrayAssert(-1)),
                 ("int[] __() => SelectMany(new[] { new [] { new int[] { } } });",
-                 Get0ToNIntAssert(-1)),
+                 Get0ToNIntArrayAssert(-1)),
                 ("int[] __() => SelectMany(new[] { new[] { new [] { 0 } } });",
-                 Get0ToNIntAssert(0)),
+                 Get0ToNIntArrayAssert(0)),
                 ("int[] __() => SelectMany(new[] { new[] { new[] { 0 } }, new[] { new[] { 1 } } });",
-                 Get0ToNIntAssert(1)),
+                 Get0ToNIntArrayAssert(1)),
                 ("int[] __() => SelectMany(new[] { new[] { new[] { 0, 1 }, new[] { 2 } }, new[] { new[] { 3, 4, 5 }, new int[] {}, new[] { 6, 7 } } });",
-                 Get0ToNIntAssert(7)),
+                 Get0ToNIntArrayAssert(7)),
             },
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
@@ -486,19 +520,19 @@ static Data[] source = Data.Array(3);",
         AssertGeneration(
             new (string code, Action<int[]> assert)[] {
                 ("int[] __() => Enumerable.ToArray(Data.List(5).Where(x => x.Int < 3).SelectMany(x => x.DataList).SelectMany(x => x.IntArray));",
-                 Get0ToNIntAssert(11)),
+                 Get0ToNIntArrayAssert(11)),
                 ("int[] __() => Data.List(5).Where(x => x.Int < 3).SelectMany(x => x.DataList).SelectMany(x => x.IntArray).ToArray();",
-                 Get0ToNIntAssert(11)),
+                 Get0ToNIntArrayAssert(11)),
 
                 ("int[] __() => Enumerable.ToArray(Data.List(6).SelectMany(x => x.DataList).Where(x => x.Int % 2 == 1).Where(x => x.Int < 5).SelectMany(x => x.IntArray).Select(x => x + 1));",
-                 GetIntAssert(new[] { 3, 4, 7, 8 })),
+                 GetIntArrayAssert(new[] { 3, 4, 7, 8 })),
                 ("int[] __() => Data.List(6).SelectMany(x => x.DataList).Where(x => x.Int % 2 == 1).Where(x => x.Int < 5).SelectMany(x => x.IntArray).Select(x => x + 1).ToArray();",
-                 GetIntAssert(new[] { 3, 4, 7, 8 })),
+                 GetIntArrayAssert(new[] { 3, 4, 7, 8 })),
 
                 ("int[] __() => Enumerable.ToArray(Data.List(6).SelectMany(x => x.DataList).Where(x => x.Int % 2 == 1).SelectMany(x => x.IntArray));",
-                 GetIntAssert(new[] { 2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23 })),
+                 GetIntArrayAssert(new[] { 2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23 })),
                 ("int[] __() => Data.List(6).SelectMany(x => x.DataList).Where(x => x.Int % 2 == 1).SelectMany(x => x.IntArray).ToArray();",
-                 GetIntAssert(new[] { 2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23 })),
+                 GetIntArrayAssert(new[] { 2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23 })),
             },
             new[] {
                 new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
@@ -535,7 +569,7 @@ static Data[] source = Data.Array(3);",
     public void Array_Select_Where_ToArray() {
         AssertGeneration(
             "int[] __() => Data.Array(10).Select(x => x.Int).Where(x => x < 5).ToArray();",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                         new StructMethod("Where", new[] {
@@ -549,7 +583,7 @@ static Data[] source = Data.Array(3);",
     public void List_Select_Where_ToArray() {
         AssertGeneration(
             "int[] __() => Data.List(10).Select(x => x.Int).Where(x => x < 5).ToArray();",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
                         new StructMethod("Where", new[] {
@@ -563,7 +597,7 @@ static Data[] source = Data.Array(3);",
     public void Array_Where_Select_ToArray() {
         AssertGeneration(
             "int[] __() => Data.Array(10).Where(x => x.Int < 5).Select(x => x.Int).ToArray();",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("Select", new[] {
@@ -578,7 +612,7 @@ static Data[] source = Data.Array(3);",
     public void Array_Select_Where_StandardToArray() {
         AssertGeneration(
             "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Select(x => x.Int).Where(x => x < 5));",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                         new StructMethod("Where", new[] {
@@ -592,7 +626,7 @@ static Data[] source = Data.Array(3);",
     public void List_Where_Select_ForEach() {
         AssertGeneration(
             "int[] __()  { List<int> result = new(); foreach(var item in Data.List(10).Where(x => x.Int < 5).Select(x => x.Int)) result.Add(item); return result.ToArray(); }",
-            Get0ToNIntAssert(),
+            Get0ToNIntArrayAssert(),
             new[] {
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                         new StructMethod("Select", new[] {
@@ -608,15 +642,15 @@ static Data[] source = Data.Array(3);",
             new (string code, Action<int[]> assert)[] {
                 (
                     "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 7).Select(x => x.Int - 2).Where(x => x >= 0));",
-                    Get0ToNIntAssert()
+                    Get0ToNIntArrayAssert()
                 ),
                 (
                     "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5).Select(x => x.Int));",
-                    Get0ToNIntAssert()
+                    Get0ToNIntArrayAssert()
                 ),
                 (
                     "int[] __() => Data.List(10).Where(x => x.Int < 7).Select(x => x.Int - 2).Where(x => x >= 0).ToArray();",
-                    Get0ToNIntAssert()
+                    Get0ToNIntArrayAssert()
                 ),
             },
             new[] {
@@ -645,7 +679,7 @@ static Data[] source = Data.Array(3);",
     public void Array() {
         AssertGeneration(
             "Data[] __() => Data.Array(5);",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new MetaLinqMethodInfo[0]
         );
     }
@@ -653,22 +687,35 @@ static Data[] source = Data.Array(3);",
     public void EnumerableToArray() {
         AssertGeneration(
             "Data[] __() => Enumerable.ToArray(Data.Array(5));",
-            Get0To4DataAssert(),
+            Get0To4DataArrayAssert(),
             new MetaLinqMethodInfo[0]
         );
     }
     #endregion
 
-    static Action<Data[]> Get0To4DataAssert() {
+    static Action<Data[]> Get0To4DataArrayAssert() {
         return (Data[] result) => {
             CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
         };
     }
-    static Action<int[]> Get0ToNIntAssert(int n = 4) {
-        return GetIntAssert(Enumerable.Range(0, n + 1).ToArray());
+    static Action<int[]> Get0ToNIntArrayAssert(int n = 4) {
+        return GetIntArrayAssert(Enumerable.Range(0, n + 1).ToArray());
     }
-    static Action<int[]> GetIntAssert(int[] expected) {
+    static Action<int[]> GetIntArrayAssert(int[] expected) {
         return (int[] result) => {
+            CollectionAssert.AreEqual(expected, result);
+        };
+    }
+    static Action<List<Data>> Get0To4DataListAssert() {
+        return (List<Data> result) => {
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
+        };
+    }
+    static Action<List<int>> Get0ToNIntListAssert(int n = 4) {
+        return GetIntListAssert(Enumerable.Range(0, n + 1).ToList());
+    }
+    static Action<List<int>> GetIntListAssert(List<int> expected) {
+        return (List<int> result) => {
             CollectionAssert.AreEqual(expected, result);
         };
     }

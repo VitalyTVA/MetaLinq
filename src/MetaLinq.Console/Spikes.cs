@@ -1,4 +1,5 @@
 ﻿using MetaLinq;
+using MetaLinq.Internal;
 using MetaLinq.Tests;
 using System.Buffers;
 

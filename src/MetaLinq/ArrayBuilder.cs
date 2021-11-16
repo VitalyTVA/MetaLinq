@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace MetaLinq;
+namespace MetaLinq.Internal;
 
 /// <summary>
 /// Helper type for avoiding allocations while building arrays.

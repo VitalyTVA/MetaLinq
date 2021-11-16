@@ -1,7 +1,3 @@
-!!!!!!!!!! apply all spike tests to generated code
-
-!!!!!!!!!! tests that selector/predicate is always called exactly once for each element (no code like current2 => current1[i1])
-
 emit SelectMany body loop via for or foreach for List<T>??  for(int i1 = 0; i1 < len1; i1++) { (now there is duplicate code with root loop emit code)
 
 kill all MetaEnumerable_Generated stuff
@@ -38,6 +34,12 @@ incomplete (non-compilable) LINQ statements tests like "ints.Select(static x => 
 
 arguments null checks (source, predicate, selector, etc.)
 
+mark methods readonly
+
+ListLayout struct in different frameworks
+
+nested selectmany memory test (array + enumerator)
+
 ~~mark generated structs readonly~~
 
 ~~nullable annotations in all projects~~
@@ -45,3 +47,7 @@ arguments null checks (source, predicate, selector, etc.)
 ~~warnings as errors in all projects~~
 
 ~~no alloc GetEnumerator to use in foreach (duck-typing)~~
+
+~~apply all spike tests to generated code~~
+
+~~tests that selector/predicate is always called exactly once for each element (no code like current2 => current1[i1])~~

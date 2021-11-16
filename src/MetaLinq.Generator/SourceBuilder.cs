@@ -21,7 +21,8 @@ namespace MetaLinq.Generator {
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Buffers;");
+using System.Buffers;
+using MetaLinq.Internal;");
             using(builder.BuildNamespace(out CodeBuilder nsBuilder, "MetaLinq")) {
                 foreach(var node in tree.GetNodes()) {
                     switch(node) {
@@ -83,6 +84,7 @@ public static {sourceName}<TSource>.{enumerableTypeName} {enumerableKind}<TSourc
             var argumentName = intermediate.GetArgumentName();
             var argumentType = intermediate.GetArgumentType(context.SourceGenericArg, "Result".GetLevelGenericType(context.Level));
             var nodes = intermediate.GetNodes().ToList();
+            bool hasToArray = nodes.Any(x => x is TerminalNode { Type : TerminalNodeType.ToArray });
             bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
             var outputType = context.GetOutputType();
             string typeName = intermediate.GetEnumerableTypeName(context.Level) + context.GetOwnTypeArgsList();
@@ -104,6 +106,11 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
                     switch(node) {
                         case TerminalNode { Type: TerminalNodeType.ToArray }:
                             EmitToArray(source, structBuilder, context);
+                            break;
+                        case TerminalNode { Type: TerminalNodeType.ToList }:
+                            if(!hasToArray)
+                                EmitToArray(source, structBuilder, context);
+                            EmitToList(source, structBuilder, context);
                             break;
                         case TerminalNode { Type: TerminalNodeType.Enumerable }:
                             EmitGetEnumerator(source, structBuilder, context);
@@ -250,6 +257,10 @@ public {outputType}[] ToArray() {{
             builder.AppendMultipleLines(@"
     return result.ToArray();
 }");
+        }
+        static void EmitToList(SourceType source, CodeBuilder builder, EmitContext context) {
+            var outputType = context.GetOutputType();
+            builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
         static void EmitLoopBody(int level, CodeBuilder builder, EmitContext[] contexts) {
             if(level >= contexts.Length) {

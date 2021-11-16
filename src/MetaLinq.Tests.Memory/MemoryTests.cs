@@ -60,22 +60,22 @@ public class Tests {
     #region select where
     [Test]
     public static void Array_Select_Where_ToList() {
-        MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 10).Where(static x => x % 100 == 0).ToArray(), ExpectedArrayOfIntsAllocations());
+        MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 10).Where(static x => x % 100 == 0).ToList(), ExpectedListOfIntsAllocations());
     }
     [Test]
     public static void Array_Where_Select_ToList() {
-        MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).ToArray(), ExpectedArrayOfIntsAllocations());
+        MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).ToList(), ExpectedListOfIntsAllocations());
     }
     #endregion
 
     #region temp
     [Test]
     public static void Array_SelectMany_ToList() {
-        MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany(static x => x.IntArray).ToArray(), ExpectedArrayOfIntsAllocations());
+        MemoryTestHelper.AssertDifference(() => testDataArray.SelectMany(static x => x.IntArray).ToList(), ExpectedListOfIntsAllocations());
     }
     [Test]
     public static void List_SelectMany_ToList() {
-        MemoryTestHelper.AssertDifference(() => testDataList.SelectMany(static x => x.IntArray).ToArray(), ExpectedArrayOfIntsAllocations());
+        MemoryTestHelper.AssertDifference(() => testDataList.SelectMany(static x => x.IntArray).ToList(), ExpectedListOfIntsAllocations());
     }
     [Test]
     public static void Array_SelectMany_ForEach() {
