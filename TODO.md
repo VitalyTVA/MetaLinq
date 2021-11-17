@@ -1,3 +1,5 @@
+allocate resulting array at once if count is known (list/array + selector/where)
+
 emit SelectMany body loop via for or foreach for List<T>??  for(int i1 = 0; i1 < len1; i1++) { (now there is duplicate code with root loop emit code)
 
 kill all MetaEnumerable_Generated stuff
@@ -39,6 +41,8 @@ mark methods readonly
 ListLayout struct in different frameworks
 
 nested selectmany memory test (array + enumerator)
+
+randoms tests - generate chains, source arrays, shuffle data, etc.
 
 ~~mark generated structs readonly~~
 

@@ -52,7 +52,13 @@ public static class MemoryTestHelper {
                 CollectionAssert.DoesNotContain(GarbageTypes, item.type);
                 Assert.False(GarbageTypePieces.Any(x => item.type.Contains(x)));
             }
-            CollectionAssert.AreEqual(expected.OrderBy(x => x.type).ToArray(), allocated);
+            var expectedAllocs = expected.OrderBy(x => x.type).ToArray();
+            if(!Enumerable.SequenceEqual(expectedAllocs, allocated)) {
+                foreach(var item in allocated) {
+                    Console.WriteLine("ALLOCATED: " + item);
+                }
+            }
+            CollectionAssert.AreEqual(expectedAllocs, allocated);
         });
         //}
     }
@@ -131,6 +137,7 @@ public static class MemoryTestHelper {
             "System.Collections.Concurrent.ConcurrentStack`1+Node[System.Object]",
             "System.SByte[]",
             "System.Runtime.CompilerServices.GCHeapHash",
+            "System.GCMemoryInfoData",
         };
     static readonly string[] GarbageTypePieces = new[] {
             "JetBrains",

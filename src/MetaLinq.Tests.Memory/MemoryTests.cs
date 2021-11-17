@@ -1,5 +1,6 @@
 ﻿using JetBrains.dotMemoryUnit;
 using MetaLinq;
+using MetaLinqSpikes;
 
 //[assembly: Apartment(System.Threading.ApartmentState.STA)]
 
@@ -13,19 +14,32 @@ public class Tests {
 
         testDataArray = new TestData[5];
         for(int i = 0; i < 5; i++) {
-            testDataArray[i] = new TestData(new[] { i * 10, i * 10 + 1 });
+            testDataArray[i] = new TestData(new[] { i * 10, i * 10 + 1 }, i);
         }
         testDataList = Enumerable.ToList(testDataArray);
+
+        var rnd = new Random(0);
+        testDataArray_Shuffled = Enumerable.ToArray(Enumerable.Select(Enumerable.Range(0, 20), x => new TestData(new int[] { }, x)));
+        for(int i = 0; i < 40; i++) {
+            var i1 = rnd.Next(testDataArray_Shuffled.Length);
+            var i2 = rnd.Next(testDataArray_Shuffled.Length);
+            var tmp = testDataArray_Shuffled[i1];
+            testDataArray_Shuffled[i1] = testDataArray_Shuffled[i2];
+            testDataArray_Shuffled[i2] = tmp;
+        }
     }
     class TestData {
-        public TestData(int[] ints) {
+        public TestData(int[] ints, int value) {
             IntArray = ints;
+            Value = value;
             //IntList = ints.ToList();
         }
         public int[] IntArray { get; }
+        public int Value { get; }
         //public List<int> IntList { get; }
     }
     static TestData[] testDataArray;
+    static TestData[] testDataArray_Shuffled;
     static List<TestData> testDataList;
     static int[] intArray = Enumerable.ToArray(Enumerable.Range(0, 5));
     static List<int> intList = Enumerable.ToList(Enumerable.Range(0, 5));
@@ -86,6 +100,17 @@ public class Tests {
             }
             AssertValue(205, sum);
         }, null);
+    }
+    #endregion
+
+    #region order by
+    //[Test]
+    //public static void Array_OrderBy_ToArrayStandard() {
+    //    MemoryTestHelper.AssertDifference(() => Enumerable.ToArray(Enumerable.OrderBy(testDataArray_Shuffled, static x => x.Value)), ExpectedArrayOfIntsAllocations());
+    //}
+    [Test]
+    public static void Array_OrderBy_ToArray() {
+        MemoryTestHelper.AssertDifference(() => MetaEnumerable_Spike.OrderBy_Meta(testDataArray_Shuffled, static x => x.Value).ToArray(), ExpectedOrderByAllocations());
     }
     #endregion
 
@@ -164,6 +189,12 @@ public class Tests {
     }
     static (string, int)[] ExpectedArrayOfIntsAllocations() {
         return new[] {
+                ("System.Int32[]", 1),
+            };
+    }
+    static (string, int)[] ExpectedOrderByAllocations() {
+        return new[] {
+                ($"{typeof(TestData).FullName}[]", 1),
                 ("System.Int32[]", 1),
             };
     }

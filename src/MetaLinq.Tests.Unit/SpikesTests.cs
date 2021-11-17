@@ -56,16 +56,6 @@ public class SpikesTests {
             new[] { new[] { 3, 4, 5 }, new int[] {}, new[] { 6, 7 } }
         });
     }
-
-    public class Data {
-        public int Id { get; set; }
-
-    }
-    [Test]
-    public void OrderBy() {
-        var en = new[] { 4, 3, 6, 2 }.Select(x => new Data { Id = x }) .OrderBy(x => x.Id);
-        en.ToArray();
-    }
 }
 
 #nullable disable
