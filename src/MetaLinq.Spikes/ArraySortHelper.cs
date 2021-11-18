@@ -5,34 +5,35 @@ using System.Runtime.InteropServices;
 
 namespace MetaLinqSpikes;
 
-internal interface IArraySortHelper<TKey> {
-	void Sort(Span<TKey> keys, IComparer<TKey> comparer);
+internal interface IArraySortHelper<TKey, TComparer> where TComparer : IComparer<TKey> {
+	void Sort(Span<TKey> keys, TComparer comparer);
 
-	int BinarySearch(TKey[] keys, int index, int length, TKey value, IComparer<TKey> comparer);
+	int BinarySearch(TKey[] keys, int index, int length, TKey value, TComparer comparer);
 }
 
 
 //[TypeDependency("System.Collections.Generic.GenericArraySortHelper`1")]
-internal class ArraySortHelper<T> : IArraySortHelper<T> {
-	private static readonly IArraySortHelper<T> s_defaultArraySortHelper = CreateArraySortHelper();
+internal class ArraySortHelper<T, TComparer> : IArraySortHelper<T, TComparer> where TComparer : IComparer<T> {
+	private static readonly IArraySortHelper<T, TComparer> s_defaultArraySortHelper = CreateArraySortHelper();
 
-	public static IArraySortHelper<T> Default => s_defaultArraySortHelper;
+	public static IArraySortHelper<T, TComparer> Default => s_defaultArraySortHelper;
 
 	//[DynamicDependency("#ctor", typeof(GenericArraySortHelper<>))]
-	private static IArraySortHelper<T> CreateArraySortHelper() {
+	private static IArraySortHelper<T, TComparer> CreateArraySortHelper() {
 		if(typeof(IComparable<T>).IsAssignableFrom(typeof(T))) {
 			throw new InvalidOperationException();
 			//return (IArraySortHelper<T>)RuntimeTypeHandle.Allocate(typeof(GenericArraySortHelper<string>).TypeHandle.Instantiate(new Type[1] { typeof(T) }));
 		}
-		return new ArraySortHelper<T>();
+		return new ArraySortHelper<T, TComparer>();
 	}
 
-	public void Sort(Span<T> keys, IComparer<T> comparer) {
+	public void Sort(Span<T> keys, TComparer comparer) {
 		try {
 			if(comparer == null) {
-				comparer = Comparer<T>.Default;
+				throw new InvalidOperationException();
+				//comparer = Comparer<T>.Default;
 			}
-			IntrospectiveSort(keys, comparer.Compare);
+			IntrospectiveSort(keys, comparer);
 		} catch(IndexOutOfRangeException) {
 			throw new ArgumentException("comparer");
 			//ThrowHelper.ThrowArgumentException_BadComparer(comparer);
@@ -42,10 +43,11 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		}
 	}
 
-	public int BinarySearch(T[] array, int index, int length, T value, IComparer<T> comparer) {
+	public int BinarySearch(T[] array, int index, int length, T value, TComparer comparer) {
 		try {
 			if(comparer == null) {
-				comparer = Comparer<T>.Default;
+				throw new InvalidOperationException();
+				//comparer = Comparer<T>.Default;
 			}
 			return InternalBinarySearch(array, index, length, value, comparer);
 		} catch(Exception e) {
@@ -55,7 +57,7 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		}
 	}
 
-	internal static void Sort(Span<T> keys, Comparison<T> comparer) {
+	internal static void Sort__(Span<T> keys, TComparer comparer) {
 		try {
 			IntrospectiveSort(keys, comparer);
 		} catch(IndexOutOfRangeException) {
@@ -85,8 +87,8 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		return ~num;
 	}
 
-	private static void SwapIfGreater(Span<T> keys, Comparison<T> comparer, int i, int j) {
-		if(comparer(keys[i], keys[j]) > 0) {
+	private static void SwapIfGreater(Span<T> keys, TComparer comparer, int i, int j) {
+		if(comparer.Compare(keys[i], keys[j]) > 0) {
 			T val = keys[i];
 			keys[i] = keys[j];
 			keys[j] = val;
@@ -100,13 +102,13 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		a[j] = val;
 	}
 
-	internal static void IntrospectiveSort(Span<T> keys, Comparison<T> comparer) {
+	internal static void IntrospectiveSort(Span<T> keys, TComparer comparer) {
 		if(keys.Length > 1) {
 			IntroSort(keys, 2 * (BitOperations.Log2((uint)keys.Length) + 1), comparer);
 		}
 	}
 
-	private static void IntroSort(Span<T> keys, int depthLimit, Comparison<T> comparer) {
+	private static void IntroSort(Span<T> keys, int depthLimit, TComparer comparer) {
 		int num = keys.Length;
 		while(num > 1) {
 			if(num <= 16) {
@@ -137,7 +139,7 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		}
 	}
 
-	private static int PickPivotAndPartition(Span<T> keys, Comparison<T> comparer) {
+	private static int PickPivotAndPartition(Span<T> keys, TComparer comparer) {
 		int num = keys.Length - 1;
 		int num2 = num >> 1;
 		SwapIfGreater(keys, comparer, 0, num2);
@@ -148,9 +150,9 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		int num3 = 0;
 		int num4 = num - 1;
 		while(num3 < num4) {
-			while(comparer(keys[++num3], val) < 0) {
+			while(comparer.Compare(keys[++num3], val) < 0) {
 			}
-			while(comparer(val, keys[--num4]) < 0) {
+			while(comparer.Compare(val, keys[--num4]) < 0) {
 			}
 			if(num3 >= num4) {
 				break;
@@ -163,7 +165,7 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		return num3;
 	}
 
-	private static void HeapSort(Span<T> keys, Comparison<T> comparer) {
+	private static void HeapSort(Span<T> keys, TComparer comparer) {
 		int length = keys.Length;
 		for(int num = length >> 1; num >= 1; num--) {
 			DownHeap(keys, num, length, comparer);
@@ -174,14 +176,14 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		}
 	}
 
-	private static void DownHeap(Span<T> keys, int i, int n, Comparison<T> comparer) {
+	private static void DownHeap(Span<T> keys, int i, int n, TComparer comparer) {
 		T val = keys[i - 1];
 		while(i <= n >> 1) {
 			int num = 2 * i;
-			if(num < n && comparer(keys[num - 1], keys[num]) < 0) {
+			if(num < n && comparer.Compare(keys[num - 1], keys[num]) < 0) {
 				num++;
 			}
-			if(comparer(val, keys[num - 1]) >= 0) {
+			if(comparer.Compare(val, keys[num - 1]) >= 0) {
 				break;
 			}
 			keys[i - 1] = keys[num - 1];
@@ -190,11 +192,11 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 		keys[i - 1] = val;
 	}
 
-	private static void InsertionSort(Span<T> keys, Comparison<T> comparer) {
+	private static void InsertionSort(Span<T> keys, TComparer comparer) {
 		for(int i = 0; i < keys.Length - 1; i++) {
 			T val = keys[i + 1];
 			int num = i;
-			while(num >= 0 && comparer(val, keys[num]) < 0) {
+			while(num >= 0 && comparer.Compare(val, keys[num]) < 0) {
 				keys[num + 1] = keys[num];
 				num--;
 			}
@@ -204,31 +206,32 @@ internal class ArraySortHelper<T> : IArraySortHelper<T> {
 }
 
 
-internal class GenericArraySortHelper<T> : IArraySortHelper<T> where T : IComparable<T> {
-	private static readonly IArraySortHelper<T> s_defaultArraySortHelper = CreateArraySortHelper();
+internal class GenericArraySortHelper<T, TComparer> : IArraySortHelper<T, TComparer> where T : IComparable<T> where TComparer : IComparer<T> {
+	private static readonly IArraySortHelper<T, TComparer> s_defaultArraySortHelper = CreateArraySortHelper();
 
-	public static IArraySortHelper<T> Default => s_defaultArraySortHelper;
+	public static IArraySortHelper<T, TComparer> Default => s_defaultArraySortHelper;
 
-	private static IArraySortHelper<T> CreateArraySortHelper() {
-		return new GenericArraySortHelper<T>();
+	private static IArraySortHelper<T, TComparer> CreateArraySortHelper() {
+		return new GenericArraySortHelper<T, TComparer>();
 	}
 
-	public void Sort(Span<T> keys, IComparer<T> comparer) {
+	public void Sort(Span<T> keys, TComparer comparer) {
 		try {
-			if(comparer == null || comparer == Comparer<T>.Default) {
-				if(keys.Length <= 1) {
-					return;
-				}
-				if(typeof(T) == typeof(double) || typeof(T) == typeof(float) || typeof(T) == typeof(Half)) {
-					int num = SortUtils.MoveNansToFront(keys, default(Span<byte>));
-					if(num == keys.Length) {
-						return;
-					}
-					keys = keys.Slice(num);
-				}
-				IntroSort(keys, 2 * (BitOperations.Log2((uint)keys.Length) + 1));
+			if(comparer == null /*|| comparer == Comparer<T>.Default*/) {
+				throw new InvalidOperationException();
+				//if(keys.Length <= 1) {
+				//	return;
+				//}
+				//if(typeof(T) == typeof(double) || typeof(T) == typeof(float) || typeof(T) == typeof(Half)) {
+				//	int num = SortUtils.MoveNansToFront(keys, default(Span<byte>));
+				//	if(num == keys.Length) {
+				//		return;
+				//	}
+				//	keys = keys.Slice(num);
+				//}
+				//IntroSort(keys, 2 * (BitOperations.Log2((uint)keys.Length) + 1));
 			} else {
-				ArraySortHelper<T>.IntrospectiveSort(keys, comparer.Compare);
+				ArraySortHelper<T, TComparer>.IntrospectiveSort(keys, comparer);
 			}
 		} catch(IndexOutOfRangeException) {
 			throw new ArgumentException("comparer");
@@ -239,12 +242,13 @@ internal class GenericArraySortHelper<T> : IArraySortHelper<T> where T : ICompar
 		}
 	}
 
-	public int BinarySearch(T[] array, int index, int length, T value, IComparer<T> comparer) {
+	public int BinarySearch(T[] array, int index, int length, T value, TComparer comparer) {
 		try {
-			if(comparer == null || comparer == Comparer<T>.Default) {
-				return BinarySearch(array, index, length, value);
+			if(comparer == null /*|| comparer == Comparer<T>.Default*/) {
+				throw new InvalidOperationException();
+				//return BinarySearch(array, index, length, value);
 			}
-			return ArraySortHelper<T>.InternalBinarySearch(array, index, length, value, comparer);
+			return ArraySortHelper<T, TComparer>.InternalBinarySearch(array, index, length, value, comparer);
 		} catch(Exception e) {
 			throw new InvalidOperationException("ExceptionResource.InvalidOperation_IComparerFailed", e);
 			//ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_IComparerFailed, e);

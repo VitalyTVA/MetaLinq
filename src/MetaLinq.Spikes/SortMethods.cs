@@ -44,7 +44,7 @@ public static partial class SortMethods {
             map[i] = i;
         }
 
-        GenericArraySortHelper<int>.Default.Sort(map, new KeysComparer(sortKeys));
+        GenericArraySortHelper<int, KeysComparer>.Default.Sort(map, new KeysComparer(sortKeys));
 
         var sorted = new TSource[source.Length];
         for(int i = 0; i != len0; i++) {

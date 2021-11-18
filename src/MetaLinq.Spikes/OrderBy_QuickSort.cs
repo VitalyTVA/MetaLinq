@@ -13,7 +13,7 @@ public static partial class Meta_Array_Spike<TSource> {
 			this.keySelector = keySelector;
 		}
 		public TSource[] ToArray() {
-			return SortMethods.Sort_Map_Comparer(source, keySelector);
+			return SortMethods.Sort_ArraySortHelper_TComparer(source, keySelector);
 		}
 	}
 }
