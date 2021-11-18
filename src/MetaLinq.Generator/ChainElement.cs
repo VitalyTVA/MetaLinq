@@ -5,6 +5,7 @@ public enum SourceType { List, Array }
 public abstract record ChainElement {
     public static ChainElement Where => WhereChainElement.Instance;
     public static ChainElement Select => SelectChainElement.Instance;
+    public static ChainElement OrderBy => OrderByChainElement.Instance;
     public static ChainElement SelectMany(SourceType sourceType) => new SelectManyChainElement(sourceType);
     public static ChainElement ToArray => ToArrayChainElement.Instance;
     public static ChainElement ToList => ToListChainElement.Instance;
@@ -28,6 +29,11 @@ public sealed record WhereChainElement : ChainElement {
 public sealed record SelectChainElement : ChainElement {
     public static readonly SelectChainElement Instance = new SelectChainElement();
     SelectChainElement() { }
+}
+
+public sealed record OrderByChainElement : ChainElement {
+    public static readonly OrderByChainElement Instance = new OrderByChainElement();
+    OrderByChainElement() { }
 }
 
 public sealed record SelectManyChainElement(SourceType SourceType) : ChainElement {

@@ -53,6 +53,22 @@ public class LinqModelTests {
     }
 
     [Test]
+    public void OrderBy() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { ChainElement.Select });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderBy });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderBy, ChainElement.ToArray });
+        AssertModel(model,
+@"List
+    Root
+        Select
+            -Enumerable
+        OrderBy
+            -ToArray
+            -Enumerable");
+    }
+
+    [Test]
     public void SelectMany_Array() {
         var model = new LinqModel();
         model.AddChain(SourceType.List, new[] { ChainElement.SelectMany(SourceType.Array) });
@@ -272,6 +288,8 @@ Array
         model.AddChain(SourceType.Array, new[] { ChainElement.Select });
         model.AddChain(SourceType.List, new[] { ChainElement.Select, ChainElement.ToArray});
         model.AddChain(SourceType.List, new[] { ChainElement.Select });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderBy, ChainElement.ToArray });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderBy });
         AssertModel(model,
 @"List
     Root
@@ -279,6 +297,9 @@ Array
             -ToArray
             -Enumerable
         Select
+            -ToArray
+            -Enumerable
+        OrderBy
             -ToArray
             -Enumerable
 Array
@@ -324,5 +345,9 @@ Array
 
         AssertNodeComparison(1, NodeKey.SelectMany(SourceType.Array), NodeKey.Simple(NodeType.Select));
         AssertNodeComparison(-1, NodeKey.Simple(NodeType.Select), NodeKey.SelectMany(SourceType.Array));
+
+        AssertNodeComparison(0, NodeKey.Simple(NodeType.OrderBy), NodeKey.Simple(NodeType.OrderBy));
+        AssertNodeComparison(-1, NodeKey.Simple(NodeType.Select), NodeKey.Simple(NodeType.OrderBy));
+        AssertNodeComparison(1, NodeKey.Simple(NodeType.OrderBy), NodeKey.Simple(NodeType.Select));
     }
 }

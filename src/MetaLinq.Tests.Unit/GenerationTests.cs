@@ -11,6 +11,33 @@ namespace MetaLinqTests.Unit;
 
 [TestFixture]
 public class GenerationTests {
+    #region order by
+    [Test]
+    public void Array_OrderBy_ToArray() {
+        AssertGeneration(
+            "Data[] __() => Data.Array(10).Shuffle().OrderBy(x => x.Int).ToArray();",
+            Get0ToNDataArrayAssert(9),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+    }
+    [Test]
+    public void Array_OrderBy_ToArray_AssertSortMethod() {
+        AssertGeneration(
+            "object? __() { DataExtensions.AssertSortMethod(x => x.OrderBy(x => x.Int).ToArray(), isStable: true, CollectionAssert.AreEqual); return null; }",
+            (object x) => Assert.Null(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+    }
+    #endregion
+
     #region where
     [Test]
     public void Array_Where_ToArray() {
@@ -694,8 +721,11 @@ static Data[] source = Data.Array(3);",
     #endregion
 
     static Action<Data[]> Get0To4DataArrayAssert() {
+        return Get0ToNDataArrayAssert(4);
+    }
+    static Action<Data[]> Get0ToNDataArrayAssert(int n = 4) {
         return (Data[] result) => {
-            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, result.Select(x => x.Int).ToArray());
+            CollectionAssert.AreEqual(Enumerable.Range(0, n + 1).ToArray(), result.Select(x => x.Int).ToArray());
         };
     }
     static Action<int[]> Get0ToNIntArrayAssert(int n = 4) {

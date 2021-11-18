@@ -110,7 +110,7 @@ public class Tests {
     //}
     [Test]
     public static void Array_OrderBy_ToArray() {
-        MemoryTestHelper.AssertDifference(() => MetaEnumerable_Spike.OrderBy_Meta(testDataArray_Shuffled, static x => x.Value).ToArray(), ExpectedOrderByAllocations());
+        MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.OrderBy(static x => x.Value).ToArray(), ExpectedOrderByAllocations());
     }
     #endregion
 

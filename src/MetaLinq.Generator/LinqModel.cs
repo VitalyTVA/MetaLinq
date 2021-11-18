@@ -52,6 +52,7 @@ public sealed class TerminalNode : LinqNode {
 public enum NodeType {
     Where,
     Select,
+    OrderBy,
     SelectMany,
     Terminal,
 }
@@ -83,6 +84,8 @@ public abstract class IntermediateNode : LinqNode {
                 return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.Where), static () => new WhereNode());
             case SelectChainElement:
                 return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.Select), static () => new SelectNode());
+            case OrderByChainElement:
+                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.OrderBy), static () => new OrderByNode());
             case SelectManyChainElement selectManyNode:
                 return (IntermediateNode)Nodes.GetOrAdd(NodeKey.SelectMany(selectManyNode.SourceType), () => new SelectManyNode(selectManyNode.SourceType));
             case ToArrayChainElement:
@@ -132,6 +135,10 @@ public sealed class WhereNode : IntermediateNode {
 public sealed class SelectNode : IntermediateNode {
     public SelectNode() { }
     protected override string Type => "Select";
+}
+public sealed class OrderByNode : IntermediateNode {
+    public OrderByNode() { }
+    protected override string Type => "OrderBy";
 }
 public sealed class SelectManyNode : IntermediateNode {
     public readonly SourceType SourceType;

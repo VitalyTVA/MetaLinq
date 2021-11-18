@@ -79,26 +79,15 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                     var currentSymbolInfo = context.SemanticModel.GetSymbolInfo(currentMemberAccess.Name);
                     if(currentSymbolInfo.Symbol is IMethodSymbol currentMethodSymbol
                         && SymbolEqualityComparer.Default.Equals(currentMethodSymbol.OriginalDefinition.ContainingType, enumerableType)) {
-                        if(currentMethodSymbol.Name == "Where") {
-                            chain.Push(ChainElement.Where);
-                            chained = true;
-                        }
-                        if(currentMethodSymbol.Name == "Select") {
-                            chain.Push(ChainElement.Select);
+                        var element = TryGetSimpleChainElement(currentMethodSymbol.Name);
+                        if(element != null) {
+                            chain.Push(element);
                             chained = true;
                         }
                         if(currentMethodSymbol.Name == "SelectMany") {
                             var lambda = ((LambdaExpressionSyntax)currentInvocation.ArgumentList.Arguments[0].Expression).ExpressionBody!;
                             var soruceType = GetSourceType(context, lambda);
                             chain.Push(ChainElement.SelectMany(soruceType!.Value));
-                            chained = true;
-                        }
-                        if(currentMethodSymbol.Name == "ToArray") {
-                            chain.Push(ChainElement.ToArray);
-                            chained = true;
-                        }
-                        if(currentMethodSymbol.Name == "ToList") {
-                            chain.Push(ChainElement.ToList);
                             chained = true;
                         }
                     }
@@ -116,6 +105,16 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 Model.AddChain(source.Value, chain);
             }
         }
+    }
+    static ChainElement? TryGetSimpleChainElement(string funcName) {
+        return funcName switch {
+            "Where" => ChainElement.Where,
+            "Select" => ChainElement.Select,
+            "OrderBy" => ChainElement.OrderBy,
+            "ToArray" => ChainElement.ToArray,
+            "ToList" => ChainElement.ToList,
+            _ => null
+        };
     }
     SourceType? GetSourceType(GeneratorSyntaxContext context, ExpressionSyntax expression) {
         var returnType = context.SemanticModel.GetTypeInfo(expression).Type;

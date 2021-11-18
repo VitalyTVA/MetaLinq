@@ -10,8 +10,8 @@ namespace MetaLinqBenchmark;
 
 class Program {
     static void Main(string[] args) {
-        BenchmarkRunner.Run<SortBenchmarks>();
-        //BenchmarkRunner.Run<OrderByBenchmarks>();
+        //BenchmarkRunner.Run<SortBenchmarks>();
+        BenchmarkRunner.Run<OrderByBenchmarks>();
         //BenchmarkRunner.Run<Benchmarks>();
     }
 }
