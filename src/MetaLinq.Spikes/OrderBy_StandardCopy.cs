@@ -3,7 +3,7 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
-namespace MetaLinqTests.Unit.Spikes.OrderBy;
+namespace MetaLinqSpikes.OrderBy;
 
 #nullable disable
 public static class Order {

@@ -1,4 +1,6 @@
-﻿namespace MetaLinqSpikes;
+﻿using System.Buffers;
+
+namespace MetaLinqSpikes;
 
 public static partial class SortMethods {
     public static TSource[] Sort_Map_Comparer<TSource>(TSource[] source, Func<TSource, int> keySelector) {

@@ -195,7 +195,7 @@ public class Tests {
     static (string, int)[] ExpectedOrderByAllocations() {
         return new[] {
                 ($"{typeof(TestData).FullName}[]", 1),
-                ("System.Int32[]", 2),
+                ("System.Int32[]", 1),
             };
     }
 }

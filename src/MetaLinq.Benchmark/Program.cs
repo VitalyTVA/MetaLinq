@@ -3,6 +3,7 @@ using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using MetaLinq;
+using MetaLinq.Internal;
 using System.Linq;
 
 namespace MetaLinqBenchmark;
@@ -44,6 +45,11 @@ public class SortBenchmarks {
     [Benchmark]
     public void Sort_ArraySortHelper_TComparer() {
         MetaLinqSpikes.SortMethods.Sort_ArraySortHelper_TComparer(testData, x => x.Value);
+    }
+
+    [Benchmark]
+    public void Sort_ArraySortHelper_TComparer_WithMap() {
+        SortHelper.SortToArray(testData, x => x.Value);
     }
 
 
