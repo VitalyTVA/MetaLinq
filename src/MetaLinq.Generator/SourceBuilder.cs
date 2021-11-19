@@ -250,8 +250,8 @@ public {outputType}[] ToArray() {{
 }}");
                 return;
             }
-            bool exactCountKnown = context is { Parent: null, Node: SelectNode };
             var contexts = context.GetReversedContexts().ToArray();
+            bool exactCountKnown = contexts.All(x => x.Node is SelectNode);
             var sourcePath = CodeGenerationTraits.GetSourcePath(contexts.Length);
 
             builder.AppendMultipleLines($@"

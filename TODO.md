@@ -1,52 +1,54 @@
-allocate resulting array at once if count is known (list/array + selector/where)
+allocate resulting array at once if count is known (list/array + where)
+
+#Posponed0
+
+#Posponed1
 
 emit SelectMany body loop via for or foreach for List<T>??  for(int i1 = 0; i1 < len1; i1++) { (now there is duplicate code with root loop emit code)
 
-SmallArray no alloc helper to pass several parameters to method
+Dispose/Reset/IEnumerator.Current implementation in struct enumerator (before/after enumeration, after dispose)
+
+rewrite list where enumerator implementation based on List<T>.GetEnumerator public no alloc method instead of for(int i = 0; i < len; i++)
+
+tests for incomplete (non-compilable) LINQ statements tests like "ints.Select(static x => )"
+
+remove #nullable disable/#nullable restore from generation
+
+implement efficient ToArray/ToList direct implementation: "Data[] __() => Data.Array(10).ToArray();"
+
+#Posponed2
+
+arguments null checks (source, predicate, selector, etc.)
+
+multitargeting (use bitoperations.log2 when targeting net5; get rid of record IsExternalInit;)
+
+ListLayout struct in different frameworks
 
 diagnostics error if no reference to MetaLinq.dll (INamedTypeSymbol for MetaLinq.Enumerable not found in SyntaxContextReceiver)
+
+#Tests
+
+check state inside array pools after unit-test via reflection (verify all arrays returned)
+
+unit-test Flatten method
 
 rewrite and unit-test LargeArrayBuilder
 
 rewrite and unit-test CodeBuilder
 
-implement efficient ToArray/ToList direct implementation: "Data[] __() => Data.Array(10).ToArray();"
+randoms tests - generate chains, source arrays, shuffle data, etc.
 
-rewrite array where enumerator implementation like new List<T>.Enumerator
+#Ideas
 
-rewrite list where enumerator implementation based on List<T>.GetEnumerator public no alloc method instead of for(int i = 0; i < len; i++)
+linq to rented pools??? source.Where().ToRentedArray(ArrayPool<T>.Shared)
 
-get rid of record IsExternalInit;
+#Housekeeping
 
-Dispose/Reset/IEnumerator.Current implementation in struct enumerator (before/after enumeration, after dispose)
-
-unit-test Current implementation in struct enumerator
-
-unit-test Flatten method
-
-remove #nullable disable/#nullable restore from generation
+make tests internals visible to assembly and mark all classes in generator private
 
 make editor.config
 
-make tests internals visible to assembly and mark all classes in generato private
-
-incomplete (non-compilable) LINQ statements tests like "ints.Select(static x => )"
-
-arguments null checks (source, predicate, selector, etc.)
-
-mark methods readonly
-
-ListLayout struct in different frameworks
-
-nested selectmany memory test (array + enumerator)
-
-randoms tests - generate chains, source arrays, shuffle data, etc.
-
-check state inside array pools after unit-test via reflection (verify all arrays returned)
-
-multitargeting (use bitoperations.log2)
-
-linq to rented pools??? source.Where().ToRentedArray()
+mark generated methods readonly
 
 #OrderBy
 
@@ -56,7 +58,13 @@ unit-test sorthelper (doubles with nans, nullables, etc)
 
 order by enumerator generation
 
+#Ideas
+
+SmallArray no alloc helper to pass several parameters to method void ParamsMethod<T, TArray>(TArray params) where TArray : ICollection<T> {}
+
 # Done
+
+~~nested selectmany memory test (array + enumerator)~~
 
 ~~mark generated structs readonly~~
 

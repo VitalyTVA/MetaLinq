@@ -15,8 +15,13 @@ public class GenerationTests : BaseFixture {
     #region order by
     [Test]
     public void Array_OrderBy_ToArray() {
-        AssertGeneration(
-            "Data[] __() => Data.Array(10).Shuffle().OrderBy(x => x.Int).ToArray();",
+            AssertGeneration(
+@"Data[] __() {{
+    var result = source.OrderBy(x => x.Int).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return result;
+}}
+static Data[] source = Data.Array(10).Shuffle();",
             Get0ToNDataArrayAssert(9),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
@@ -263,6 +268,21 @@ public class GenerationTests : BaseFixture {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                         new StructMethod("ToArray")
+                    })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Select_Select_ToArray() {
+        AssertGeneration(
+            "int[] __() => Data.Array(5).Select(x => x.Int - 1).Select(x => x + 1).ToArray();",
+            Get0ToNIntArrayAssert(),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Select", new[] { 
+                            new StructMethod("ToArray") 
+                        })
                     })
             }
         );
