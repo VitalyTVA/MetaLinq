@@ -1,7 +1,17 @@
-﻿namespace MetaLinqTests.Unit.Spikes;
+﻿using MetaLinq.Tests;
+
+namespace MetaLinqTests.Unit.Spikes;
 
 [TestFixture]
 public class SpikesTests {
+    [Test]
+    public void OrderByNotReused() {
+        var s = Data.Array(10).Shuffle();
+        var ordered = s.OrderBy(x => x.Int);
+        ordered.ToArray();
+        ordered.ToArray();
+        DataExtensions.AssertAll(s, x => Assert.AreEqual(2, x.Int_GetCount));
+    }
     [Test]
     public void Plain() {
         void Assert(int[] expected, int[]source) {

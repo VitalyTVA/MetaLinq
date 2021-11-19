@@ -1,4 +1,4 @@
-allocate resulting array at once if count is known (list/array + where)
+allocate resulting array at once if count is known (list/array + where/skip/take)
 
 #Posponed0
 
@@ -37,6 +37,8 @@ rewrite and unit-test LargeArrayBuilder
 rewrite and unit-test CodeBuilder
 
 randoms tests - generate chains, source arrays, shuffle data, etc.
+
+test that sort performed every time we call OrderBy.TArray for the same instance of OrderByEn (keys not cached). Can't write such test now - var s = source.OrderBy(x => x.Int); s.ToArray(); chains not supported
 
 #Ideas
 
