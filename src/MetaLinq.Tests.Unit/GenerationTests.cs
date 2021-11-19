@@ -266,6 +266,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void List_Select_ToArray() {

@@ -7,6 +7,30 @@
 https://github.com/dotnet/runtime/tree/main/src/libraries/System.Linq/src/System/Linq
 https://github.com/NetFabric/NetFabric.Hyperlinq
 
+##Select benchmark
+
+|          Method |     N |          Mean |         Error |        StdDev | Ratio | RatioSD |   Gen 0 |  Gen 1 | Allocated |
+|---------------- |------ |--------------:|--------------:|--------------:|------:|--------:|--------:|-------:|----------:|
+| Select_Standard |    10 |      36.80 ns |      0.212 ns |      0.126 ns |  1.00 |    0.00 |  0.0178 |      - |     112 B |
+|     Select_Meta |    10 |      19.33 ns |      0.230 ns |      0.120 ns |  0.53 |    0.00 |  0.0102 |      - |      64 B |
+|       Select_AF |    10 |     200.38 ns |      0.823 ns |      0.430 ns |  5.45 |    0.03 |  0.0393 |      - |     248 B |
+|    Select_Hyper |    10 |      25.69 ns |      0.335 ns |      0.199 ns |  0.70 |    0.01 |  0.0102 |      - |      64 B |
+|                 |       |               |               |               |       |         |         |        |           |
+| Select_Standard |   100 |     160.43 ns |      1.670 ns |      1.105 ns |  1.00 |    0.00 |  0.0751 |      - |     472 B |
+|     Select_Meta |   100 |     155.04 ns |      3.615 ns |      2.151 ns |  0.97 |    0.01 |  0.0675 |      - |     424 B |
+|       Select_AF |   100 |   1,273.55 ns |     17.037 ns |     11.269 ns |  7.94 |    0.07 |  0.2499 |      - |   1,576 B |
+|    Select_Hyper |   100 |     163.02 ns |      0.941 ns |      0.560 ns |  1.02 |    0.01 |  0.0675 |      - |     424 B |
+|                 |       |               |               |               |       |         |         |        |           |
+| Select_Standard |  1000 |   1,352.55 ns |     20.382 ns |     13.481 ns |  1.00 |    0.00 |  0.6485 | 0.0095 |   4,072 B |
+|     Select_Meta |  1000 |   1,837.72 ns |    737.263 ns |    487.654 ns |  1.36 |    0.35 |  0.6409 | 0.0095 |   4,024 B |
+|       Select_AF |  1000 |  11,294.41 ns |    116.667 ns |     77.168 ns |  8.35 |    0.08 |  1.9684 | 0.0458 |  12,416 B |
+|    Select_Hyper |  1000 |   1,477.91 ns |     42.628 ns |     28.196 ns |  1.09 |    0.02 |  0.6390 | 0.0095 |   4,024 B |
+|                 |       |               |               |               |       |         |         |        |           |
+| Select_Standard | 10000 |  12,998.76 ns |    223.692 ns |    116.995 ns |  1.00 |    0.00 |  6.3629 | 0.7935 |  40,072 B |
+|     Select_Meta | 10000 |  20,447.93 ns |  8,942.348 ns |  5,914.810 ns |  1.45 |    0.42 |  6.3171 | 0.7782 |  40,024 B |
+|       Select_AF | 10000 | 160,722.15 ns | 59,375.145 ns | 39,272.982 ns | 11.76 |    3.13 | 24.5361 | 4.0283 | 155,008 B |
+|    Select_Hyper | 10000 |  20,996.63 ns |  8,810.472 ns |  5,827.582 ns |  1.54 |    0.47 |  6.3171 | 0.7782 |  40,024 B |
+
 ##OrderBy simple benchmark
 
 |           Method |     N |           Mean |        Error |       StdDev | Ratio | RatioSD |    Gen 0 |    Gen 1 |    Gen 2 | Allocated |

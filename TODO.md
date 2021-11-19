@@ -46,6 +46,8 @@ check state inside array pools after unit-test via reflection (verify all arrays
 
 multitargeting (use bitoperations.log2)
 
+linq to rented pools??? source.Where().ToRentedArray()
+
 #OrderBy
 
 OrderBy(x => x) special case for array of primitive types

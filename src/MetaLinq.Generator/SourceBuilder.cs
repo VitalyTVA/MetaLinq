@@ -250,14 +250,16 @@ public {outputType}[] ToArray() {{
 }}");
                 return;
             }
+            bool exactCountKnown = context is { Parent: null, Node: SelectNode };
+            var contexts = context.GetReversedContexts().ToArray();
+            var sourcePath = CodeGenerationTraits.GetSourcePath(contexts.Length);
 
             builder.AppendMultipleLines($@"
 public {outputType}[] ToArray() {{
-    using var result = new LargeArrayBuilder<{outputType}>();");
-            var contexts = context.GetReversedContexts().ToArray();
+    using var result = new {(exactCountKnown ? $"ExactSizeArrayBuilder<{outputType}>(this{sourcePath}.{source.GetCountName()})" : $"LargeArrayBuilder<{outputType}>()")};");
             builder.Tab.AppendLine($"var source = this;");
 
-            EmitLoop(source, builder.Tab, 0, "this" + CodeGenerationTraits.GetSourcePath(contexts.Length),
+            EmitLoop(source, builder.Tab, 0, "this" + sourcePath,
                 bodyBuilder => EmitLoopBody(0, bodyBuilder, contexts));
 
             builder.AppendMultipleLines(@"

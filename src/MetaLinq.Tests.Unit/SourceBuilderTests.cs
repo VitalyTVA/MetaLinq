@@ -6,7 +6,8 @@ public class CodeBuilderTests : BaseFixture {
     CodeBuilder builder = new(new StringBuilder());
 
     [SetUp]
-    public void SetUp() {
+    public override void SetUp() {
+        base.SetUp();
         sb = new StringBuilder();
         builder = new CodeBuilder(sb);
     }

@@ -10,8 +10,9 @@ namespace MetaLinqBenchmark;
 
 class Program {
     static void Main(string[] args) {
+        BenchmarkRunner.Run<SelectBenchmarks>();
         //BenchmarkRunner.Run<SortBenchmarks>();
-        BenchmarkRunner.Run<OrderByBenchmarks>();
+        //BenchmarkRunner.Run<OrderByBenchmarks>();
         //BenchmarkRunner.Run<Benchmarks>();
     }
 }
@@ -67,6 +68,39 @@ public class SortBenchmarks {
     //public void Sort_Direct_Comparison() {
     //    MetaLinqSpikes.SortMethods.Sort_Direct_Comparison(testData, x => x.Value);
     //}
+}
+
+[SimpleJob(RuntimeMoniker.Net60, warmupCount: 2, targetCount: 10)]
+//[MinColumn, MaxColumn, MeanColumn, MedianColumn]
+[MeanColumn]
+[MemoryDiagnoser]
+public class SelectBenchmarks {
+    TestData[] testData = { };
+
+    [Params(10, 100, 1_000, 10_000)]
+    public int N;
+
+    [GlobalSetup]
+    public void Setup() {
+        testData = new TestData[N];
+        var rnd = new Random(0);
+        for(int i = 0; i < N; i++) {
+            testData[i] = new TestData(Array.Empty<int>(), rnd.Next(N));
+        }
+    }
+
+    [Benchmark(Baseline = true)]
+    public int[] Select_Standard() => Standard.Select(testData);
+
+    [Benchmark]
+    public int[] Select_Meta() => Meta.Select(testData);
+
+    [Benchmark]
+    public int[] Select_AF() => AF.Select(testData);
+
+    [Benchmark]
+    public int[] Select_Hyper() => Hyper.Select(testData);
+
 }
 
 [SimpleJob(RuntimeMoniker.Net60, warmupCount: 2, targetCount: 10)]
