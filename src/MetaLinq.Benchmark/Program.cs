@@ -10,8 +10,8 @@ namespace MetaLinqBenchmark;
 
 class Program {
     static void Main(string[] args) {
-        BenchmarkRunner.Run<SelectBenchmarks>();
-        //BenchmarkRunner.Run<SortBenchmarks>();
+        //BenchmarkRunner.Run<SelectBenchmarks>();
+        BenchmarkRunner.Run<SortBenchmarks>();
         //BenchmarkRunner.Run<OrderByBenchmarks>();
         //BenchmarkRunner.Run<Benchmarks>();
     }
@@ -49,8 +49,8 @@ public class SortBenchmarks {
     }
 
     [Benchmark]
-    public void Sort_ArraySortHelper_TComparer_WithMap() {
-        SortHelper.SortToArray(testData, x => x.Value);
+    public void SortHelper_SortToArray() {
+        SortHelper.SortToArray(testData, x => x.Value, descending: false);
     }
 
 

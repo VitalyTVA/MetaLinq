@@ -26,6 +26,8 @@ ListLayout struct in different frameworks
 
 diagnostics error if no reference to MetaLinq.dll (INamedTypeSymbol for MetaLinq.Enumerable not found in SyntaxContextReceiver)
 
+ArrayPool<TKey>.Shared.Return(sortKeys, clearArray: false); - should clear when T is not a primitive value type 
+
 #Tests
 
 check state inside array pools after unit-test via reflection (verify all arrays returned)
