@@ -67,6 +67,21 @@ public class LinqModelTests : BaseFixture {
             -ToArray
             -Enumerable");
     }
+    [Test]
+    public void OrderByDescending() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { ChainElement.Select });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderByDescending });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderByDescending, ChainElement.ToArray });
+        AssertModel(model,
+@"List
+    Root
+        Select
+            -Enumerable
+        OrderByDescending
+            -ToArray
+            -Enumerable");
+    }
 
     [Test]
     public void SelectMany_Array() {
@@ -290,6 +305,9 @@ Array
         model.AddChain(SourceType.List, new[] { ChainElement.Select });
         model.AddChain(SourceType.List, new[] { ChainElement.OrderBy, ChainElement.ToArray });
         model.AddChain(SourceType.List, new[] { ChainElement.OrderBy });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderByDescending, ChainElement.ToArray });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderByDescending });
+
         AssertModel(model,
 @"List
     Root
@@ -300,6 +318,9 @@ Array
             -ToArray
             -Enumerable
         OrderBy
+            -ToArray
+            -Enumerable
+        OrderByDescending
             -ToArray
             -Enumerable
 Array
@@ -349,5 +370,9 @@ Array
         AssertNodeComparison(0, NodeKey.Simple(NodeType.OrderBy), NodeKey.Simple(NodeType.OrderBy));
         AssertNodeComparison(-1, NodeKey.Simple(NodeType.Select), NodeKey.Simple(NodeType.OrderBy));
         AssertNodeComparison(1, NodeKey.Simple(NodeType.OrderBy), NodeKey.Simple(NodeType.Select));
+
+        AssertNodeComparison(0, NodeKey.Simple(NodeType.OrderByDescending), NodeKey.Simple(NodeType.OrderByDescending));
+        AssertNodeComparison(-1, NodeKey.Simple(NodeType.Select), NodeKey.Simple(NodeType.OrderByDescending));
+        AssertNodeComparison(1, NodeKey.Simple(NodeType.OrderByDescending), NodeKey.Simple(NodeType.Select));
     }
 }

@@ -17,11 +17,11 @@ public class GenerationTests : BaseFixture {
     public void Array_OrderBy_ToArray() {
             AssertGeneration(
 @"Data[] __() {{
+    var source = Data.Array(10).Shuffle();
     var result = source.OrderBy(x => x.Int).ToArray();
     source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
     return result;
-}}
-static Data[] source = Data.Array(10).Shuffle();",
+}}",
             Get0ToNDataArrayAssert(9),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
@@ -29,6 +29,24 @@ static Data[] source = Data.Array(10).Shuffle();",
                 })
             }
         );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_OrderByDescending_ToArray() {
+        AssertGeneration(
+@"Data[] __() {{
+    var source = Data.Array(5).Shuffle();
+    var result = source.OrderByDescending(x => x.Int).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return result;
+}}",
+        GetDataArrayAssert(4, 3, 2, 1, 0),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("ToArray")
+                })
+        }
+    );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
@@ -368,11 +386,11 @@ static Data[] source = Data.Array(10).Shuffle();",
     public void Array_SelectManyArray_ToArray() {
         AssertGeneration(
 @"int[] __() {{
+    var source = Data.Array(3);
     var result = source.SelectMany(x => x.IntArray).ToArray();
     source.AssertAll(x => Assert.AreEqual(1, x.IntArray_GetCount));
     return result;
-}}
-static Data[] source = Data.Array(3);",
+}}",
             Get0ToNIntArrayAssert(5),
             new [] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
@@ -433,11 +451,11 @@ static Data[] source = Data.Array(3);",
     public void Array_SelectManyArray_StandardToArray() {
         AssertGeneration(
 @"int[] __() {{
+    var source = Data.Array(3);
     var result = Enumerable.ToArray(source.SelectMany(x => x.IntArray));
     source.AssertAll(x => Assert.AreEqual(1, x.IntArray_GetCount));
     return result;
-}}
-static Data[] source = Data.Array(3);",
+}}",
             Get0ToNIntArrayAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
@@ -450,11 +468,11 @@ static Data[] source = Data.Array(3);",
     public void Array_SelectManyList_StandardToArray() {
         AssertGeneration(
 @"int[] __() {{
+    var source = Data.Array(3);
     var result = Enumerable.ToArray(source.SelectMany(x => x.IntList));
     source.AssertAll(x => Assert.AreEqual(1, x.IntList_GetCount));
     return result;
-}}
-static Data[] source = Data.Array(3);",
+}}",
             Get0ToNIntArrayAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
@@ -502,14 +520,14 @@ static Data[] source = Data.Array(3);",
     public void Array_SelectManyList_SelectManyArray_ToArray() {
         AssertGeneration(
 @"int[] __() {{
+    var source = Data.Array(3);
     var result = source.SelectMany(x => x.DataList).SelectMany(x => x.IntArray).ToArray();
     source.AssertAll(x => {
         Assert.AreEqual(1, x.DataList_GetCount);
         x.DataList.AssertAll(y => Assert.AreEqual(1, y.IntArray_GetCount));
     });
     return result;
-}}
-static Data[] source = Data.Array(3);",
+}}",
             Get0ToNIntArrayAssert(11),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
@@ -755,8 +773,11 @@ static Data[] source = Data.Array(3);",
         return Get0ToNDataArrayAssert(4);
     }
     static Action<Data[]> Get0ToNDataArrayAssert(int n = 4) {
+        return GetDataArrayAssert(Enumerable.Range(0, n + 1).ToArray());
+    }
+    static Action<Data[]> GetDataArrayAssert(params int[] array) {
         return (Data[] result) => {
-            CollectionAssert.AreEqual(Enumerable.Range(0, n + 1).ToArray(), result.Select(x => x.Int).ToArray());
+            CollectionAssert.AreEqual(array, result.Select(x => x.Int).ToArray());
         };
     }
     static Action<int[]> Get0ToNIntArrayAssert(int n = 4) {

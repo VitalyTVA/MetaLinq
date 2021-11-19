@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 namespace MetaLinq.Internal;
 
 public static class SortHelper {
-	public static TSource[] SortToArray<TSource, TKey>(TSource[] source, Func<TSource, TKey> keySelector) {
+	public static TSource[] SortToArray<TSource, TKey>(TSource[] source, Func<TSource, TKey> keySelector, bool descending) {
 		var len0 = source.Length;
 
 		var sortKeys = new TKey[source.Length];
@@ -16,8 +16,10 @@ public static class SortHelper {
 			map[i] = i;
 		}
 
-		ArraySorter<TKey, NoComparer<TKey>>
-			.IntrospectiveSort(map.AsSpan().Slice(0, len0), sortKeys, new NoComparer<TKey>());
+		if(descending)
+			ArraySorter<TKey, NoComparerDescending<TKey>>.IntrospectiveSort(map.AsSpan().Slice(0, len0), sortKeys, default);
+		else
+			ArraySorter<TKey, NoComparer<TKey>>.IntrospectiveSort(map.AsSpan().Slice(0, len0), sortKeys, default);
 
 		var sorted = new TSource[source.Length];
 		for(int i = 0; i != len0; i++) {
@@ -47,6 +49,11 @@ readonly struct NoComparer<T> : IComparer<T> {
 		throw new NotImplementedException();
 	}
 }
+readonly struct NoComparerDescending<T> : IComparer<T> {
+	readonly public int Compare(T? val1, T? val2) {
+		throw new NotImplementedException();
+	}
+}
 static class ArraySorter<T, TComparer> where TComparer : IComparer<T> {
 	private static void SwapIfGreater(Span<int> map, Span<T> keys, TComparer comparer, int i, int j) {
 		if(CompareMap(comparer, map[i], map[j], keys) > 0) {
@@ -61,14 +68,26 @@ static class ArraySorter<T, TComparer> where TComparer : IComparer<T> {
 			var value1 = keys[index1];
 			var value2 = keys[index2];
 			int result;
-			if(typeof(TComparer) == typeof(NoComparer<T>) && typeof(T) == typeof(int)) {
+			if(typeof(TComparer) == typeof(NoComparer<T>)) {
+				if(typeof(T) == typeof(int)) {
 #nullable disable
-				result = (int)(object)value1 - (int)(object)value2;
+					result = (int)(object)value1 - (int)(object)value2;
 #nullable restore
+				} else {
+					throw new InvalidOperationException();
+				}
+			} else if(typeof(TComparer) == typeof(NoComparerDescending<T>)) {
+				if(typeof(T) == typeof(int)) {
+#nullable disable
+					result = (int)(object)value2 - (int)(object)value1;
+#nullable restore
+				} else {
+					throw new InvalidOperationException();
+				}
 			} else {
-				result = comparer.Compare(value1, value2);
-			}
-			if(result == 0)
+				throw new InvalidOperationException();
+            }
+            if(result == 0)
 				return index1 - index2;
 			return result;
 		}

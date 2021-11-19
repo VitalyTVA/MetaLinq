@@ -242,11 +242,11 @@ foreach(var item{level} in source{level}) {{");
             IntermediateNode intermediate = context.Node;
             var outputType = context.GetOutputType();
 
-            if(context is { Parent: null, Node: OrderByNode } 
+            if(context is { Parent: null, Node: OrderByNode or OrderByDescendingNode } 
                 && context.Node.GetNodes().Single() is TerminalNode { Type : TerminalNodeType.ToArray }) {
                 builder.AppendMultipleLines($@"
 public {outputType}[] ToArray() {{
-    return MetaLinq.Internal.SortHelper.SortToArray(source, keySelector);
+    return MetaLinq.Internal.SortHelper.SortToArray(source, keySelector, descending: {(context.Node is OrderByDescendingNode ? "true" : "false")});
 }}");
                 return;
             }
@@ -331,7 +331,7 @@ if(!source{sourcePath}.predicate(item{level + 1}))
         public static string GetArgumentType(this IntermediateNode intermediate, string inType, string outType) {
             return intermediate switch {
                 WhereNode => $"Func<{inType}, bool>",
-                SelectNode or OrderByNode => $"Func<{inType}, {outType}>",
+                SelectNode or OrderByNode or OrderByDescendingNode => $"Func<{inType}, {outType}>",
                 SelectManyNode selectMany => $"Func<{inType}, {selectMany.SourceType.GetSourceTypeName(outType)}>",
                 _ => throw new NotImplementedException(),
             };
@@ -354,6 +354,7 @@ if(!source{sourcePath}.predicate(item{level + 1}))
                 SelectNode => "Select",
                 SelectManyNode => "SelectMany",
                 OrderByNode => "OrderBy",
+                OrderByDescendingNode => "OrderByDescending",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -368,14 +369,14 @@ if(!source{sourcePath}.predicate(item{level + 1}))
         public static string? GetOwnTypeArg(this IntermediateNode intermediate, string argName) {
             return intermediate switch {
                 WhereNode => null,
-                SelectNode or SelectManyNode or OrderByNode => argName,
+                SelectNode or SelectManyNode or OrderByNode or OrderByDescendingNode => argName,
                 _ => throw new NotImplementedException(),
             };
         }
 
         public static string GetOutputType(this EmitContext context) {
             return context.Node switch {
-                WhereNode or OrderByNode => context.SourceGenericArg,
+                WhereNode or OrderByNode or OrderByDescendingNode => context.SourceGenericArg,
                 SelectNode or SelectManyNode => "Result".GetLevelGenericType(context.Level),
                 _ => throw new NotImplementedException(),
             };
@@ -384,7 +385,7 @@ if(!source{sourcePath}.predicate(item{level + 1}))
             return intermediate switch {
                 WhereNode => "predicate",
                 SelectNode or SelectManyNode => "selector",
-                OrderByNode => "keySelector",
+                OrderByNode or OrderByDescendingNode => "keySelector",
                 _ => throw new NotImplementedException(),
             };
         }
