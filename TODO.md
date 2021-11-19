@@ -44,6 +44,8 @@ randoms tests - generate chains, source arrays, shuffle data, etc.
 
 check state inside array pools after unit-test via reflection (verify all arrays returned)
 
+multitargeting (use bitoperations.log2)
+
 #OrderBy
 
 OrderBy(x => x) special case for array of primitive types

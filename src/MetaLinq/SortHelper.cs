@@ -26,6 +26,20 @@ public static class SortHelper {
 		ArrayPool<int>.Shared.Return(map, clearArray: false);
 		return sorted;
 	}
+	public static int Log2(uint value) {
+		value |= value >> 1;
+		value |= value >> 2;
+		value |= value >> 4;
+		value |= value >> 8;
+		value |= value >> 16;
+		return Unsafe.AddByteOffset(ref System.Runtime.InteropServices.MemoryMarshal.GetReference(Log2DeBruijn), (IntPtr)(int)(value * 130329821 >> 27));
+	}
+	static ReadOnlySpan<byte> Log2DeBruijn => new byte[32] {
+		0, 9, 1, 10, 13, 21, 2, 29, 11, 14,
+		16, 18, 22, 25, 3, 30, 8, 12, 20, 28,
+		15, 17, 24, 7, 19, 27, 23, 6, 26, 5,
+		4, 31
+	};
 }
 
 readonly struct NoComparer<T> : IComparer<T> {
@@ -70,7 +84,7 @@ static class ArraySorter<T, TComparer> where TComparer : IComparer<T> {
 
 	internal static void IntrospectiveSort(Span<int> map, Span<T> keys, TComparer comparer) {
 		if(map.Length > 1) {
-			IntroSort(map, keys, 2 * (BitOperations.Log2((uint)map.Length) + 1), comparer);
+			IntroSort(map, keys, 2 * (SortHelper.Log2((uint)map.Length) + 1), comparer);
 		}
 	}
 
@@ -100,7 +114,7 @@ static class ArraySorter<T, TComparer> where TComparer : IComparer<T> {
 			depthLimit--;
 			int num2 = PickPivotAndPartition(map.Slice(0, num), keys, comparer);
 			Span<int> span = map;
-			IntroSort(span[(num2 + 1)..num], keys, depthLimit, comparer);
+			IntroSort(span.Slice((num2 + 1), num - (num2 + 1))/*span[(num2 + 1)..num]*/, keys, depthLimit, comparer);
 			num = num2;
 		}
 	}
