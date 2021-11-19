@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace MetaLinq.Internal;
-
 /// <summary>
 /// Helper type for building dynamically-sized arrays while minimizing allocations and copying.
 /// </summary>
@@ -27,8 +26,8 @@ public struct LargeArrayBuilder<T>
     /// <summary>
     /// Constructs a new builder.
     /// </summary>
-    public LargeArrayBuilder(ArrayPool<T> pool, bool clearOnDispose)
-        : this(maxCapacity: int.MaxValue, pool: pool, arrayBuilderPool: ArrayPool<T[]>.Shared, clearOnDispose) {
+    public LargeArrayBuilder()
+        : this(maxCapacity: int.MaxValue, pool: ArrayPool<T>.Shared, arrayBuilderPool: ArrayPool<T[]>.Shared, clearOnDispose: false) {
     }
 
     /// <summary>
@@ -40,7 +39,7 @@ public struct LargeArrayBuilder<T>
     /// </remarks>
     public LargeArrayBuilder(int maxCapacity, ArrayPool<T> pool, ArrayPool<T[]> arrayBuilderPool, bool clearOnDispose) {
         Debug.Assert(maxCapacity >= 0);
-
+        TestTrace.LargeArrayBuilderCreated();
         this.pool = pool;
         this.clearOnDispose = clearOnDispose;
         this.maxCapacity = maxCapacity;

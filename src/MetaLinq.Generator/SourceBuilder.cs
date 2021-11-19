@@ -253,7 +253,7 @@ public {outputType}[] ToArray() {{
 
             builder.AppendMultipleLines($@"
 public {outputType}[] ToArray() {{
-    using var result = new LargeArrayBuilder<{outputType}>(ArrayPool<{outputType}>.Shared, false);");
+    using var result = new LargeArrayBuilder<{outputType}>();");
             var contexts = context.GetReversedContexts().ToArray();
             builder.Tab.AppendLine($"var source = this;");
 

@@ -1,7 +1,7 @@
 ﻿namespace MetaLinqTests.Unit;
 
 [TestFixture]
-public class CodeBuilderTests {
+public class CodeBuilderTests : BaseFixture {
     StringBuilder sb = new();
     CodeBuilder builder = new(new StringBuilder());
 

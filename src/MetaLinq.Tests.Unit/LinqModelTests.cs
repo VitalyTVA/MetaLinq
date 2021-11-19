@@ -1,7 +1,7 @@
 ﻿namespace MetaLinqTests.Unit;
 
 [TestFixture]
-public class LinqModelTests {
+public class LinqModelTests : BaseFixture {
     [Test]
     public void Empty() {
         var model = new LinqModel();

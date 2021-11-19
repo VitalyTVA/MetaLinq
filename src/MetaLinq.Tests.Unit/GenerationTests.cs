@@ -1,4 +1,5 @@
-﻿using MetaLinq.Tests;
+﻿using MetaLinq.Internal;
+using MetaLinq.Tests;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Buffers;
@@ -10,7 +11,7 @@ using System.Runtime.CompilerServices;
 namespace MetaLinqTests.Unit;
 
 [TestFixture]
-public class GenerationTests {
+public class GenerationTests : BaseFixture {
     #region order by
     [Test]
     public void Array_OrderBy_ToArray() {
@@ -23,6 +24,7 @@ public class GenerationTests {
                 })
             }
         );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void Array_OrderBy_ToArray_AssertSortMethod() {
@@ -35,6 +37,7 @@ public class GenerationTests {
                 })
             }
         );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     #endregion
 
@@ -50,6 +53,7 @@ public class GenerationTests {
                     })
             }
         );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void Array_Where_ToList() {
@@ -160,6 +164,7 @@ public class GenerationTests {
                     })
             }
         );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void Array_Where_StandardToArray() {
@@ -309,6 +314,7 @@ public class GenerationTests {
                     }, implementsIEnumerable: true)
             }
         );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
     [Test]
@@ -353,6 +359,7 @@ static Data[] source = Data.Array(3);",
                 })
             }
         );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void Array_SelectManyArrayNewArrayExpression_ToArray() {
@@ -513,6 +520,7 @@ static Data[] source = Data.Array(3);",
                 })
             }
         );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void SelectMany_SelectMany_EnumeratorTests() {
@@ -605,6 +613,7 @@ static Data[] source = Data.Array(3);",
                     })
             }
         );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void List_Select_Where_ToArray() {
@@ -662,6 +671,7 @@ static Data[] source = Data.Array(3);",
                     })
             }
         );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void SelectAndWhere_LongMixedChains() {

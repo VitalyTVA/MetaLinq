@@ -1,12 +1,13 @@
 ﻿using MetaLinq.Internal;
 using MetaLinq.Tests;
+using MetaLinqTests.Unit;
 using System.Buffers;
 using System.Numerics;
 
 namespace MetaLinqTests.SortHelperTests;
 
 [TestFixture]
-public class SortHelperTests {
+public class SortHelperTests : BaseFixture {
     [Test]
     public void SortHelper_SortToArray() {
         AssertSortMethod(x => SortHelper.SortToArray(x, x => x.Int), isStable: true);

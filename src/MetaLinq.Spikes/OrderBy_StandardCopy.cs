@@ -708,7 +708,7 @@ internal static class EnumerableHelpers {
 			collection.CopyTo(array, 0);
 			return array;
 		}
-		LargeArrayBuilder<T> largeArrayBuilder = new LargeArrayBuilder<T>(ArrayPool<T>.Shared, false);
+		LargeArrayBuilder<T> largeArrayBuilder = new LargeArrayBuilder<T>();
         foreach(var item in source) {
 			largeArrayBuilder.Add(item);
 		}

@@ -28,7 +28,7 @@ namespace Spike {
                 this.selector = selector;
             }
             public T0_Result[] ToArray() {
-                using var result = new LargeArrayBuilder<T0_Result>(ArrayPool<T0_Result>.Shared, false);
+                using var result = new LargeArrayBuilder<T0_Result>();
                 var source = this;
                 var source0 = this.source;
                 var len0 = source0.Length;
@@ -101,7 +101,7 @@ namespace Spike {
                     this.predicate = predicate;
                 }
                 public T0_Result[] ToArray() {
-                    using var result = new LargeArrayBuilder<T0_Result>(ArrayPool<T0_Result>.Shared, false);
+                    using var result = new LargeArrayBuilder<T0_Result>();
                     var rootSource = this.source.source;
                     var len = rootSource.Length;
                     var source = this;
@@ -209,7 +209,7 @@ namespace Spike {
                                 }
 
                                 public T5_Result[] ToArray() {
-                                    using var result = new LargeArrayBuilder<T5_Result>(ArrayPool<T5_Result>.Shared, false);
+                                    using var result = new LargeArrayBuilder<T5_Result>();
                                     int length = source.source.source.source.source.Length;
                                     for(int i = 0; i < length; i++) {
                                         var itemT0 = source.source.source.source.source[i];
