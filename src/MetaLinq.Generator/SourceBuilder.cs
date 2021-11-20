@@ -249,10 +249,11 @@ foreach(var item{level} in source{level}) {{");
             var builderType = GetBuilderType(contexts);
             var sourcePath = CodeGenerationTraits.GetSourcePath(contexts.Length);
 
+            bool sameResultType = contexts[0].SourceGenericArg == outputType;
             string arrayBuilder = builderType switch {
                 BuilderType.UnknownSize => $"using var result = new LargeArrayBuilder<{outputType}>();",
                 BuilderType.ExactSize => $"var result = new {outputType}[this{sourcePath}.{source.GetCountName()}];",
-                BuilderType.ExactSizeOrderBy => $"var (sortKeys, map) = (new {"Result".GetLevelGenericType(contexts.Last().Level)}[this{sourcePath}.{source.GetCountName()}], ArrayPool<int>.Shared.Rent(this{sourcePath}.{source.GetCountName()}));",
+                BuilderType.ExactSizeOrderBy => $"var (result, sortKeys, map) = ({(sameResultType ? $"this{sourcePath}" : $"new {context.SourceGenericArg}[this{sourcePath}.{source.GetCountName()}]")}, new {"Result".GetLevelGenericType(contexts.Last().Level)}[this{sourcePath}.{source.GetCountName()}], ArrayPool<int>.Shared.Rent(this{sourcePath}.{source.GetCountName()}));",
                 _ => throw new NotImplementedException(),
             };
 
@@ -266,7 +267,7 @@ public {outputType}[] ToArray() {{
                     string addValue = builderType switch {
                         BuilderType.UnknownSize => $"result.Add(item{level});",
                         BuilderType.ExactSize => $"result[i0] = item{level};",
-                        BuilderType.ExactSizeOrderBy => $"sortKeys[i0] = item{level}; map[i0] = i0;",
+                        BuilderType.ExactSizeOrderBy => $"sortKeys[i0] = item{level}; map[i0] = i0;{(sameResultType ? null : $"result[i0] = item{level - 1};")}",
                         _ => throw new NotImplementedException(),
                     };
                     b.AppendLine(addValue);
@@ -277,7 +278,7 @@ public {outputType}[] ToArray() {{
                 BuilderType.ExactSize => $@"return result;",
                 BuilderType.ExactSizeOrderBy => 
 $@"ArrayPool<int>.Shared.Return(map);
-return SortHelper.Sort(this{sourcePath}, map, sortKeys, descending: {(contexts.Last().Node is OrderByDescendingNode ? "true" : "false")});",
+return SortHelper.Sort(result, map, sortKeys, descending: {(contexts.Last().Node is OrderByDescendingNode ? "true" : "false")});",
                 _ => throw new NotImplementedException(),
             };
 

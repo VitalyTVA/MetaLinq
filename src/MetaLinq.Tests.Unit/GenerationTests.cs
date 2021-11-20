@@ -51,7 +51,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_Select_OrderBy_ToArray() {
+    public void Array_Select_OrderByDescending_ToArray() {
         AssertGeneration(
 @"int[] __() {{
     var source = Data.Array(10).Shuffle();
@@ -59,11 +59,34 @@ public class GenerationTests : BaseFixture {
     source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
     return Enumerable.ToArray(Enumerable.Select(result, x => -x.Value));
 }}",
-        Get0ToNDataArrayAssert(9),
+        Get0ToNIntArrayAssert(9),
         new[] {
-                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
-                    new StructMethod("ToArray")
+            new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                new StructMethod("OrderByDescending", new[] {
+                    new StructMethod("ToArray"),
                 })
+            })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void List_Select_OrderByDescending_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Data.List(10).Shuffle();
+    var result = source.Select(x => new { Value = x.Int }).OrderBy(x => x.Value).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return Enumerable.ToArray(Enumerable.Select(result, x => x.Value));
+}}",
+        Get0ToNIntArrayAssert(9),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("ToArray"),
+                })
+            })
         }
     );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
@@ -100,6 +123,8 @@ public class GenerationTests : BaseFixture {
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
+
+    //mixed chains with selectmany/where/select before orderby
     #endregion
 
     #region where

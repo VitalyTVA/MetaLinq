@@ -11,7 +11,7 @@ https://github.com/NetFabric/NetFabric.Hyperlinq
 
 https://github.com/kevin-montrose/LinqAF
 
-##Select benchmark
+## Select benchmark
 
 |           Method |    N |        Mean |      Error |    StdDev |      Median | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
 |----------------- |----- |------------:|-----------:|----------:|------------:|------:|--------:|-------:|-------:|----------:|
@@ -30,7 +30,7 @@ https://github.com/kevin-montrose/LinqAF
 | AsFastAsPossible | 1000 | 1,534.86 ns |  16.050 ns |  9.551 ns | 1,530.69 ns |  1.13 |    0.01 | 0.6409 | 0.0095 |   4,024 B |
 |     Select_Hyper | 1000 | 1,473.89 ns |  22.671 ns | 14.996 ns | 1,469.46 ns |  1.09 |    0.02 | 0.6390 | 0.0095 |   4,024 B |
 
-##OrderBy simple benchmark
+## OrderBy
 
 |           Method |    N |        Mean |       Error |    StdDev | Ratio |  Gen 0 |  Gen 1 | Allocated |
 |----------------- |----- |------------:|------------:|----------:|------:|-------:|-------:|----------:|
@@ -43,7 +43,23 @@ https://github.com/kevin-montrose/LinqAF
 | OrderBy_Standard | 1000 | 74,772.8 ns | 1,212.70 ns | 802.13 ns |  1.00 | 3.7842 | 0.2441 |  24,272 B |
 |     OrderBy_Meta | 1000 | 21,565.4 ns |   536.44 ns | 354.82 ns |  0.29 | 1.8921 | 0.0610 |  12,048 B |
 
-##Sort Benchmark
+## Select_OrderBy
+
+|                 Method |    N |        Mean |       Error |      StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
+|----------------------- |----- |------------:|------------:|------------:|------:|--------:|-------:|-------:|----------:|
+| SelectOrderBy_Standard |   10 |    210.2 ns |     4.95 ns |     3.27 ns |  1.00 |    0.00 | 0.0763 |      - |     480 B |
+|     SelectOrderBy_Meta |   10 |    103.7 ns |     1.41 ns |     0.84 ns |  0.49 |    0.01 | 0.0305 |      - |     192 B |
+|       SelectOrderBy_AF |   10 |    584.4 ns |    14.84 ns |     9.81 ns |  2.78 |    0.08 | 0.1307 |      - |     824 B |
+|                        |      |             |             |             |       |         |        |        |           |
+| SelectOrderBy_Standard |  100 |  3,572.3 ns |    45.38 ns |    27.01 ns |  1.00 |    0.00 | 0.3052 |      - |   1,920 B |
+|     SelectOrderBy_Meta |  100 |  1,404.4 ns |    82.19 ns |    54.37 ns |  0.39 |    0.02 | 0.2022 |      - |   1,272 B |
+|       SelectOrderBy_AF |  100 |  4,859.1 ns |   196.63 ns |   130.06 ns |  1.36 |    0.04 | 0.9460 |      - |   5,960 B |
+|                        |      |             |             |             |       |         |        |        |           |
+| SelectOrderBy_Standard | 1000 | 72,520.5 ns | 1,415.40 ns |   936.20 ns |  1.00 |    0.00 | 2.5635 |      - |  16,320 B |
+|     SelectOrderBy_Meta | 1000 | 26,575.9 ns | 2,980.55 ns | 1,971.45 ns |  0.37 |    0.03 | 1.9226 | 0.0305 |  12,072 B |
+|       SelectOrderBy_AF | 1000 | 71,090.0 ns | 1,391.03 ns |   920.08 ns |  0.98 |    0.02 | 7.2021 | 0.4883 |  45,544 B |
+
+## Sort Benchmark
 
 best ever:
 

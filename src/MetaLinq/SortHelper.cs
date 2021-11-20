@@ -36,7 +36,7 @@ public static class SortHelper {
     }
 
     public static TSource[] ArraySortToArray<TSource, TKey>(TSource[] source, Func<TSource, TKey> keySelector, bool descending) {
-        var (sortKeys, map) = (new TKey[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
+        var (result, sortKeys, map) = (source, new TKey[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
         var len = source.Length;
         for(int i = 0; i < len; i++) {
             var item = source[i];
@@ -44,8 +44,9 @@ public static class SortHelper {
             map[i] = i;
         }
         ArrayPool<int>.Shared.Return(map);
-        return Sort(source, map, sortKeys, descending);
+        return Sort(result, map, sortKeys, descending);
     }
+
     public static int Log2(uint value) {
         value |= value >> 1;
         value |= value >> 2;

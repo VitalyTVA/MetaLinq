@@ -3,6 +3,20 @@
 namespace MetaLinqSpikes;
 
 public static partial class SortMethods {
+    public static TSource[] ArraySortToArray<TSource, TResult, TKey>(TSource[] source, Func<TSource, TResult> selector, Func<TResult, TKey> keySelector, bool descending) {
+        var (result, sortKeys, map) = (new TResult[source.Length], new TKey[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
+        var len = source.Length;
+        for(int i = 0; i < len; i++) {
+            var item = source[i];
+            var item2 = selector(item);
+            result[i] = item2;
+            sortKeys[i] = keySelector(item2);
+            map[i] = i;
+        }
+        ArrayPool<int>.Shared.Return(map);
+        return MetaLinq.Internal.SortHelper.Sort(source, map, sortKeys, descending);
+    }
+
     public static TSource[] Sort_Map_Comparer<TSource>(TSource[] source, Func<TSource, int> keySelector) {
         var len0 = source.Length;
 
