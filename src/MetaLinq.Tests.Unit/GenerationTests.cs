@@ -32,6 +32,44 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
+    public void List_OrderBy_ToArray() {
+        AssertGeneration(
+@"Data[] __() {{
+    var source = Data.List(10).Shuffle();
+    var result = source.OrderBy(x => x.Int).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return result;
+}}",
+        Get0ToNDataArrayAssert(9),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.List, "OrderBy", new[] {
+                    new StructMethod("ToArray")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Select_OrderBy_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => new { Value = -x.Int }).OrderByDescending(x => x.Value).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return Enumerable.ToArray(Enumerable.Select(result, x => -x.Value));
+}}",
+        Get0ToNDataArrayAssert(9),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("ToArray")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
     public void Array_OrderByDescending_ToArray() {
         AssertGeneration(
 @"Data[] __() {{

@@ -16,6 +16,8 @@ remove #nullable disable/#nullable restore from generation
 
 implement efficient ToArray/ToList direct implementation: "Data[] __() => Data.Array(10).ToArray();"
 
+ExactSizeOrderByArrayBuilder.ToArray overload for List<T> (or generate it fo each type with public indexer public T[int index]). This way we can use indexer without virtual calls
+
 #Posponed2
 
 arguments null checks (source, predicate, selector, etc.)

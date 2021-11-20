@@ -242,30 +242,47 @@ foreach(var item{level} in source{level}) {{");
             IntermediateNode intermediate = context.Node;
             var outputType = context.GetOutputType();
 
-            if(context is { Parent: null, Node: OrderByNode or OrderByDescendingNode } 
-                && context.Node.GetNodes().Single() is TerminalNode { Type : TerminalNodeType.ToArray }) {
-                builder.AppendMultipleLines($@"
-public {outputType}[] ToArray() {{
-    return MetaLinq.Internal.SortHelper.SortToArray(source, keySelector, descending: {(context.Node is OrderByDescendingNode ? "true" : "false")});
-}}");
-                return;
-            }
+//            if(context is { Parent: null, Node: OrderByNode or OrderByDescendingNode } 
+//                && context.Node.GetNodes().Single() is TerminalNode { Type : TerminalNodeType.ToArray }) {
+//                builder.AppendMultipleLines($@"
+//public {outputType}[] ToArray() {{
+//    return MetaLinq.Internal.SortHelper.SortToArray(source, keySelector, descending: {(context.Node is OrderByDescendingNode ? "true" : "false")});
+//}}");
+//                return;
+//            }
             var contexts = context.GetReversedContexts().ToArray();
-            bool exactCountKnown = contexts.All(x => x.Node is SelectNode);
+            var builderType = GetBuilderType(contexts);
             var sourcePath = CodeGenerationTraits.GetSourcePath(contexts.Length);
+
+            string arrayBuilder = builderType switch {
+                BuilderType.UnknownSize => $"LargeArrayBuilder<{outputType}>()",
+                BuilderType.ExactSize => $"ExactSizeArrayBuilder<{outputType}>(this{sourcePath}.{source.GetCountName()})",
+                BuilderType.ExactSizeOrderBy => $"ExactSizeOrderByArrayBuilder<{outputType}, {"Result".GetLevelGenericType(contexts.Last().Level)}>(this{sourcePath}.{source.GetCountName()}, descending: {(contexts.Last().Node is OrderByDescendingNode ? "true" : "false")})",
+                _ => throw new NotImplementedException(),
+            };
 
             builder.AppendMultipleLines($@"
 public {outputType}[] ToArray() {{
-    using var result = new {(exactCountKnown ? $"ExactSizeArrayBuilder<{outputType}>(this{sourcePath}.{source.GetCountName()})" : $"LargeArrayBuilder<{outputType}>()")};");
+    using var result = new {arrayBuilder};");
             builder.Tab.AppendLine($"var source = this;");
 
             EmitLoop(source, builder.Tab, 0, "this" + sourcePath,
                 bodyBuilder => EmitLoopBody(0, bodyBuilder, contexts));
 
-            builder.AppendMultipleLines(@"
-    return result.ToArray();
-}");
+            builder.AppendMultipleLines($@"
+    return result.ToArray({(builderType == BuilderType.ExactSizeOrderBy ? $"this{sourcePath}" : null)});
+}}");
         }
+        static BuilderType GetBuilderType(EmitContext[] contexts) {
+            if(contexts.Last().Node is OrderByNode or OrderByDescendingNode) {
+                //contexts = contexts.Take(contexts.Length - 1).ToArray();
+                return BuilderType.ExactSizeOrderBy;
+            }
+            if(contexts.All(x => x.Node is SelectNode))
+                return BuilderType.ExactSize;
+            return BuilderType.UnknownSize;
+        }
+        enum BuilderType { UnknownSize, ExactSize, ExactSizeOrderBy }
         static void EmitToList(SourceType source, CodeBuilder builder, EmitContext context) {
             var outputType = context.GetOutputType();
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
@@ -292,6 +309,10 @@ if(!source{sourcePath}.predicate(item{level + 1}))
                 case SelectManyNode selectMany:
                     EmitLoop(selectMany.SourceType, builder, level + 1, $"source{sourcePath}.selector(item{level})",
                         bodyBuilder => EmitLoopBody(level + 1, bodyBuilder.Tab, contexts));
+                    break;
+                case OrderByNode or OrderByDescendingNode:
+                    builder.AppendLine($"var item{level + 1} = keySelector(item{level});");
+                    EmitLoopBody(level + 1, builder, contexts);
                     break;
                 default:
                     throw new NotImplementedException();

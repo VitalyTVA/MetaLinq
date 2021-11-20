@@ -11,8 +11,8 @@ namespace MetaLinqBenchmark;
 class Program {
     static void Main(string[] args) {
         //BenchmarkRunner.Run<SelectBenchmarks>();
-        BenchmarkRunner.Run<SortBenchmarks>();
-        //BenchmarkRunner.Run<OrderByBenchmarks>();
+        //BenchmarkRunner.Run<SortBenchmarks>();
+        BenchmarkRunner.Run<OrderByBenchmarks>();
         //BenchmarkRunner.Run<Benchmarks>();
     }
 }
@@ -50,7 +50,7 @@ public class SortBenchmarks {
 
     [Benchmark]
     public void SortHelper_SortToArray() {
-        SortHelper.SortToArray(testData, x => x.Value, descending: false);
+        SortHelper.ArraySortToArray(testData, x => x.Value, descending: false);
     }
 
 
