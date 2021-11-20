@@ -11,12 +11,10 @@ public class SortHelperTests : BaseFixture {
     [Test]
     public void SortHelper_SortToArray() {
         AssertSortMethod(x => SortHelper.ArraySortToArray(x, x => x.Int, descending: false), isStable: true);
-        AssertSortMethod(x => SortHelper.ListSortToArray(x, x => x.Int, descending: false), isStable: true);
     }
     [Test]
     public void SortHelper_SortToArrayDescending() {
         AssertSortMethod(x => SortHelper.ArraySortToArray(x, x => -x.Int, descending: true), isStable: true);
-        AssertSortMethod(x => SortHelper.ListSortToArray(x, x => -x.Int, descending: true), isStable: true);
     }
 
     public static void AssertSortMethod(Func<Data[], Data[]> sort, bool isStable) {

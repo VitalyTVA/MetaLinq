@@ -121,7 +121,7 @@ public class SelectBenchmarks {
 public class OrderByBenchmarks {
     TestData[] testData = { };
 
-    [Params(10, 100, 1_000, 10_000)]
+    [Params(10, 100, 1_000/*, 10_000*/)]
     public int N;
 
     [GlobalSetup]
@@ -139,8 +139,8 @@ public class OrderByBenchmarks {
     [Benchmark]
     public TestData[] OrderBy_Meta() => Meta.OrderBy(testData);
 
-    [Benchmark]
-    public TestData[] OrderBy_AF() => AF.OrderBy(testData);
+    //[Benchmark]
+    //public TestData[] OrderBy_AF() => AF.OrderBy(testData);
 
     //[Benchmark]
     //public TestData[] OrderBy_Hyper() => Hyper.OrderBy(testData);

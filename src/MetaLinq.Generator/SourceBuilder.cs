@@ -233,8 +233,11 @@ for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
     var item{level} = source{level}[i{level}];");
             if(source == SourceType.List)
                 builder.AppendMultipleLines($@"
+int i{level} = 0;
 foreach(var item{level} in source{level}) {{");
             emitBody(builder.Tab);
+            if(source == SourceType.List)
+                builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
 
@@ -242,36 +245,44 @@ foreach(var item{level} in source{level}) {{");
             IntermediateNode intermediate = context.Node;
             var outputType = context.GetOutputType();
 
-//            if(context is { Parent: null, Node: OrderByNode or OrderByDescendingNode } 
-//                && context.Node.GetNodes().Single() is TerminalNode { Type : TerminalNodeType.ToArray }) {
-//                builder.AppendMultipleLines($@"
-//public {outputType}[] ToArray() {{
-//    return MetaLinq.Internal.SortHelper.SortToArray(source, keySelector, descending: {(context.Node is OrderByDescendingNode ? "true" : "false")});
-//}}");
-//                return;
-//            }
             var contexts = context.GetReversedContexts().ToArray();
             var builderType = GetBuilderType(contexts);
             var sourcePath = CodeGenerationTraits.GetSourcePath(contexts.Length);
 
             string arrayBuilder = builderType switch {
-                BuilderType.UnknownSize => $"LargeArrayBuilder<{outputType}>()",
-                BuilderType.ExactSize => $"ExactSizeArrayBuilder<{outputType}>(this{sourcePath}.{source.GetCountName()})",
-                BuilderType.ExactSizeOrderBy => $"ExactSizeOrderByArrayBuilder<{outputType}, {"Result".GetLevelGenericType(contexts.Last().Level)}>(this{sourcePath}.{source.GetCountName()}, descending: {(contexts.Last().Node is OrderByDescendingNode ? "true" : "false")})",
+                BuilderType.UnknownSize => $"using var result = new LargeArrayBuilder<{outputType}>();",
+                BuilderType.ExactSize => $"var result = new {outputType}[this{sourcePath}.{source.GetCountName()}];",
+                BuilderType.ExactSizeOrderBy => $"var (sortKeys, map) = (new {"Result".GetLevelGenericType(contexts.Last().Level)}[this{sourcePath}.{source.GetCountName()}], ArrayPool<int>.Shared.Rent(this{sourcePath}.{source.GetCountName()}));",
                 _ => throw new NotImplementedException(),
             };
 
             builder.AppendMultipleLines($@"
 public {outputType}[] ToArray() {{
-    using var result = new {arrayBuilder};");
+    {arrayBuilder}");
             builder.Tab.AppendLine($"var source = this;");
 
             EmitLoop(source, builder.Tab, 0, "this" + sourcePath,
-                bodyBuilder => EmitLoopBody(0, bodyBuilder, contexts));
+                bodyBuilder => EmitLoopBody(0, bodyBuilder, contexts, (b, level) => {
+                    string addValue = builderType switch {
+                        BuilderType.UnknownSize => $"result.Add(item{level});",
+                        BuilderType.ExactSize => $"result[i0] = item{level};",
+                        BuilderType.ExactSizeOrderBy => $"sortKeys[i0] = item{level}; map[i0] = i0;",
+                        _ => throw new NotImplementedException(),
+                    };
+                    b.AppendLine(addValue);
+                }));
 
-            builder.AppendMultipleLines($@"
-    return result.ToArray({(builderType == BuilderType.ExactSizeOrderBy ? $"this{sourcePath}" : null)});
-}}");
+            string result = builderType switch {
+                BuilderType.UnknownSize => $@"return result.ToArray();",
+                BuilderType.ExactSize => $@"return result;",
+                BuilderType.ExactSizeOrderBy => 
+$@"ArrayPool<int>.Shared.Return(map);
+return SortHelper.Sort(this{sourcePath}, map, sortKeys, descending: {(contexts.Last().Node is OrderByDescendingNode ? "true" : "false")});",
+                _ => throw new NotImplementedException(),
+            };
+
+            builder.Tab.AppendLine(result);
+            builder.AppendLine("}");
         }
         static BuilderType GetBuilderType(EmitContext[] contexts) {
             if(contexts.Last().Node is OrderByNode or OrderByDescendingNode) {
@@ -287,11 +298,12 @@ public {outputType}[] ToArray() {{
             var outputType = context.GetOutputType();
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
-        static void EmitLoopBody(int level, CodeBuilder builder, EmitContext[] contexts) {
+        static void EmitLoopBody(int level, CodeBuilder builder, EmitContext[] contexts, Action<CodeBuilder, int> finish) {
             if(level >= contexts.Length) {
-                builder.AppendLine($"result.Add(item{level});");
+                finish(builder, level);
                 return;
             }
+            void EmitNext(CodeBuilder nextBuilder) => EmitLoopBody(level + 1, nextBuilder, contexts, finish);
             var intermediate = contexts[level].Node;
             var sourcePath = CodeGenerationTraits.GetSourcePath(contexts.Length - 1 - level);
             switch(intermediate) {
@@ -300,19 +312,19 @@ public {outputType}[] ToArray() {{
 var item{level + 1} = item{level};
 if(!source{sourcePath}.predicate(item{level + 1}))
     continue;");
-                    EmitLoopBody(level + 1, builder, contexts);
+                    EmitNext(builder);
                     break;
                 case SelectNode:
                     builder.AppendLine($@"var item{level + 1} = source{sourcePath}.selector(item{level});");
-                    EmitLoopBody(level + 1, builder, contexts);
+                    EmitNext(builder);
                     break;
                 case SelectManyNode selectMany:
                     EmitLoop(selectMany.SourceType, builder, level + 1, $"source{sourcePath}.selector(item{level})",
-                        bodyBuilder => EmitLoopBody(level + 1, bodyBuilder.Tab, contexts));
+                        bodyBuilder => EmitNext(bodyBuilder));
                     break;
                 case OrderByNode or OrderByDescendingNode:
                     builder.AppendLine($"var item{level + 1} = keySelector(item{level});");
-                    EmitLoopBody(level + 1, builder, contexts);
+                    EmitNext(builder);
                     break;
                 default:
                     throw new NotImplementedException();

@@ -4,39 +4,28 @@ using System.Runtime.CompilerServices;
 
 namespace MetaLinq.Internal;
 
-public ref struct ExactSizeOrderByArrayBuilder<T, TKey> {
-    readonly bool descending;
-    int index;
-    readonly TKey[] sortKeys;
-    readonly int[] map;
+public static class SortHelper {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ExactSizeOrderByArrayBuilder(int len, bool descending) {
-        index = 0;
-        this.descending = descending;
-        sortKeys = new TKey[len];
-        map = ArrayPool<int>.Shared.Rent(len);
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly T[] ToArray(T[] source) {
-        var len = source.Length;
-        T[] sorted = SortAndAllocateResultArray(len);
-        for(int i = 0; i != len; i++) {
-            sorted[i] = source[map[i]];
-        }
-        return sorted;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly T[] ToArray(IList<T> source) {
-        var len = source.Count;
-        T[] sorted = SortAndAllocateResultArray(len);
+    public static T[] Sort<T, TKey>(T[] source, int[] map, TKey[] sortKeys, bool descending) {
+        var len = sortKeys.Length;
+        var sorted = SortAndAllocateResultArray<T, TKey>(map, sortKeys, descending); ;
         for(int i = 0; i != len; i++) {
             sorted[i] = source[map[i]];
         }
         return sorted;
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    readonly T[] SortAndAllocateResultArray(int len) {
+    public static T[] Sort<T, TKey>(IList<T> source, int[] map, TKey[] sortKeys, bool descending) {
+        var len = sortKeys.Length;
+        var sorted = SortAndAllocateResultArray<T, TKey>(map, sortKeys, descending);
+        for(int i = 0; i != len; i++) {
+            sorted[i] = source[map[i]];
+        }
+        return sorted;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static T[] SortAndAllocateResultArray<T, TKey>(int[] map, TKey[] sortKeys, bool descending) {
+        var len = sortKeys.Length;
         var mapSpan = map.AsSpan().Slice(0, len);
         if(descending)
             ArraySorter<TKey, NoComparerDescending<TKey>>.IntrospectiveSort(mapSpan, sortKeys, default);
@@ -46,34 +35,16 @@ public ref struct ExactSizeOrderByArrayBuilder<T, TKey> {
         return sorted;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Add(TKey value) {
-        sortKeys[index] = value;
-        map[index] = index;
-        index++;
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Dispose() {
-        Debug.Assert(index == sortKeys.Length);
-        ArrayPool<int>.Shared.Return(map);
-    }
-}
-public static class SortHelper {
     public static TSource[] ArraySortToArray<TSource, TKey>(TSource[] source, Func<TSource, TKey> keySelector, bool descending) {
-        using var builder = new ExactSizeOrderByArrayBuilder<TSource, TKey>(source.Length, descending);
+        var (sortKeys, map) = (new TKey[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
         var len = source.Length;
         for(int i = 0; i < len; i++) {
-            builder.Add(keySelector(source[i]));
+            var item = source[i];
+            sortKeys[i] = keySelector(item); 
+            map[i] = i;
         }
-        return builder.ToArray(source);
-    }
-    public static TSource[] ListSortToArray<TSource, TKey>(IList<TSource> source, Func<TSource, TKey> keySelector, bool descending) {
-        using var builder = new ExactSizeOrderByArrayBuilder<TSource, TKey>(source.Count, descending);
-        var len = source.Count;
-        for(int i = 0; i < len; i++) {
-            builder.Add(keySelector(source[i]));
-        }
-        return builder.ToArray(source);
+        ArrayPool<int>.Shared.Return(map);
+        return Sort(source, map, sortKeys, descending);
     }
     public static int Log2(uint value) {
         value |= value >> 1;
