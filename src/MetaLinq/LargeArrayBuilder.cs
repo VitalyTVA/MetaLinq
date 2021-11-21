@@ -151,6 +151,7 @@ public struct LargeArrayBuilder<T>
         foreach(var item in buffers.AsSpan())
             pool.Return(item, clearOnDispose);
         buffers.Dispose();
+        TestTrace.LargeArrayBuilderDisposed();
     }
 
     bool ICollection<T>.IsReadOnly

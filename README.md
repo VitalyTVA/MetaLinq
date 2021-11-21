@@ -59,6 +59,22 @@ https://github.com/kevin-montrose/LinqAF
 |     SelectOrderBy_Meta | 1000 | 26,575.9 ns | 2,980.55 ns | 1,971.45 ns |  0.37 |    0.03 | 1.9226 | 0.0305 |  12,072 B |
 |       SelectOrderBy_AF | 1000 | 71,090.0 ns | 1,391.03 ns |   920.08 ns |  0.98 |    0.02 | 7.2021 | 0.4883 |  45,544 B |
 
+## Where_OrderBy
+
+|                Method |    N |        Mean |       Error |    StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
+|---------------------- |----- |------------:|------------:|----------:|------:|--------:|-------:|-------:|----------:|
+| WhereOrderBy_Standard |   10 |    149.2 ns |     3.03 ns |   2.01 ns |  1.00 |    0.00 | 0.0675 |      - |     424 B |
+|     WhereOrderBy_Meta |   10 |    274.7 ns |     4.87 ns |   2.90 ns |  1.85 |    0.03 | 0.0229 |      - |     144 B |
+|       WhereOrderBy_AF |   10 |    326.5 ns |     4.71 ns |   3.12 ns |  2.19 |    0.04 | 0.0482 |      - |     304 B |
+|                       |      |             |             |           |       |         |        |        |           |
+| WhereOrderBy_Standard |  100 |  1,662.7 ns |    32.40 ns |  21.43 ns |  1.00 |    0.00 | 0.3071 |      - |   1,936 B |
+|     WhereOrderBy_Meta |  100 |  1,593.5 ns |    30.10 ns |  19.91 ns |  0.96 |    0.02 | 0.1564 |      - |     992 B |
+|       WhereOrderBy_AF |  100 |  3,708.8 ns |    78.30 ns |  51.79 ns |  2.23 |    0.05 | 0.5722 |      - |   3,592 B |
+|                       |      |             |             |           |       |         |        |        |           |
+| WhereOrderBy_Standard | 1000 | 22,308.7 ns |   459.14 ns | 303.70 ns |  1.00 |    0.00 | 2.0752 | 0.0305 |  13,040 B |
+|     WhereOrderBy_Meta | 1000 | 11,359.7 ns | 1,006.05 ns | 665.44 ns |  0.51 |    0.03 | 1.3275 | 0.0153 |   8,352 B |
+|       WhereOrderBy_AF | 1000 | 46,137.6 ns |   661.99 ns | 437.86 ns |  2.07 |    0.04 | 4.3945 | 0.0610 |  27,848 B |
+
 ## Sort Benchmark
 
 best ever:

@@ -28,6 +28,7 @@ public class Tests {
             testDataArray_Shuffled[i2] = tmp;
         }
     }
+    record struct TestStruct(int Value);
     class TestData {
         public TestData(int[] ints, int value) {
             IntArray = ints;
@@ -111,6 +112,24 @@ public class Tests {
     [Test]
     public static void Array_OrderBy_ToArray() {
         MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.OrderBy(static x => x.Value).ToArray(), ExpectedOrderByAllocations());
+    }
+    [Test]
+    public static void Array_Select_OrderBy_ToArray() {
+        MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.Select(static x => new TestStruct(x.Value)).OrderBy(static x => x.Value).ToArray(),
+            new[] {
+                ($"{typeof(TestStruct).FullName}[]", 2),
+                ("System.Int32[]", 1),
+            }
+        );
+    }
+    [Test]
+    public static void Array_Where_OrderBy_ToArray() {
+        MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.Where(static x => x.Value % 3 == 0).OrderBy(static x => x.Value).ToArray(),
+            new[] {
+                ($"{typeof(TestData).FullName}[]", 2),
+                ("System.Int32[]", 2),
+            }
+        );
     }
     #endregion
 

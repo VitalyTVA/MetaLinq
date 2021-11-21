@@ -253,13 +253,15 @@ foreach(var item{level} in source{level}) {{");
             string arrayBuilder = builderType switch {
                 BuilderType.UnknownSize => $"using var result = new LargeArrayBuilder<{outputType}>();",
                 BuilderType.ExactSize => $"var result = new {outputType}[this{sourcePath}.{source.GetCountName()}];",
+                BuilderType.UnknownSizeOrderBy => 
+@$"using var result = new LargeArrayBuilder<{(sameResultType ? contexts[0].SourceGenericArg : context.SourceGenericArg)}>();
+using var sortKeys = new LargeArrayBuilder<{"Result".GetLevelGenericType(contexts.Last().Level)}>();
+using var map = new LargeArrayBuilder<int>();",
                 BuilderType.ExactSizeOrderBy => $"var (result, sortKeys, map) = ({(sameResultType ? $"this{sourcePath}" : $"new {context.SourceGenericArg}[this{sourcePath}.{source.GetCountName()}]")}, new {"Result".GetLevelGenericType(contexts.Last().Level)}[this{sourcePath}.{source.GetCountName()}], ArrayPool<int>.Shared.Rent(this{sourcePath}.{source.GetCountName()}));",
                 _ => throw new NotImplementedException(),
             };
-
-            builder.AppendMultipleLines($@"
-public {outputType}[] ToArray() {{
-    {arrayBuilder}");
+            builder.AppendLine($"public {outputType}[] ToArray() {{");
+            builder.Tab.AppendMultipleLines(arrayBuilder);
             builder.Tab.AppendLine($"var source = this;");
 
             EmitLoop(source, builder.Tab, 0, "this" + sourcePath,
@@ -267,6 +269,7 @@ public {outputType}[] ToArray() {{
                     string addValue = builderType switch {
                         BuilderType.UnknownSize => $"result.Add(item{level});",
                         BuilderType.ExactSize => $"result[i0] = item{level};",
+                        BuilderType.UnknownSizeOrderBy => $"sortKeys.Add(item{level}); result.Add(item{level - 1}); map.Add(result.Count - 1);",
                         BuilderType.ExactSizeOrderBy => $"sortKeys[i0] = item{level}; map[i0] = i0;{(sameResultType ? null : $"result[i0] = item{level - 1};")}",
                         _ => throw new NotImplementedException(),
                     };
@@ -276,25 +279,29 @@ public {outputType}[] ToArray() {{
             string result = builderType switch {
                 BuilderType.UnknownSize => $@"return result.ToArray();",
                 BuilderType.ExactSize => $@"return result;",
-                BuilderType.ExactSizeOrderBy => 
+                BuilderType.UnknownSizeOrderBy => 
+$@"
+return SortHelper.Sort(result.ToArray(), map.ToArray(), sortKeys.ToArray(), descending: {(contexts.Last().Node is OrderByDescendingNode ? "true" : "false")});",
+                BuilderType.ExactSizeOrderBy =>
 $@"ArrayPool<int>.Shared.Return(map);
 return SortHelper.Sort(result, map, sortKeys, descending: {(contexts.Last().Node is OrderByDescendingNode ? "true" : "false")});",
                 _ => throw new NotImplementedException(),
             };
 
-            builder.Tab.AppendLine(result);
+            builder.Tab.AppendMultipleLines(result);
             builder.AppendLine("}");
         }
         static BuilderType GetBuilderType(EmitContext[] contexts) {
             if(contexts.Last().Node is OrderByNode or OrderByDescendingNode) {
-                //contexts = contexts.Take(contexts.Length - 1).ToArray();
-                return BuilderType.ExactSizeOrderBy;
+                if(contexts.Take(contexts.Length - 1).All(x => x.Node is SelectNode))
+                    return BuilderType.ExactSizeOrderBy;
+                return BuilderType.UnknownSizeOrderBy;
             }
             if(contexts.All(x => x.Node is SelectNode))
                 return BuilderType.ExactSize;
             return BuilderType.UnknownSize;
         }
-        enum BuilderType { UnknownSize, ExactSize, ExactSizeOrderBy }
+        enum BuilderType { UnknownSize, ExactSize, UnknownSizeOrderBy, ExactSizeOrderBy }
         static void EmitToList(SourceType source, CodeBuilder builder, EmitContext context) {
             var outputType = context.GetOutputType();
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");

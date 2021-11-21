@@ -1,3 +1,4 @@
+mixed chains with selectmany/where/select before orderby
 allocate resulting array at once if count is known (list/array + where/skip/take)
 
 #Posponed0

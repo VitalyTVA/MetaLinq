@@ -9,6 +9,7 @@ public class BaseFixture {
     }
     [TearDown]
     public virtual void TearDown() {
+        Assert.AreEqual(TestTrace.LargeArrayBuilderCreatedCount, TestTrace.LargeArrayBuilderDisposedCount);
         TestTrace.Clear();
     }
 }

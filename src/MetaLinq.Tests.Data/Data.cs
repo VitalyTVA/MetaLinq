@@ -26,6 +26,10 @@ public class Data {
             : new List<Data>();
     }
 
+    public override string ToString() {
+        return "Int: " + @int;
+    }
+
     public int DataList_GetCount { get; private set; }
     readonly List<Data> dataList;
     public List<Data> DataList {

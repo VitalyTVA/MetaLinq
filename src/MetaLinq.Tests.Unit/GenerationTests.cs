@@ -72,7 +72,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void List_Select_OrderByDescending_ToArray() {
+    public void List_Select_OrderBy_ToArray() {
         AssertGeneration(
 @"int[] __() {{
     var source = Data.List(10).Shuffle();
@@ -124,6 +124,46 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
+    [Test]
+    public void Array_Where_OrderByDescending_ToArray() {
+        AssertGeneration(
+@"Data[] __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 5).OrderByDescending(x => x.Int).ToArray();
+}}",
+        GetDataArrayAssert(4, 3, 2, 1, 0),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderByDescending", new[] {
+                    new StructMethod("ToArray"),
+                })
+            })
+        }
+    );
+        Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    //    [Test]
+    //    public void Array_Where_SelectMany_Select_Where_OrderByDescending_ToArray() {
+    //        AssertGeneration(
+    //@"int[] __() {{
+    //    var source = Data.Array(10).Shuffle();
+    //    var result = source.Where(x => x.Int < 8).SelectMany(x => x.DataList).Select(x => new { Value = -x.Int }).Where(x => x.Value > -8).OrderByDescending(x => x.Value).ToArray();
+    //    return Enumerable.ToArray(Enumerable.Select(result, x => -x.Value));
+    //}}",
+    //        Get0ToNIntArrayAssert(9),
+    //        new[] {
+    //            new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+    //                new StructMethod("OrderByDescending", new[] {
+    //                    new StructMethod("ToArray"),
+    //                })
+    //            })
+    //        }
+    //    );
+    //        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    //    }
+
+    //dispose large array builder when UnknownSizeOrderBy
     //mixed chains with selectmany/where/select before orderby
     #endregion
 
