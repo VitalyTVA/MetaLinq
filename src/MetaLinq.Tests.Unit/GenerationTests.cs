@@ -143,28 +143,54 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
-    //    [Test]
-    //    public void Array_Where_SelectMany_Select_Where_OrderByDescending_ToArray() {
-    //        AssertGeneration(
-    //@"int[] __() {{
-    //    var source = Data.Array(10).Shuffle();
-    //    var result = source.Where(x => x.Int < 8).SelectMany(x => x.DataList).Select(x => new { Value = -x.Int }).Where(x => x.Value > -8).OrderByDescending(x => x.Value).ToArray();
-    //    return Enumerable.ToArray(Enumerable.Select(result, x => -x.Value));
-    //}}",
-    //        Get0ToNIntArrayAssert(9),
-    //        new[] {
-    //            new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
-    //                new StructMethod("OrderByDescending", new[] {
-    //                    new StructMethod("ToArray"),
-    //                })
-    //            })
-    //        }
-    //    );
-    //        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-    //    }
+    [Test]
+    public void List_Select_Where_OrderBy_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Data.List(10).Shuffle();
+    var result = source.Select(x => new { Value = x.Int }).Where(x => x.Value < 6).OrderBy(x => x.Value).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return Enumerable.ToArray(Enumerable.Select(result, x => x.Value));
+}}",
+        Get0ToNIntArrayAssert(5),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                new StructMethod("Where", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("ToArray"),
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
+    }
 
-    //dispose large array builder when UnknownSizeOrderBy
-    //mixed chains with selectmany/where/select before orderby
+    [Test]
+    public void Array_Where_SelectMany_Select_Where_OrderByDescending_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+        var source = Data.Array(10).Shuffle();
+        var result = source.Where(x => x.Int < 8).SelectMany(x => x.DataList).Select(x => new { Value = -x.Int }).Where(x => x.Value > -8).OrderByDescending(x => x.Value).ToArray();
+        return Enumerable.ToArray(Enumerable.Select(result, x => -x.Value));
+    }}",
+        Get0ToNIntArrayAssert(7),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("SelectMany", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("OrderByDescending", new[] {
+                                new StructMethod("ToArray"),
+                            })
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region where
@@ -347,12 +373,12 @@ public class GenerationTests : BaseFixture {
             },
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("GetEnumerator"),
                         new StructMethod("ToArray"),
-                        new StructMethod("GetEnumerator")
                     }, implementsIEnumerable: true),
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                        new StructMethod("GetEnumerator"),
                         new StructMethod("ToArray"),
-                        new StructMethod("GetEnumerator")
                     }, implementsIEnumerable: true)
 
             }
@@ -473,10 +499,10 @@ public class GenerationTests : BaseFixture {
                     )
             },
             new[] {
-                    new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                         new StructMethod("ToArray")
                     }),
-                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("ToArray")
                     }),
             }
@@ -712,30 +738,30 @@ static Data[] source = Data.Array(3);",
                  GetIntArrayAssert(new[] { 2, 3, 6, 7, 10, 11, 14, 15, 18, 19, 22, 23 })),
             },
             new[] {
-                new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
-                    new StructMethod("SelectMany", new[] {
-                        new StructMethod("SelectMany", new[] {
-                            new StructMethod("ToArray"),
-                            new StructMethod("GetEnumerator"),
-                        }, implementsIEnumerable: true)
-                    })
-                }),
                 new MetaLinqMethodInfo(SourceType.List, "SelectMany", new[] {
                     new StructMethod("Where", new[] {
+                        new StructMethod("SelectMany", new[] {
+                            new StructMethod("GetEnumerator"),
+                            new StructMethod("ToArray"),
+                        }, implementsIEnumerable: true),
                         new StructMethod("Where", new[] {
                             new StructMethod("SelectMany", new[] {
                                 new StructMethod("Select", new[] {
-                                    new StructMethod("ToArray"),
                                     new StructMethod("GetEnumerator"),
+                                    new StructMethod("ToArray"),
                                 }, implementsIEnumerable: true),
                             })
                         }),
+                    })
+                }),
+                new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                    new StructMethod("SelectMany", new[] {
                         new StructMethod("SelectMany", new[] {
-                            new StructMethod("ToArray"),
                             new StructMethod("GetEnumerator"),
+                            new StructMethod("ToArray"),
                         }, implementsIEnumerable: true)
                     })
-                })
+                }),
             }
         );
     }
@@ -835,10 +861,10 @@ static Data[] source = Data.Array(3);",
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                         new StructMethod("Select", new[] {
+                            new StructMethod("GetEnumerator"),
                             new StructMethod("Where", new[] {
                                 new StructMethod("GetEnumerator")
                             }, implementsIEnumerable: true),
-                            new StructMethod("GetEnumerator"),
                         }, implementsIEnumerable: true)
                     }),
                     new MetaLinqMethodInfo(SourceType.List, "Where", new[] {

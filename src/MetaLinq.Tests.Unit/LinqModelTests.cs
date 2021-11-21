@@ -61,10 +61,10 @@ public class LinqModelTests : BaseFixture {
         AssertModel(model,
 @"List
     Root
-        Select
-            -Enumerable
         OrderBy
+            -Enumerable
             -ToArray
+        Select
             -Enumerable");
     }
     [Test]
@@ -76,10 +76,10 @@ public class LinqModelTests : BaseFixture {
         AssertModel(model,
 @"List
     Root
-        Select
-            -Enumerable
         OrderByDescending
+            -Enumerable
             -ToArray
+        Select
             -Enumerable");
     }
 
@@ -114,9 +114,9 @@ public class LinqModelTests : BaseFixture {
         AssertModel(model,
 @"List
     Root
-        SelectMany List
-            -Enumerable
         SelectMany Array
+            -Enumerable
+        SelectMany List
             -Enumerable");
     }
 
@@ -128,9 +128,9 @@ public class LinqModelTests : BaseFixture {
         AssertModel(model,
 @"List
     Root
-        SelectMany List
-            -Enumerable
         SelectMany Array
+            -Enumerable
+        SelectMany List
             -Enumerable");
     }
 
@@ -147,14 +147,14 @@ public class LinqModelTests : BaseFixture {
 @"List
     Root
         Select
-            SelectMany List
-                -Enumerable
             SelectMany Array
                 -Enumerable
-        SelectMany Array
-            Where
+            SelectMany List
                 -Enumerable
-            -Enumerable");
+        SelectMany Array
+            -Enumerable
+            Where
+                -Enumerable");
     }
 
     [Test]
@@ -189,9 +189,9 @@ public class LinqModelTests : BaseFixture {
         AssertModel(model,
 @"Array
     Root
-        Where
-            -Enumerable
         Select
+            -Enumerable
+        Where
             -Enumerable");
     }
 
@@ -232,18 +232,18 @@ public class LinqModelTests : BaseFixture {
         AssertModel(model,
 @"Array
     Root
+        Select
+            -Enumerable
+            -ToArray
+            -ToList
         Where
-            Where
-                -ToArray
-                -ToList
-                -Enumerable
             Select
                 -ToArray
                 -ToList
-        Select
-            -ToArray
-            -ToList
-            -Enumerable");
+            Where
+                -Enumerable
+                -ToArray
+                -ToList");
     }
 
     [Test]
@@ -271,8 +271,8 @@ Array
 @"Array
     Root
         Where
-            -ToArray
-            -Enumerable");
+            -Enumerable
+            -ToArray");
     }
 
     [Test]
@@ -286,8 +286,8 @@ Array
 @"Array
     Root
         Where
-            -ToArray
-            -Enumerable");
+            -Enumerable
+            -ToArray");
     }
 
     [Test]
@@ -311,30 +311,30 @@ Array
         AssertModel(model,
 @"List
     Root
-        Where
-            -ToArray
-            -Enumerable
-        Select
-            -ToArray
-            -Enumerable
         OrderBy
-            -ToArray
             -Enumerable
+            -ToArray
         OrderByDescending
-            -ToArray
             -Enumerable
+            -ToArray
+        Select
+            -Enumerable
+            -ToArray
+        Where
+            -Enumerable
+            -ToArray
 Array
     Root
-        Where
-            Select
-                -ToArray
-            -ToArray
-            -Enumerable
         Select
+            -Enumerable
+            -ToArray
             Where
                 -ToArray
-            -ToArray
-            -Enumerable");
+        Where
+            -Enumerable
+            Select
+                -ToArray
+            -ToArray");
     }
 
     static void AssertModel(LinqModel model, string expected) {
@@ -343,36 +343,36 @@ Array
 
     [Test]
     public void NodeKeyTests() { 
-        void AssertNodeComparison(int expected, NodeKey key1, NodeKey key2) { 
-            Assert.AreEqual(expected, Comparer<NodeKey>.Default.Compare(key1, key2));
+        void AssertNodeComparison(int expected, ChainElement key1, ChainElement key2) { 
+            Assert.AreEqual(expected, ChainElement.Comparer.Compare(key1, key2));
         }
-        AssertNodeComparison(0, NodeKey.Simple(NodeType.Select), NodeKey.Simple(NodeType.Select));
-        AssertNodeComparison(1, NodeKey.Simple(NodeType.Select), NodeKey.Simple(NodeType.Where));
-        AssertNodeComparison(-1, NodeKey.Simple(NodeType.Where), NodeKey.Simple(NodeType.Select));
+        AssertNodeComparison(0, ChainElement.Select, ChainElement.Select);
+        AssertNodeComparison(-1, ChainElement.Select, ChainElement.Where);
+        AssertNodeComparison(1, ChainElement.Where, ChainElement.Select);
 
-        AssertNodeComparison(0, NodeKey.Terminal(TerminalNodeType.ToList), NodeKey.Terminal(TerminalNodeType.ToList));
-        AssertNodeComparison(1, NodeKey.Terminal(TerminalNodeType.ToList), NodeKey.Terminal(TerminalNodeType.ToArray));
-        AssertNodeComparison(-1, NodeKey.Terminal(TerminalNodeType.ToArray), NodeKey.Terminal(TerminalNodeType.ToList));
+        AssertNodeComparison(0, ChainElement.ToList, ChainElement.ToList);
+        AssertNodeComparison(1, ChainElement.ToList, ChainElement.ToArray);
+        AssertNodeComparison(-1, ChainElement.ToArray, ChainElement.ToList);
 
-        AssertNodeComparison(0, NodeKey.SelectMany(SourceType.Array), NodeKey.SelectMany(SourceType.Array));
-        AssertNodeComparison(1, NodeKey.SelectMany(SourceType.Array), NodeKey.SelectMany(SourceType.List));
-        AssertNodeComparison(-1, NodeKey.SelectMany(SourceType.List), NodeKey.SelectMany(SourceType.Array));
+        AssertNodeComparison(0, ChainElement.SelectMany(SourceType.Array), ChainElement.SelectMany(SourceType.Array));
+        AssertNodeComparison(-1, ChainElement.SelectMany(SourceType.Array), ChainElement.SelectMany(SourceType.List));
+        AssertNodeComparison(1, ChainElement.SelectMany(SourceType.List), ChainElement.SelectMany(SourceType.Array));
 
-        AssertNodeComparison(1, NodeKey.Terminal(TerminalNodeType.ToList), NodeKey.Simple(NodeType.Select));
-        AssertNodeComparison(-1, NodeKey.Simple(NodeType.Select), NodeKey.Terminal(TerminalNodeType.ToList));
+        AssertNodeComparison(1, ChainElement.ToList, ChainElement.Select);
+        AssertNodeComparison(-1, ChainElement.Select, ChainElement.ToList);
 
-        AssertNodeComparison(1, NodeKey.Terminal(TerminalNodeType.ToList), NodeKey.SelectMany(SourceType.Array));
-        AssertNodeComparison(-1, NodeKey.SelectMany(SourceType.Array), NodeKey.Terminal(TerminalNodeType.ToList));
+        AssertNodeComparison(1, ChainElement.ToList, ChainElement.SelectMany(SourceType.Array));
+        AssertNodeComparison(-1, ChainElement.SelectMany(SourceType.Array), ChainElement.ToList);
 
-        AssertNodeComparison(1, NodeKey.SelectMany(SourceType.Array), NodeKey.Simple(NodeType.Select));
-        AssertNodeComparison(-1, NodeKey.Simple(NodeType.Select), NodeKey.SelectMany(SourceType.Array));
+        AssertNodeComparison(1, ChainElement.SelectMany(SourceType.Array), ChainElement.Select);
+        AssertNodeComparison(-1, ChainElement.Select, ChainElement.SelectMany(SourceType.Array));
 
-        AssertNodeComparison(0, NodeKey.Simple(NodeType.OrderBy), NodeKey.Simple(NodeType.OrderBy));
-        AssertNodeComparison(-1, NodeKey.Simple(NodeType.Select), NodeKey.Simple(NodeType.OrderBy));
-        AssertNodeComparison(1, NodeKey.Simple(NodeType.OrderBy), NodeKey.Simple(NodeType.Select));
+        AssertNodeComparison(0, ChainElement.OrderBy, ChainElement.OrderBy);
+        AssertNodeComparison(1, ChainElement.Select, ChainElement.OrderBy);
+        AssertNodeComparison(-1, ChainElement.OrderBy, ChainElement.Select);
 
-        AssertNodeComparison(0, NodeKey.Simple(NodeType.OrderByDescending), NodeKey.Simple(NodeType.OrderByDescending));
-        AssertNodeComparison(-1, NodeKey.Simple(NodeType.Select), NodeKey.Simple(NodeType.OrderByDescending));
-        AssertNodeComparison(1, NodeKey.Simple(NodeType.OrderByDescending), NodeKey.Simple(NodeType.Select));
+        AssertNodeComparison(0, ChainElement.OrderByDescending, ChainElement.OrderByDescending);
+        AssertNodeComparison(1, ChainElement.Select, ChainElement.OrderByDescending);
+        AssertNodeComparison(-1, ChainElement.OrderByDescending, ChainElement.Select);
     }
 }

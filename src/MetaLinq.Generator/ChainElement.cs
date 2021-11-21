@@ -10,6 +10,14 @@ public abstract record ChainElement {
     public static ChainElement SelectMany(SourceType sourceType) => new SelectManyChainElement(sourceType);
     public static ChainElement ToArray => ToArrayChainElement.Instance;
     public static ChainElement ToList => ToListChainElement.Instance;
+    public static ChainElement Enumerable => EnumerableChainElement.Instance;
+
+    public static readonly IComparer<ChainElement> Comparer = Comparer<ChainElement>.Create((x1, x2) => {
+        var typeComparison = Comparer<string>.Default.Compare(x1.GetType().Name, x2.GetType().Name);
+        if(typeComparison != 0)
+            return typeComparison;
+        return Comparer<string>.Default.Compare(x1.ToString(), x2.ToString());
+    });
 }
 
 public sealed record ToArrayChainElement : ChainElement {
@@ -20,6 +28,11 @@ public sealed record ToArrayChainElement : ChainElement {
 public sealed record ToListChainElement : ChainElement {
     public static readonly ToListChainElement Instance = new ToListChainElement();
     ToListChainElement() { }
+}
+
+public sealed record EnumerableChainElement : ChainElement {
+    public static readonly EnumerableChainElement Instance = new EnumerableChainElement();
+    EnumerableChainElement() { }
 }
 
 public sealed record WhereChainElement : ChainElement {

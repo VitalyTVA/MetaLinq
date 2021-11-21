@@ -49,68 +49,45 @@ public sealed class TerminalNode : LinqNode {
     }
 }
 
-public enum NodeType {
-    Where,
-    Select,
-    OrderBy,
-    OrderByDescending,
-    SelectMany,
-    Terminal,
-}
-public record struct NodeKey(NodeType type, TerminalNodeType? terminal, SourceType? source) : IComparable<NodeKey> {
-    public static NodeKey Simple(NodeType type) => new NodeKey(type, null, null);
-    public static NodeKey Terminal(TerminalNodeType type) => new NodeKey(NodeType.Terminal, type, null);
-    public static NodeKey SelectMany(SourceType type) => new NodeKey(NodeType.SelectMany, null, type);
-
-    public int CompareTo(NodeKey other) {
-        int typeResult = Comparer<NodeType>.Default.Compare(type, other.type);
-        if(typeResult != 0)
-            return typeResult;
-        int terminalResult = Extensions.CompareNullable(terminal, other.terminal);
-        if(terminalResult != 0)
-            return terminalResult;
-        int sourceResult = Extensions.CompareNullable(source, other.source);
-        if(sourceResult != 0)
-            return sourceResult;
-        return 0;
-    }
-}
-
 public abstract class IntermediateNode : LinqNode {
-    readonly Dictionary<NodeKey, LinqNode> Nodes = new();
+    readonly Dictionary<ChainElement, LinqNode> Nodes = new(/*Extensions.CreatequalityComparer<ChainElement>(x => x.GetHashCode(), (x1, x2) => {
+        var typeComparison = EqualityComparer<Type>.Default.Equals(x1.GetType(), x2.GetType());
+        if(!typeComparison) 
+            return typeComparison;
+        return EqualityComparer<string>.Default.Equals(x1.ToString(), x2.ToString());
+    })*/);
 
     public IntermediateNode? AddElement(ChainElement element) {
         switch(element) {
             case WhereChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.Where), static () => new WhereNode());
+                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new WhereNode());
             case SelectChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.Select), static () => new SelectNode());
+                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new SelectNode());
             case OrderByChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.OrderBy), static () => new OrderByNode());
+                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new OrderByNode());
             case OrderByDescendingChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.Simple(NodeType.OrderByDescending), static () => new OrderByDescendingNode());
+                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new OrderByDescendingNode());
             case SelectManyChainElement selectManyNode:
-                return (IntermediateNode)Nodes.GetOrAdd(NodeKey.SelectMany(selectManyNode.SourceType), () => new SelectManyNode(selectManyNode.SourceType));
+                return (IntermediateNode)Nodes.GetOrAdd(element, () => new SelectManyNode(selectManyNode.SourceType));
             case ToArrayChainElement:
-                Nodes.GetOrAdd(NodeKey.Terminal(TerminalNodeType.ToArray) , static () => TerminalNode.ToArray);
+                Nodes.GetOrAdd(element, static () => TerminalNode.ToArray);
                 return null;
             case ToListChainElement:
-                Nodes.GetOrAdd(NodeKey.Terminal(TerminalNodeType.ToList), static () => TerminalNode.ToList);
+                Nodes.GetOrAdd(element, static () => TerminalNode.ToList);
                 return null;
             default:
                 throw new InvalidOperationException();
         }
     }
     public void AddEnumerableNode() {
-        Nodes.GetOrAdd(NodeKey.Terminal(TerminalNodeType.Enumerable), static () => TerminalNode.Enumerable);
+        Nodes.GetOrAdd(ChainElement.Enumerable, static () => TerminalNode.Enumerable);
     }
     public IEnumerable<LinqNode> GetNodes() {
-        IEnumerable<KeyValuePair<NodeKey, LinqNode>> pairs = Nodes;
-        if(Nodes.ContainsKey(NodeKey.Terminal(TerminalNodeType.ToList))
-            && !Nodes.ContainsKey(NodeKey.Terminal(TerminalNodeType.ToArray)))
-            pairs = pairs.Concat(new[] { new KeyValuePair<NodeKey, LinqNode>(NodeKey.Terminal(TerminalNodeType.ToArray), TerminalNode.ToArray) });
+        IEnumerable<KeyValuePair<ChainElement, LinqNode>> pairs = Nodes;
+        if(Nodes.ContainsKey(ChainElement.ToList) && !Nodes.ContainsKey(ChainElement.ToArray))
+            pairs = pairs.Concat(new[] { new KeyValuePair<ChainElement, LinqNode>(ChainElement.ToArray, TerminalNode.ToArray) });
         var nodes = pairs
-            .OrderBy(x => x.Key)
+            .OrderBy(x => x.Key, ChainElement.Comparer)
             .Select(x => x.Value);
         return nodes;
     }

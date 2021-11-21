@@ -60,4 +60,26 @@ public static class Extensions {
             throw new NotImplementedException();
         return Comparer<T>.Default.Compare(value1!.Value, value2!.Value);
     }
+
+    //public static IEqualityComparer<T> CreatequalityComparer<T>(Func<T, int> getHashCode, Func<T, T, bool> equals) {
+    //    if(getHashCode == null) {
+    //        throw new ArgumentNullException(nameof(getHashCode));
+    //    }
+    //    if(equals == null) {
+    //        throw new ArgumentNullException(nameof(equals));
+    //    }
+    //    return new EqualityComparer<T>(getHashCode, equals);
+    //}
+
+    //class EqualityComparer<T> : IEqualityComparer<T> {
+    //    private readonly Func<T, int> _getHashCode;
+    //    private readonly Func<T, T, bool> _equals;
+
+    //    public EqualityComparer(Func<T, int> getHashCode, Func<T, T, bool> equals) {
+    //        _getHashCode = getHashCode;
+    //        _equals = equals;
+    //    }
+    //    public bool Equals(T x, T y) => _equals(x, y);
+    //    public int GetHashCode(T obj) => _getHashCode(obj);
+    //}
 }
