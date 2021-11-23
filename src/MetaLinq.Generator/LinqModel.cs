@@ -100,34 +100,34 @@ public abstract class IntermediateNode : LinqNode {
         }
         return sb.ToString();
     }
-    protected abstract string Type { get; }
+    protected internal abstract string Type { get; }
 }
 
 public sealed class RootNode : IntermediateNode {
     public RootNode() { }
-    protected override string Type => "Root";
+    protected internal override string Type => "Root";
 }
 
 public sealed class WhereNode : IntermediateNode {
     public WhereNode() { }
-    protected override string Type => "Where";
+    protected internal override string Type => "Where";
 }
 public sealed class SelectNode : IntermediateNode {
     public SelectNode() { }
-    protected override string Type => "Select";
+    protected internal override string Type => "Select";
 }
 public sealed class OrderByNode : IntermediateNode {
     public OrderByNode() { }
-    protected override string Type => "OrderBy";
+    protected internal override string Type => "OrderBy";
 }
 public sealed class OrderByDescendingNode : IntermediateNode {
     public OrderByDescendingNode() { }
-    protected override string Type => "OrderByDescending";
+    protected internal override string Type => "OrderByDescending";
 }
 public sealed class SelectManyNode : IntermediateNode {
     public readonly SourceType SourceType;
     public SelectManyNode(SourceType sourceType) {
         SourceType = sourceType;
     }
-    protected override string Type => "SelectMany " + SourceType;
+    protected internal override string Type => "SelectMany " + SourceType;
 }

@@ -257,7 +257,10 @@ foreach(var item{level} in source{level}) {{");
 @$"using var result = new LargeArrayBuilder<{(sameResultType ? contexts[0].SourceGenericArg : context.SourceGenericArg)}>();
 using var sortKeys = new LargeArrayBuilder<{"Result".GetLevelGenericType(contexts.Last().Level)}>();
 using var map = new LargeArrayBuilder<int>();",
-                BuilderType.ExactSizeOrderBy => $"var (result, sortKeys, map) = ({(sameResultType ? $"this{sourcePath}" : $"new {context.SourceGenericArg}[this{sourcePath}.{source.GetCountName()}]")}, new {"Result".GetLevelGenericType(contexts.Last().Level)}[this{sourcePath}.{source.GetCountName()}], ArrayPool<int>.Shared.Rent(this{sourcePath}.{source.GetCountName()}));",
+                BuilderType.ExactSizeOrderBy => 
+@$"var result = {(sameResultType ? $"this{sourcePath}" : $"new {context.SourceGenericArg}[this{sourcePath}.{source.GetCountName()}]")};
+var sortKeys = new {"Result".GetLevelGenericType(contexts.Last().Level)}[this{sourcePath}.{source.GetCountName()}];
+var map = ArrayPool<int>.Shared.Rent(this{sourcePath}.{source.GetCountName()});",
                 _ => throw new NotImplementedException(),
             };
             builder.AppendLine($"public {outputType}[] ToArray() {{");

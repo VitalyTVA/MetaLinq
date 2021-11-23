@@ -61,19 +61,19 @@ https://github.com/kevin-montrose/LinqAF
 
 ## Where_OrderBy
 
-|                Method |    N |        Mean |       Error |    StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
-|---------------------- |----- |------------:|------------:|----------:|------:|--------:|-------:|-------:|----------:|
-| WhereOrderBy_Standard |   10 |    149.2 ns |     3.03 ns |   2.01 ns |  1.00 |    0.00 | 0.0675 |      - |     424 B |
-|     WhereOrderBy_Meta |   10 |    274.7 ns |     4.87 ns |   2.90 ns |  1.85 |    0.03 | 0.0229 |      - |     144 B |
-|       WhereOrderBy_AF |   10 |    326.5 ns |     4.71 ns |   3.12 ns |  2.19 |    0.04 | 0.0482 |      - |     304 B |
-|                       |      |             |             |           |       |         |        |        |           |
-| WhereOrderBy_Standard |  100 |  1,662.7 ns |    32.40 ns |  21.43 ns |  1.00 |    0.00 | 0.3071 |      - |   1,936 B |
-|     WhereOrderBy_Meta |  100 |  1,593.5 ns |    30.10 ns |  19.91 ns |  0.96 |    0.02 | 0.1564 |      - |     992 B |
-|       WhereOrderBy_AF |  100 |  3,708.8 ns |    78.30 ns |  51.79 ns |  2.23 |    0.05 | 0.5722 |      - |   3,592 B |
-|                       |      |             |             |           |       |         |        |        |           |
-| WhereOrderBy_Standard | 1000 | 22,308.7 ns |   459.14 ns | 303.70 ns |  1.00 |    0.00 | 2.0752 | 0.0305 |  13,040 B |
-|     WhereOrderBy_Meta | 1000 | 11,359.7 ns | 1,006.05 ns | 665.44 ns |  0.51 |    0.03 | 1.3275 | 0.0153 |   8,352 B |
-|       WhereOrderBy_AF | 1000 | 46,137.6 ns |   661.99 ns | 437.86 ns |  2.07 |    0.04 | 4.3945 | 0.0610 |  27,848 B |
+|                   Method |    N |        Mean |       Error |      StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
+|------------------------- |----- |------------:|------------:|------------:|------:|--------:|-------:|-------:|----------:|
+|    WhereOrderBy_Standard |   10 |    148.7 ns |    14.66 ns |     7.67 ns |  1.00 |    0.00 | 0.0675 |      - |     424 B |
+|        WhereOrderBy_Meta |   10 |    267.1 ns |     2.96 ns |     1.76 ns |  1.80 |    0.09 | 0.0229 |      - |     144 B |
+| Array_Where_ToArray_Fast |   10 |    192.7 ns |    78.99 ns |    52.24 ns |  1.15 |    0.15 | 0.0229 |      - |     144 B |
+|                          |      |             |             |             |       |         |        |        |           |
+|    WhereOrderBy_Standard |  100 |  2,037.7 ns |   733.58 ns |   485.22 ns |  1.00 |    0.00 | 0.3071 |      - |   1,936 B |
+|        WhereOrderBy_Meta |  100 |  1,547.5 ns |    28.23 ns |    16.80 ns |  0.82 |    0.17 | 0.1564 |      - |     992 B |
+| Array_Where_ToArray_Fast |  100 |  1,160.8 ns |    40.98 ns |    27.11 ns |  0.60 |    0.14 | 0.1564 |      - |     992 B |
+|                          |      |             |             |             |       |         |        |        |           |
+|    WhereOrderBy_Standard | 1000 | 22,327.0 ns |   200.59 ns |   132.68 ns |  1.00 |    0.00 | 2.0752 | 0.0305 |  13,040 B |
+|        WhereOrderBy_Meta | 1000 | 11,219.8 ns | 1,630.71 ns | 1,078.61 ns |  0.50 |    0.05 | 1.3275 | 0.0153 |   8,352 B |
+| Array_Where_ToArray_Fast | 1000 |  9,582.2 ns |   547.76 ns |   362.31 ns |  0.43 |    0.02 | 1.3275 | 0.0153 |   8,352 B |
 
 ## Sort Benchmark
 

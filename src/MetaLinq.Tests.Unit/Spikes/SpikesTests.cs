@@ -19,6 +19,11 @@ public class SpikesTests {
         DataExtensions.AssertAll(s, x => Assert.AreEqual(1, x.Int_GetCount));
     }
     [Test]
+    public void Where_OrderBy() {
+        var s = Data.Array(10).Shuffle();
+        var ordered = s.Where(x => x.Int % 3 == 0).OrderBy(x => x.Int).ToArray();
+    }
+    [Test]
     public void Plain() {
         void Assert(int[] expected, int[]source) {
             var result = new List<int>();

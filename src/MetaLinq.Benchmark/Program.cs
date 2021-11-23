@@ -141,8 +141,11 @@ public class Where_OrderByBenchmarks {
     [Benchmark]
     public TestData[] WhereOrderBy_Meta() => Meta.Where_OrderBy(testData);
 
+    //[Benchmark]
+    //public TestData[] WhereOrderBy_AF() => AF.Where_OrderBy(testData);
+
     [Benchmark]
-    public TestData[] WhereOrderBy_AF() => AF.Where_OrderBy(testData);
+    public TestData[] Array_Where_ToArray_Fast() => MetaLinqSpikes.SortMethods.Array_Where_ToArray_Fast(testData, static x => x.Value % 3 == 0, x => x.Value);
 
     //[Benchmark]
     //public TestData[] WhereOrderBy_Hyper() => Hyper.Where_OrderBy(testData);

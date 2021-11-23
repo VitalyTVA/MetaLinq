@@ -1,0 +1,37 @@
+﻿<XtraSerializer version="21.2.0.0">
+  <Items>
+    <Item1 ItemKind="DiagramRoot" Theme="Sequence" SelectedStencils="BasicShapes, ArrowShapes, DecorativeShapes">
+      <Children>
+        <Item1 Position="490,40" Size="100,75" Shape="BasicShapes.Rectangle" Content="SameSize&#xD;&#xA;SameType" ItemKind="DiagramShape" />
+        <Item2 Position="430,530" Size="160,75" Shape="BasicShapes.Rectangle" Content="new LargeBuilder&lt;TResult&gt;" ItemKind="DiagramShape" />
+        <Item3 Position="350,190" Size="100,75" Shape="BasicShapes.Rectangle" Content="SameSize&#xD;&#xA;OtherType" ItemKind="DiagramShape" />
+        <Item4 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="ToArray" ItemKind="DiagramConnector" BeginItem="0" EndItem="13" BeginPoint="360,125" EndPoint="180,240" />
+        <Item5 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="Select" ItemKind="DiagramConnector" BeginItem="0" EndItem="2" BeginPoint="360,125" EndPoint="480,190" />
+        <Item6 Position="590,190" Size="100,75" Shape="BasicShapes.Rectangle" Content="OtherSize&#xD;&#xA;SameType" ItemKind="DiagramShape" />
+        <Item7 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="Where" ItemKind="DiagramConnector" BeginItem="0" EndItem="5" BeginPoint="360,125" EndPoint="500,190" />
+        <Item8 Position="490,320" Size="100,75" Shape="BasicShapes.Rectangle" Content="OtherSize&#xD;&#xA;OtherType" ItemKind="DiagramShape" />
+        <Item9 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="SelectMany" ItemKind="DiagramConnector" BeginItem="0" EndItem="7" BeginPoint="360,125" EndPoint="400,320" />
+        <Item10 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="Select" ItemKind="DiagramConnector" BeginItem="5" EndItem="7" BeginPoint="500,265" EndPoint="400,320" />
+        <Item11 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="Where" ItemKind="DiagramConnector" BeginItem="2" EndItem="7" BeginPoint="310,265" EndPoint="400,320" />
+        <Item12 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="ToArray" ItemKind="DiagramConnector" BeginItem="7" EndItem="1" BeginPoint="400,395" EndPoint="350,470" />
+        <Item13 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="OrderBy" ItemKind="DiagramConnector" BeginItem="7" EndItem="19" BeginPoint="400,395" EndPoint="670,500" />
+        <Item14 Position="90,190" Size="100,75" Shape="BasicShapes.Rectangle" Content="new TSource[len]" ItemKind="DiagramShape" />
+        <Item15 Position="230,390" Size="100,75" Shape="BasicShapes.Rectangle" Content="new TResult[len]" ItemKind="DiagramShape" />
+        <Item16 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="ToArray" ItemKind="DiagramConnector" BeginItem="2" EndItem="14" BeginPoint="310,265" EndPoint="200,380" />
+        <Item17 Position="680,320" Size="160,75" Shape="BasicShapes.Rectangle" Content="new LargeBuilder&lt;TSource&gt;" ItemKind="DiagramShape" />
+        <Item18 Position="220,190" Size="100,75" Shape="BasicShapes.Rectangle" Content="SameSize&#xD;&#xA;SameType&#xD;&#xA;OrderBy" ItemKind="DiagramShape" />
+        <Item19 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="OrderBy" ItemKind="DiagramConnector" BeginItem="0" EndItem="17" BeginPoint="360,125" EndPoint="270,190" />
+        <Item20 Position="620,530" Size="180,75" ThemeStyleId="Variant4" Shape="BasicShapes.Rectangle" Content="new LargeBuilder&lt;TResult&gt;" ItemKind="DiagramShape" />
+        <Item21 Position="370,390" Size="100,75" Shape="BasicShapes.Rectangle" Content="SameSize&#xD;&#xA;OtherType&#xD;&#xA;OrderBy" ItemKind="DiagramShape" />
+        <Item22 BeginItemPointIndex="2" EndItemPointIndex="-1" Points="(Empty)" Type="Straight" Content="OrderBy" ItemKind="DiagramConnector" BeginItem="2" EndItem="20" BeginPoint="400,265" EndPoint="380,340" />
+        <Item23 Position="280,530" Size="130,75" Shape="BasicShapes.Rectangle" Content="new TResult[len]&#xD;&#xA;new TKey[len]&#xD;&#xA;map = new int[len]" ItemKind="DiagramShape" />
+        <Item24 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="ToArray" ItemKind="DiagramConnector" BeginItem="20" EndItem="22" BeginPoint="310,415" EndPoint="230,450" />
+        <Item25 Position="120,290" Size="140,75" Shape="BasicShapes.Rectangle" Content="new TSource[len]&#xD;&#xA;new TKey[len]&#xD;&#xA;map = new int[len]" ItemKind="DiagramShape" />
+        <Item26 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="ToArray" ItemKind="DiagramConnector" BeginItem="17" EndItem="24" BeginPoint="270,265" EndPoint="190,290" />
+        <Item27 Position="860,320" Size="160,75" ThemeStyleId="Variant4" Shape="BasicShapes.Rectangle" Content="new LargeBuilder&lt;TSource&gt;" ItemKind="DiagramShape" />
+        <Item28 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="OrderBy" ItemKind="DiagramConnector" BeginItem="5" EndItem="26" BeginPoint="640,265" EndPoint="940,320" />
+        <Item29 BeginItemPointIndex="2" EndItemPointIndex="0" Points="(Empty)" Type="Straight" Content="ToArray" ItemKind="DiagramConnector" BeginItem="5" EndItem="16" BeginPoint="640,265" EndPoint="760,320" />
+      </Children>
+    </Item1>
+  </Items>
+</XtraSerializer>

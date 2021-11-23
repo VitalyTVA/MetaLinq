@@ -1,5 +1,8 @@
-mixed chains with selectmany/where/select before orderby
-allocate resulting array at once if count is known (list/array + where/skip/take)
+reduce large array usage (work pieces [Trivial -> UnknownSize/UnknownType/UnknownSizaAndType -> Array/OrderByArray] - repeat)
+
+ArrayPool rent/return tests
+
+Add max capacity to large array builder (like in LargeArrayBuilder from net6)
 
 #Posponed0
 
