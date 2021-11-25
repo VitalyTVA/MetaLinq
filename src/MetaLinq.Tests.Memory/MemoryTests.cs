@@ -127,7 +127,7 @@ public class Tests {
         MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.Where(static x => x.Value % 3 == 0).OrderBy(static x => x.Value).ToArray(),
             new[] {
                 ($"{typeof(TestData).FullName}[]", 2),
-                ("System.Int32[]", 2),
+                ("System.Int32[]", 1),
             }
         );
     }

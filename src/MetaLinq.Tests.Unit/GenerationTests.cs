@@ -140,7 +140,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
     [Test]
@@ -163,7 +163,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
     [Test]
@@ -189,7 +189,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
     #endregion
 

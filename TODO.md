@@ -1,8 +1,16 @@
+bool useKeySelector - KILL
+ 
+BuilderType.UnknownSizeOrderBy => - KILL
+
+several orderby levels (keySelector path)
+
 reduce large array usage (work pieces [Trivial -> UnknownSize/UnknownType/UnknownSizaAndType -> Array/OrderByArray] - repeat)
 
 ArrayPool rent/return tests
 
 Add max capacity to large array builder (like in LargeArrayBuilder from net6)
+
+see how large array builder it works without dispose int net6 (dispose on ToArray???)
 
 #Posponed0
 
