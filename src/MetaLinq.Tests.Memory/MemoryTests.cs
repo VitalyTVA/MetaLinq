@@ -131,15 +131,15 @@ public class Tests {
             }
         );
     }
-    [Test]
-    public static void Array_Where_OrderBy_ToArray_Standard() {
-        MemoryTestHelper.AssertDifference(() => Enumerable.ToArray(Enumerable.OrderBy(Enumerable.Where(testDataArray_Shuffled, static x => x.Value % 3 == 0), static x => x.Value)),
-            new[] {
-                ($"{typeof(TestData).FullName}[]", 2),
-                ("System.Int32[]", 2),
-            }
-        );
-    }
+    //[Test]
+    //public static void Array_Where_OrderBy_ToArray_Standard() {
+    //    MemoryTestHelper.AssertDifference(() => Enumerable.ToArray(Enumerable.OrderBy(Enumerable.Where(testDataArray_Shuffled, static x => x.Value % 3 == 0), static x => x.Value)),
+    //        new[] {
+    //            ($"{typeof(TestData).FullName}[]", 2),
+    //            ("System.Int32[]", 2),
+    //        }
+    //    );
+    //}
     #endregion
 
     #region where

@@ -84,11 +84,14 @@ public class PieceOfWorkTests {
     static void AssertPieces(ChainElement[] chain, string[] expected) {
         var model = new LinqModel();
         model.AddChain(SourceType.List, chain);
-        var nodes = Extensions.Unfold<IntermediateNode>(
-            model.GetTrees().Single().Item2,
-            x => x.GetNodes().OfType<IntermediateNode>().SingleOrDefault()
-        ).Skip(1);
-        var result = nodes.GetPieces().Select(x => x.ToString()).ToArray();
+        var firstNode = (IntermediateNode)model.GetTrees().Single().Item2.GetNodes().Single();
+        var lastContext = Extensions.Unfold(
+            EmitContext.Root(SourceType.List, firstNode),
+            context => {
+                var node = context.Node.GetNodes().OfType<IntermediateNode>().SingleOrDefault();
+                return node != null ? context.Next(node) : null;
+            }).Last();
+        var result = lastContext.GetPieces().Select(x => x.ToString()).ToArray();
         CollectionAssert.AreEqual(expected, result);
     }
 }

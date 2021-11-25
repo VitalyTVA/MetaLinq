@@ -44,8 +44,7 @@ using MetaLinq.Internal;");
                 partial: true, 
                 generics: sourceGenericArg)
             ) {
-                var enumerableSourceType = source.GetSourceTypeName(sourceGenericArg);
-                var context = new EmitContext(0, intermediate, enumerableSourceType, sourceGenericArg, null);
+                var context = EmitContext.Root(source, intermediate);
                 EmitStruct(source, sourceTypeBuilder, context);
             }
         }
@@ -113,7 +112,7 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
                             EmitGetEnumerator(source, structBuilder, context);
                             break;
                         case IntermediateNode nextIntermediate:
-                            var nextContext = new EmitContext(context.Level + 1, nextIntermediate, $"{typeName}", outputType, context);
+                            var nextContext = context.Next(nextIntermediate);
                             EmitStructMethod(structBuilder, nextContext);
                             EmitStruct(source, structBuilder, nextContext);
                             break;
@@ -344,7 +343,15 @@ if(!source{sourcePath}.predicate(item{level + 1}))
         }
     }
 
-    public record EmitContext(int Level, IntermediateNode Node, string SourceType, string SourceGenericArg, EmitContext? Parent);
+    public record EmitContext(int Level, IntermediateNode Node, string SourceType, string SourceGenericArg, EmitContext? Parent) {
+        const string RootSourceType = "TSource";
+
+        public static EmitContext Root(SourceType source, IntermediateNode Node) 
+            => new EmitContext(0, Node, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
+
+        public EmitContext Next(IntermediateNode node)
+            => new EmitContext(Level + 1, node, Node.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
+    }
 
     public static class CodeGenerationTraits {
         public static string GetEnumerableTypeName(this IntermediateNode intermediate, int level) {
