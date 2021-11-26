@@ -124,3 +124,16 @@ current:
 |            Sort_Map_Comparison | 10000 |   750,229.3 ns | 7,061.38 ns | 4,670.67 ns |  0.68 |    0.00 | 25.3906 | 2.9297 | 160,160 B |
 | Sort_ArraySortHelper_TComparer | 10000 |   604,992.2 ns | 2,791.36 ns | 1,661.09 ns |  0.55 |    0.00 | 24.4141 | 0.9766 | 160,072 B |
 |         SortHelper_SortToArray | 10000 |   600,363.3 ns | 7,074.10 ns | 4,679.08 ns |  0.54 |    0.00 | 18.5547 |      - | 120,049 B |
+
+## Array_Where_OrderBy_Select_Where_OrderByDescending
+
+|                                                      Method |    N |         Mean |       Error |      StdDev | Ratio |  Gen 0 |  Gen 1 | Allocated |
+|------------------------------------------------------------ |----- |-------------:|------------:|------------:|------:|-------:|-------:|----------:|
+| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard |   10 |     640.6 ns |     7.64 ns |     4.54 ns |  1.00 | 0.1745 |      - |   1,096 B |
+|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta |   10 |     484.8 ns |     5.10 ns |     3.37 ns |  0.76 | 0.0629 |      - |     400 B |
+|                                                             |      |              |             |             |       |        |        |           |
+| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard |  100 |   8,288.9 ns |   105.52 ns |    69.80 ns |  1.00 | 0.9003 |      - |   5,672 B |
+|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta |  100 |   3,937.3 ns |    94.66 ns |    62.61 ns |  0.48 | 0.5264 |      - |   3,320 B |
+|                                                             |      |              |             |             |       |        |        |           |
+| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard | 1000 | 137,329.9 ns | 1,158.18 ns |   766.07 ns |  1.00 | 7.0801 |      - |  45,472 B |
+|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta | 1000 |  53,016.8 ns | 1,913.25 ns | 1,265.50 ns |  0.39 | 5.0659 | 0.1221 |  32,000 B |
