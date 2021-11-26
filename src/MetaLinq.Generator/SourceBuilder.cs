@@ -222,16 +222,13 @@ next{level + 1}:
             }
         }
 
-        static void EmitLoop(SourceType source, CodeBuilder builder, int level, string sourceExpression, Action<CodeBuilder> emitBody, bool useKeySelector = false) {
+        static void EmitLoop(SourceType source, CodeBuilder builder, int level, string sourceExpression, Action<CodeBuilder> emitBody) {
             builder.AppendLine($"var source{level} = {sourceExpression};");
             if(source == SourceType.Array) {
                 builder.AppendMultipleLines($@"
 var len{level} = source{level}.Length;
-for(int i{level} = 0; i{level} < len{level}; i{level}++) {{");
-                if(useKeySelector)
-                    builder.AppendLine($"    var item{level} = keySelector(source{level}[i{level}]);");
-                else
-                    builder.AppendLine($"    var item{level} = source{level}[i{level}];");
+for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
+    var item{level} = source{level}[i{level}];");
             }
             if(source == SourceType.List)
                 builder.AppendMultipleLines($@"
@@ -265,7 +262,7 @@ foreach(var item{level} in source{level}) {{");
         }
 
         private static void EmitPieceOrWork(SourceType source, CodeBuilder builder, string sourcePath, PieceOfWork piece, int totalLevels) {
-            var builderType = (piece.SameSize, piece.SameType, piece.ResultType);
+            var builderType = (piece.SameSize, piece.ResultType);
             var lastContext = piece.Contexts.Last();
             var outputType = lastContext.GetOutputType();
 
@@ -273,14 +270,10 @@ foreach(var item{level} in source{level}) {{");
             var lastLevel = piece.Contexts.Last().Level;
 
             string arrayBuilder = builderType switch {
-                (false, _, ResultType.ToArray) => $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
-                (true, _, ResultType.ToArray) => $"var result{topLevel} = new {outputType}[{sourcePath}.{source.GetCountName()}];",
-                //                BuilderType.UnknownSizeOrderBy => 
-                //@$"using var result = new LargeArrayBuilder<{(sameResultType ? contexts[0].SourceGenericArg : context.SourceGenericArg)}>();
-                //using var sortKeys = new LargeArrayBuilder<{"Result".GetLevelGenericType(contexts.Last().Level)}>();
-                //using var map = new LargeArrayBuilder<int>();",
-                (true, _, ResultType.OrderBy) =>
-@$"var result{topLevel} = {(builderType.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{sourcePath}.{source.GetCountName()}]")};
+                (false, ResultType.ToArray) => $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
+                (true, ResultType.ToArray) => $"var result{topLevel} = new {outputType}[{sourcePath}.{source.GetCountName()}];",
+                (true, ResultType.OrderBy) =>
+@$"var result{topLevel} = {(piece.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{sourcePath}.{source.GetCountName()}]")};
 var sortKeys{topLevel} = new {"Result".GetLevelGenericType(lastContext.Level)}[{sourcePath}.{source.GetCountName()}];
 var map{topLevel} = ArrayPool<int>.Shared.Rent({sourcePath}.{source.GetCountName()});",
                 _ => throw new NotImplementedException(),
@@ -290,22 +283,18 @@ var map{topLevel} = ArrayPool<int>.Shared.Rent({sourcePath}.{source.GetCountName
             EmitLoop(source, builder.Tab, topLevel, sourcePath,
                 bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece.Contexts, (b, level) => {
                     string addValue = builderType switch {
-                        (false, _, ResultType.ToArray) => $"result{topLevel}.Add(item{level});",
-                        (true, _, ResultType.ToArray) => $"result{topLevel}[i{topLevel}] = item{level};",
-                        //BuilderType.UnknownSizeOrderBy => $"sortKeys.Add(item{level}); result.Add(item{level - 1}); map.Add(result.Count - 1);",
-                        (true, _, ResultType.OrderBy) => $"sortKeys{topLevel}[i{topLevel}] = item{level}; map{topLevel}[i{topLevel}] = i{topLevel};{(builderType.SameType ? null : $"result{topLevel}[i{topLevel}] = item{level - 1};")}",
+                        (false, ResultType.ToArray) => $"result{topLevel}.Add(item{level});",
+                        (true, ResultType.ToArray) => $"result{topLevel}[i{topLevel}] = item{level};",
+                        (true, ResultType.OrderBy) => $"sortKeys{topLevel}[i{topLevel}] = item{level}; map{topLevel}[i{topLevel}] = i{topLevel};{(piece.SameType ? null : $"result{topLevel}[i{topLevel}] = item{level - 1};")}",
                         _ => throw new NotImplementedException(),
                     };
                     b.AppendLine(addValue);
-                }, totalLevels), useKeySelector: topLevel != 0);
+                }, totalLevels));
 
             string result = builderType switch {
-                (false, _, ResultType.ToArray) => $@"var result_{lastLevel} = result{topLevel}.ToArray();",
-                (true, _, ResultType.ToArray) => $@"var result_{lastLevel} = result{topLevel};",
-                //                BuilderType.UnknownSizeOrderBy => 
-                //$@"
-                //return SortHelper.Sort(result.ToArray(), map.ToArray(), sortKeys.ToArray(), descending: {(contexts.Last().Node is OrderByDescendingNode ? "true" : "false")});",
-                (true, _, ResultType.OrderBy) =>
+                (false, ResultType.ToArray) => $@"var result_{lastLevel} = result{topLevel}.ToArray();",
+                (true, ResultType.ToArray) => $@"var result_{lastLevel} = result{topLevel};",
+                (true, ResultType.OrderBy) =>
 $@"ArrayPool<int>.Shared.Return(map{topLevel});
 var result_{lastLevel} = SortHelper.Sort(result{topLevel}, map{topLevel}, sortKeys{topLevel}, descending: {(lastContext.Node is OrderByDescendingNode ? "true" : "false")});",
                 _ => throw new NotImplementedException(),
@@ -319,12 +308,12 @@ var result_{lastLevel} = SortHelper.Sort(result{topLevel}, map{topLevel}, sortKe
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
         static void EmitLoopBody(int level, CodeBuilder builder, EmitContext[] contexts, Action<CodeBuilder, int> finish, int totalLevels) {
-            if(level >= contexts.Length) {
+            if(level > contexts.Last().Level) {
                 finish(builder, level);
                 return;
             }
             void EmitNext(CodeBuilder nextBuilder) => EmitLoopBody(level + 1, nextBuilder, contexts, finish, totalLevels);
-            var intermediate = contexts[level].Node;
+            var intermediate = contexts[level - contexts.First().Level].Node;
             var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels - level);
             switch(intermediate) {
                 case WhereNode:
