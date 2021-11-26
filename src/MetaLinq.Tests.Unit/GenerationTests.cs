@@ -191,6 +191,75 @@ public class GenerationTests : BaseFixture {
     );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
+
+    [Test]
+    public void Array_Where_OrderBy_Select_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).ToArray();
+}}",
+        Get0ToNIntArrayAssert(6),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("ToArray"),
+                    })  
+                })
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Where_OrderBy_Select_OrderByDescending_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).OrderByDescending(x => 2 * x).ToArray();
+}}",
+        GetIntArrayAssert(new[] { 6, 5, 4, 3, 2, 1, 0 }),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("OrderByDescending", new[] {
+                            new StructMethod("ToArray"),
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Where_OrderBy_Select_Where_OrderByDescending_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).Where(x => x > 2).OrderByDescending(x => 2 * x).ToArray();
+}}",
+        GetIntArrayAssert(new[] { 6, 5, 4, 3 }),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("OrderByDescending", new[] {
+                                new StructMethod("ToArray"),
+                            })
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region where

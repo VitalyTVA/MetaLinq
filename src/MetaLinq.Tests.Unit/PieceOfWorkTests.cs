@@ -62,6 +62,32 @@ public class PieceOfWorkTests {
         });
     }
 
+    [Test]
+    public void Where_Select_OrderBy_SelectMany_Where() {
+        AssertPieces(new[] { ChainElement.Where, ChainElement.Select, ChainElement.OrderBy, ChainElement.SelectMany(SourceType.List), ChainElement.Where}, new[] {
+"SameType: False, SameSize: False, ResultType: ToArray, Nodes: [Where, Select]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
+"SameType: False, SameSize: False, ResultType: ToArray, Nodes: [SelectMany List, Where]",
+        });
+    }
+
+    [Test]
+    public void Where_OrderBy_Select() {
+        AssertPieces(new[] { ChainElement.Where, ChainElement.OrderBy, ChainElement.Select }, new[] {
+"SameType: True, SameSize: False, ResultType: ToArray, Nodes: [Where]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
+"SameType: False, SameSize: True, ResultType: ToArray, Nodes: [Select]",
+        });
+    }
+
+    [Test]
+    public void Select_OrderBy_Where() {
+        AssertPieces(new[] { ChainElement.Select, ChainElement.OrderBy, ChainElement.Where }, new[] {
+"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]",
+"SameType: True, SameSize: False, ResultType: ToArray, Nodes: [Where]",
+        });
+    }
+
 
     [Test]
     public void Where() {

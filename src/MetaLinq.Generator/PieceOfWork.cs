@@ -38,6 +38,8 @@ public static class PieceOfWorkExtensions {
                         yield return new PieceOfWork(current.ToArray(), sameType, sameSize, ResultType.ToArray);
                         yield return new PieceOfWork(new[] { context }, true, true, ResultType.OrderBy);
                     }
+                    sameType = true;
+                    sameSize = true;
                     current.Clear();
                     break;
                 default:

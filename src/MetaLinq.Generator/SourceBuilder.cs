@@ -332,7 +332,7 @@ if(!this{sourcePath}.predicate(item{level + 1}))
                         bodyBuilder => EmitNext(bodyBuilder));
                     break;
                 case OrderByNode or OrderByDescendingNode:
-                    builder.AppendLine($"var item{level + 1} = keySelector(item{level});");
+                    builder.AppendLine($"var item{level + 1} = this{sourcePath}.keySelector(item{level});");
                     EmitNext(builder);
                     break;
                 default:
