@@ -11,12 +11,12 @@ namespace MetaLinqBenchmark;
 
 class Program {
     static void Main(string[] args) {
-        BenchmarkRunner.Run<Array_Where_OrderBy_Select_Where_OrderByDescendingBenchmarks>();
+        //BenchmarkRunner.Run<Array_Where_OrderBy_Select_Where_OrderByDescendingBenchmarks>();
         //BenchmarkRunner.Run<Where_OrderByBenchmarks>();
         //BenchmarkRunner.Run<Select_OrderByBenchmarks>();
         //BenchmarkRunner.Run<SelectBenchmarks>();
         //BenchmarkRunner.Run<SortBenchmarks>();
-        //BenchmarkRunner.Run<OrderByBenchmarks>();
+        BenchmarkRunner.Run<OrderByBenchmarks>();
         //BenchmarkRunner.Run<Benchmarks>();
     }
 }

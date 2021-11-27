@@ -1,9 +1,41 @@
 ﻿using MetaLinq.Internal;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace MetaLinqSpikes;
 
 public static partial class SortMethods {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T[] Sort<T, TKey>(T[] source, int[] map, TKey[] sortKeys, bool descending) {
+        var len = sortKeys.Length;
+
+        T[] sorted;
+        if(descending)
+            sorted = SortHelper.SortAndAllocateResultArray<T, KeysComparerDescending<TKey>>(map, new KeysComparerDescending<TKey>(sortKeys), len);
+        else
+            sorted = SortHelper.SortAndAllocateResultArray<T, KeysComparer<TKey>>(map, new KeysComparer<TKey>(sortKeys), len);
+
+        for(int i = 0; i != len; i++) {
+            sorted[i] = source[map[i]];
+        }
+        return sorted;
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T[] Sort<T, TKey>(IList<T> source, int[] map, TKey[] sortKeys, bool descending) {
+        var len = sortKeys.Length;
+
+        T[] sorted;
+        if(descending)
+            sorted = SortHelper.SortAndAllocateResultArray<T, KeysComparerDescending<TKey>>(map, new KeysComparerDescending<TKey>(sortKeys), len);
+        else
+            sorted = SortHelper.SortAndAllocateResultArray<T, KeysComparer<TKey>>(map, new KeysComparer<TKey>(sortKeys), len);
+
+        for(int i = 0; i != len; i++) {
+            sorted[i] = source[map[i]];
+        }
+        return sorted;
+    }
+
     public static TSource[] ArraySortToArray<TSource, TKey>(TSource[] source, Func<TSource, TKey> keySelector, bool descending) {
         var (result, sortKeys, map) = (source, new TKey[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
         var len = source.Length;
@@ -13,7 +45,7 @@ public static partial class SortMethods {
             map[i] = i;
         }
         ArrayPool<int>.Shared.Return(map);
-        return SortHelper.Sort(result, map, sortKeys, descending);
+        return Sort(result, map, sortKeys, descending);
     }
 
     public static TSource[] Array_Where_ToArray_Slow<TSource, TKey>(TSource[] source, Func<TSource, bool> predicate, Func<TSource, TKey> keySelector, bool descending) {
@@ -30,7 +62,7 @@ public static partial class SortMethods {
             var item2 = keySelector(item1);
             sortKeys.Add(item2); result.Add(item1); map.Add(result.Count - 1);
         }
-        return SortHelper.Sort(result.ToArray(), map.ToArray(), sortKeys.ToArray(), descending: true);
+        return Sort(result.ToArray(), map.ToArray(), sortKeys.ToArray(), descending: true);
     }
 
     public static TSource[] Array_Where_ToArray_Fast<TSource, TKey>(TSource[] source, Func<TSource, bool> predicate, Func<TSource, TKey> keySelector) {
@@ -59,7 +91,7 @@ public static partial class SortMethods {
                 sortKeys[i0] = item1;
                 map[i0] = i0;
             }
-            return SortHelper.Sort(result1, map, sortKeys, descending: false);
+            return Sort(result1, map, sortKeys, descending: false);
         }
     }
 
@@ -74,7 +106,7 @@ public static partial class SortMethods {
             map[i] = i;
         }
         ArrayPool<int>.Shared.Return(map);
-        return MetaLinq.Internal.SortHelper.Sort(result, map, sortKeys, descending);
+        return Sort(result, map, sortKeys, descending);
     }
 
     public static TSource[] Sort_Map_Comparer<TSource>(TSource[] source, Func<TSource, int> keySelector) {

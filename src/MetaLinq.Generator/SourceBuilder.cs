@@ -296,7 +296,8 @@ var map{topLevel} = ArrayPool<int>.Shared.Rent({sourcePath}.{source.GetCountName
                 (true, ResultType.ToArray) => $@"var result_{lastLevel} = result{topLevel};",
                 (true, ResultType.OrderBy) =>
 $@"ArrayPool<int>.Shared.Return(map{topLevel});
-var result_{lastLevel} = SortHelper.Sort(result{topLevel}, map{topLevel}, sortKeys{topLevel}, descending: {(lastContext.Node is OrderByDescendingNode ? "true" : "false")});",
+var comparer{lastLevel} = new KeysComparer{(lastContext.Node is OrderByDescendingNode ? "Descending" : null)}<{"Result".GetLevelGenericType(lastContext.Level)}>(sortKeys{topLevel});
+var result_{lastLevel} = SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}.Length);",
                 _ => throw new NotImplementedException(),
             };
 

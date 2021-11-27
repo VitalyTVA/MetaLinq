@@ -6,18 +6,17 @@ namespace MetaLinq.Internal;
 
 public static class SortHelper {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T[] Sort<T, TKey>(T[] source, int[] map, TKey[] sortKeys, bool descending) {
-        var len = sortKeys.Length;
-        var sorted = SortAndAllocateResultArray<T, TKey>(map, sortKeys, descending); ;
+    public static T[] Sort<T, TComparer>(T[] source, int[] map, TComparer comparer, int len) where TComparer : IComparer<int> {
+        var sorted = SortAndAllocateResultArray<T, TComparer>(map, comparer, len);
+
         for(int i = 0; i != len; i++) {
             sorted[i] = source[map[i]];
         }
         return sorted;
     }
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T[] Sort<T, TKey>(IList<T> source, int[] map, TKey[] sortKeys, bool descending) {
-        var len = sortKeys.Length;
-        var sorted = SortAndAllocateResultArray<T, TKey>(map, sortKeys, descending);
+    public static T[] Sort<T, TComparer>(IList<T> source, int[] map, TComparer comparer, int len) where TComparer : IComparer<int> {
+        var sorted = SortAndAllocateResultArray<T, TComparer>(map, comparer, len);
         for(int i = 0; i != len; i++) {
             sorted[i] = source[map[i]];
         }
@@ -25,13 +24,9 @@ public static class SortHelper {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static T[] SortAndAllocateResultArray<T, TKey>(int[] map, TKey[] sortKeys, bool descending) {
-        var len = sortKeys.Length;
+    public static T[] SortAndAllocateResultArray<T, TComparer>(int[] map, TComparer comparer, int len) where TComparer: IComparer<int> {
         var mapSpan = map.AsSpan().Slice(0, len);
-        if(descending)
-            ArraySorter<TKey, KeysComparerDescending<TKey>>.IntrospectiveSort(mapSpan, new KeysComparerDescending<TKey>(sortKeys));
-        else
-            ArraySorter<TKey, KeysComparer<TKey>>.IntrospectiveSort(mapSpan, new KeysComparer<TKey>(sortKeys));
+        ArraySorter<TComparer>.IntrospectiveSort(mapSpan, comparer);
         var sorted = new T[len];
         return sorted;
     }
@@ -52,7 +47,7 @@ public static class SortHelper {
     };
 }
 
-readonly struct KeysComparer<TKey> : IComparer<int> {
+public readonly struct KeysComparer<TKey> : IComparer<int> {
     readonly TKey[] keys;
 
     public KeysComparer(TKey[] keys) {
@@ -73,7 +68,7 @@ readonly struct KeysComparer<TKey> : IComparer<int> {
     }
 }
 
-readonly struct KeysComparerDescending<TKey> : IComparer<int> {
+public readonly struct KeysComparerDescending<TKey> : IComparer<int> {
     readonly TKey[] keys;
 
     public KeysComparerDescending(TKey[] keys) {
@@ -94,7 +89,7 @@ readonly struct KeysComparerDescending<TKey> : IComparer<int> {
     }
 }
 
-static class ArraySorter<T, TComparer> where TComparer : IComparer<int> {
+static class ArraySorter<TComparer> where TComparer : IComparer<int> {
     static void SwapIfGreater(Span<int> map, TComparer comparer, int i, int j) {
         if(CompareMap(comparer, map[i], map[j]) > 0) {
             int val = map[i];
