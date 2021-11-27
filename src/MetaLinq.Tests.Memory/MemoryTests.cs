@@ -19,7 +19,7 @@ public class Tests {
         testDataList = Enumerable.ToList(testDataArray);
 
         var rnd = new Random(0);
-        testDataArray_Shuffled = Enumerable.ToArray(Enumerable.Select(Enumerable.Range(0, 20), x => new TestData(new int[] { }, x)));
+        testDataArray_Shuffled = Enumerable.ToArray(Enumerable.Select(Enumerable.Range(0, 20), x => new TestData(new int[] { }, x) { Value2 = rnd.Next(5), Value3 = rnd.Next(3) }));
         for(int i = 0; i < 40; i++) {
             var i1 = rnd.Next(testDataArray_Shuffled.Length);
             var i2 = rnd.Next(testDataArray_Shuffled.Length);
@@ -37,6 +37,8 @@ public class Tests {
         }
         public int[] IntArray { get; }
         public int Value { get; }
+        public int Value2 { get; set; }
+        public int Value3 { get; set; }
         //public List<int> IntList { get; }
     }
     static TestData[] testDataArray;
@@ -112,6 +114,15 @@ public class Tests {
     [Test]
     public static void Array_OrderBy_ToArray() {
         MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.OrderBy(static x => x.Value).ToArray(), ExpectedOrderByAllocations());
+    }
+    [Test]
+    public static void Array_OrderBy_ThenBy_ThenBy_ToArray() {
+        MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.OrderBy(static x => x.Value3).ThenBy(static x => x.Value2).ThenBy(static x => x.Value).ToArray(),
+            new[] {
+                ($"{typeof(TestData).FullName}[]", 1),
+                ("System.Int32[]", 3),
+            }
+        );
     }
     [Test]
     public static void Array_Select_OrderBy_ToArray() {

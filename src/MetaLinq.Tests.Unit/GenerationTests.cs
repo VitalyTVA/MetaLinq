@@ -159,8 +159,6 @@ public class GenerationTests : BaseFixture {
     );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
-    //benchmark OrderBy_ThenBy_ThenBy
-    //memory test OrderBy_ThenBy_ThenBy
 
     [Test]
     public void List_OrderBy_ToArray() {
