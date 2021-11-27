@@ -4,6 +4,18 @@ using System.Buffers;
 namespace MetaLinqSpikes;
 
 public static partial class SortMethods {
+    public static TSource[] ArraySortToArray<TSource, TKey>(TSource[] source, Func<TSource, TKey> keySelector, bool descending) {
+        var (result, sortKeys, map) = (source, new TKey[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
+        var len = source.Length;
+        for(int i = 0; i < len; i++) {
+            var item = source[i];
+            sortKeys[i] = keySelector(item);
+            map[i] = i;
+        }
+        ArrayPool<int>.Shared.Return(map);
+        return SortHelper.Sort(result, map, sortKeys, descending);
+    }
+
     public static TSource[] Array_Where_ToArray_Slow<TSource, TKey>(TSource[] source, Func<TSource, bool> predicate, Func<TSource, TKey> keySelector, bool descending) {
         using var result = new LargeArrayBuilder<TSource>();
         using var sortKeys = new LargeArrayBuilder<TKey>();

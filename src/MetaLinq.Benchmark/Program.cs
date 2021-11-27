@@ -4,6 +4,7 @@ using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using MetaLinq;
 using MetaLinq.Internal;
+using MetaLinqSpikes;
 using System.Linq;
 
 namespace MetaLinqBenchmark;
@@ -53,7 +54,7 @@ public class SortBenchmarks {
 
     [Benchmark]
     public void SortHelper_SortToArray() {
-        SortHelper.ArraySortToArray(testData, x => x.Value, descending: false);
+        SortMethods.ArraySortToArray(testData, x => x.Value, descending: false);
     }
 
 
@@ -209,8 +210,8 @@ public class Select_OrderByBenchmarks {
     [Benchmark]
     public int[] SelectOrderBy_Meta() => Meta.Select_OrderBy(testData);
 
-    [Benchmark]
-    public int[] SelectOrderBy_AF() => AF.Select_OrderBy(testData);
+    //[Benchmark]
+    //public int[] SelectOrderBy_AF() => AF.Select_OrderBy(testData);
 
     //[Benchmark]
     //public TestData[] SelectOrderBy_Hyper() => Hyper.Select_OrderBy(testData);
@@ -241,8 +242,8 @@ public class OrderByBenchmarks {
     [Benchmark]
     public TestData[] OrderBy_Meta() => Meta.OrderBy(testData);
 
-    [Benchmark]
-    public TestData[] OrderBy_AF() => AF.OrderBy(testData);
+    //[Benchmark]
+    //public TestData[] OrderBy_AF() => AF.OrderBy(testData);
 
     //[Benchmark]
     //public TestData[] OrderBy_Hyper() => Hyper.OrderBy(testData);

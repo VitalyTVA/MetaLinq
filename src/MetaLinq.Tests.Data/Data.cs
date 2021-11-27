@@ -99,14 +99,16 @@ public static class DataExtensions {
         AssertSort(sort, isStable, array.Select(x => new Data(x)).ToArray(), assertion);
     }
     static void AssertSort(Func<Data[], Data[]> sort, bool isStable, Data[] array, Action<IEnumerable, IEnumerable> assertion) {
+        var expected = array.OrderBy(x => x.Int).ToArray();
+        var actual = sort(array);
         assertion(
-            array.OrderBy(x => x.Int).ToArray().Select(x => x.Int).ToArray(),
-            sort(array).Select(x => x.Int).ToArray()
+            expected.Select(x => x.Int).ToArray(),
+            actual.Select(x => x.Int).ToArray()
         );
         if(isStable) {
             assertion(
-                array.OrderBy(x => x.Int).ToArray(),
-                sort(array)
+                expected,
+                actual
             );
         }
     }

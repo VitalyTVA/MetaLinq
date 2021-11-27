@@ -1094,11 +1094,21 @@ public static class Executor {{
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
         driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation, out var diagnostics);
+
+        bool DebugMode = true;
+
         foreach(var tree in outputCompilation.SyntaxTrees.ToArray()) {
             if(!File.Exists(tree.FilePath)) {
                 var newPath = Path.Combine(filesPath, Path.GetFileName(tree.FilePath));
-                outputCompilation = outputCompilation.ReplaceSyntaxTree(tree, tree.WithFilePath(newPath));
-                File.WriteAllText(newPath, tree.GetText().ToString(), Encoding.UTF8);
+                
+                if(DebugMode) {
+                    outputCompilation = outputCompilation.ReplaceSyntaxTree(tree, tree.WithFilePath(newPath));
+                    File.WriteAllText(newPath, tree.GetText().ToString(), Encoding.UTF8);
+                } else {
+                    if(File.Exists(newPath))
+                        File.Delete(newPath);
+                }
+
             }
         }
         GeneratorDriverRunResult runResult = driver.GetRunResult();
@@ -1106,7 +1116,7 @@ public static class Executor {{
         GeneratorRunResult generatorResult = runResult.Results[0];
         var generatedCode = generatorResult.GeneratedSources.Select(x => x.SourceText.ToString());
 
-        var emitResult = outputCompilation.Emit(dllPath, pdbPath: Path.ChangeExtension(dllPath, "pdb"));
+        var emitResult = outputCompilation.Emit(dllPath, pdbPath: DebugMode ? Path.ChangeExtension(dllPath, "pdb") : null);
         var severeDiagnostics = emitResult.Diagnostics.Where(x => x.Severity != DiagnosticSeverity.Hidden).ToArray();
         if(!emitResult.Success || severeDiagnostics.Any()) {
             foreach(var code in generatedCode) {

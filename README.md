@@ -32,48 +32,46 @@ https://github.com/kevin-montrose/LinqAF
 
 ## OrderBy
 
-|           Method |    N |        Mean |       Error |    StdDev | Ratio |  Gen 0 |  Gen 1 | Allocated |
-|----------------- |----- |------------:|------------:|----------:|------:|-------:|-------:|----------:|
-| OrderBy_Standard |   10 |    267.1 ns |     3.70 ns |   2.45 ns |  1.00 | 0.0815 |      - |     512 B |
-|     OrderBy_Meta |   10 |    117.9 ns |     2.07 ns |   1.37 ns |  0.44 | 0.0267 |      - |     168 B |
-|                  |      |             |             |           |       |        |        |           |
-| OrderBy_Standard |  100 |  3,589.0 ns |    98.12 ns |  64.90 ns |  1.00 | 0.4234 |      - |   2,672 B |
-|     OrderBy_Meta |  100 |  1,314.6 ns |    19.01 ns |  12.58 ns |  0.37 | 0.1984 |      - |   1,248 B |
-|                  |      |             |             |           |       |        |        |           |
-| OrderBy_Standard | 1000 | 74,772.8 ns | 1,212.70 ns | 802.13 ns |  1.00 | 3.7842 | 0.2441 |  24,272 B |
-|     OrderBy_Meta | 1000 | 21,565.4 ns |   536.44 ns | 354.82 ns |  0.29 | 1.8921 | 0.0610 |  12,048 B |
+|           Method |    N |        Mean |     Error |    StdDev | Ratio |  Gen 0 |  Gen 1 | Allocated |
+|----------------- |----- |------------:|----------:|----------:|------:|-------:|-------:|----------:|
+| OrderBy_Standard |   10 |    265.8 ns |  10.15 ns |   6.72 ns |  1.00 | 0.0815 |      - |     512 B |
+|     OrderBy_Meta |   10 |    113.3 ns |   2.07 ns |   1.23 ns |  0.43 | 0.0267 |      - |     168 B |
+|                  |      |             |           |           |       |        |        |           |
+| OrderBy_Standard |  100 |  3,617.4 ns |  36.15 ns |  21.51 ns |  1.00 | 0.4234 |      - |   2,672 B |
+|     OrderBy_Meta |  100 |  1,237.1 ns |  21.97 ns |  14.53 ns |  0.34 | 0.1984 |      - |   1,248 B |
+|                  |      |             |           |           |       |        |        |           |
+| OrderBy_Standard | 1000 | 71,301.8 ns | 400.79 ns | 209.62 ns |  1.00 | 3.7842 | 0.2441 |  24,272 B |
+|     OrderBy_Meta | 1000 | 29,618.2 ns | 831.17 ns | 549.77 ns |  0.41 | 1.8921 | 0.0610 |  12,048 B |
 
 ## Select_OrderBy
 
-|                 Method |    N |        Mean |       Error |      StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
-|----------------------- |----- |------------:|------------:|------------:|------:|--------:|-------:|-------:|----------:|
-| SelectOrderBy_Standard |   10 |    210.2 ns |     4.95 ns |     3.27 ns |  1.00 |    0.00 | 0.0763 |      - |     480 B |
-|     SelectOrderBy_Meta |   10 |    103.7 ns |     1.41 ns |     0.84 ns |  0.49 |    0.01 | 0.0305 |      - |     192 B |
-|       SelectOrderBy_AF |   10 |    584.4 ns |    14.84 ns |     9.81 ns |  2.78 |    0.08 | 0.1307 |      - |     824 B |
-|                        |      |             |             |             |       |         |        |        |           |
-| SelectOrderBy_Standard |  100 |  3,572.3 ns |    45.38 ns |    27.01 ns |  1.00 |    0.00 | 0.3052 |      - |   1,920 B |
-|     SelectOrderBy_Meta |  100 |  1,404.4 ns |    82.19 ns |    54.37 ns |  0.39 |    0.02 | 0.2022 |      - |   1,272 B |
-|       SelectOrderBy_AF |  100 |  4,859.1 ns |   196.63 ns |   130.06 ns |  1.36 |    0.04 | 0.9460 |      - |   5,960 B |
-|                        |      |             |             |             |       |         |        |        |           |
-| SelectOrderBy_Standard | 1000 | 72,520.5 ns | 1,415.40 ns |   936.20 ns |  1.00 |    0.00 | 2.5635 |      - |  16,320 B |
-|     SelectOrderBy_Meta | 1000 | 26,575.9 ns | 2,980.55 ns | 1,971.45 ns |  0.37 |    0.03 | 1.9226 | 0.0305 |  12,072 B |
-|       SelectOrderBy_AF | 1000 | 71,090.0 ns | 1,391.03 ns |   920.08 ns |  0.98 |    0.02 | 7.2021 | 0.4883 |  45,544 B |
+
+|                 Method |    N |        Mean |     Error |    StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
+|----------------------- |----- |------------:|----------:|----------:|------:|--------:|-------:|-------:|----------:|
+| SelectOrderBy_Standard |   10 |    215.9 ns |   7.17 ns |   4.74 ns |  1.00 |    0.00 | 0.0763 |      - |     480 B |
+|     SelectOrderBy_Meta |   10 |    111.2 ns |   4.04 ns |   2.68 ns |  0.52 |    0.02 | 0.0305 |      - |     192 B |
+|                        |      |             |           |           |       |         |        |        |           |
+| SelectOrderBy_Standard |  100 |  3,562.8 ns | 105.52 ns |  69.79 ns |  1.00 |    0.00 | 0.3052 |      - |   1,920 B |
+|     SelectOrderBy_Meta |  100 |  1,333.9 ns |  44.13 ns |  29.19 ns |  0.37 |    0.01 | 0.2022 |      - |   1,272 B |
+|                        |      |             |           |           |       |         |        |        |           |
+| SelectOrderBy_Standard | 1000 | 70,820.6 ns | 425.27 ns | 281.29 ns |  1.00 |    0.00 | 2.5635 |      - |  16,320 B |
+|     SelectOrderBy_Meta | 1000 | 29,506.6 ns | 353.00 ns | 210.07 ns |  0.42 |    0.00 | 1.9226 | 0.0305 |  12,072 B |
 
 ## Where_OrderBy
 
-|                   Method |    N |        Mean |     Error |    StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
-|------------------------- |----- |------------:|----------:|----------:|------:|--------:|-------:|-------:|----------:|
-|    WhereOrderBy_Standard |   10 |    143.1 ns |   1.56 ns |   0.93 ns |  1.00 |    0.00 | 0.0675 |      - |     424 B |
-|        WhereOrderBy_Meta |   10 |    171.7 ns |   1.76 ns |   1.16 ns |  1.20 |    0.01 | 0.0176 |      - |     112 B |
-| Array_Where_ToArray_Fast |   10 |    158.9 ns |   0.56 ns |   0.37 ns |  1.11 |    0.01 | 0.0229 |      - |     144 B |
-|                          |      |             |           |           |       |         |        |        |           |
-|    WhereOrderBy_Standard |  100 |  1,544.8 ns |  13.26 ns |   8.77 ns |  1.00 |    0.00 | 0.3071 |      - |   1,936 B |
-|        WhereOrderBy_Meta |  100 |  1,040.8 ns |  10.21 ns |   6.75 ns |  0.67 |    0.01 | 0.1297 |      - |     816 B |
-| Array_Where_ToArray_Fast |  100 |  1,130.9 ns |  44.59 ns |  29.49 ns |  0.73 |    0.02 | 0.1564 |      - |     992 B |
-|                          |      |             |           |           |       |         |        |        |           |
-|    WhereOrderBy_Standard | 1000 | 20,829.4 ns | 452.24 ns | 299.13 ns |  1.00 |    0.00 | 2.0752 | 0.0305 |  13,040 B |
-|        WhereOrderBy_Meta | 1000 |  8,730.6 ns | 171.97 ns | 113.75 ns |  0.42 |    0.01 | 1.0986 | 0.0153 |   6,952 B |
-| Array_Where_ToArray_Fast | 1000 | 10,327.1 ns | 425.07 ns | 281.16 ns |  0.50 |    0.02 | 1.3275 | 0.0153 |   8,352 B |
+|                   Method |    N |        Mean |       Error |    StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
+|------------------------- |----- |------------:|------------:|----------:|------:|--------:|-------:|-------:|----------:|
+|    WhereOrderBy_Standard |   10 |    138.9 ns |     5.07 ns |   3.35 ns |  1.00 |    0.00 | 0.0675 |      - |     424 B |
+|        WhereOrderBy_Meta |   10 |    164.8 ns |     5.75 ns |   3.80 ns |  1.19 |    0.04 | 0.0176 |      - |     112 B |
+| Array_Where_ToArray_Fast |   10 |    153.2 ns |     6.16 ns |   4.07 ns |  1.10 |    0.04 | 0.0229 |      - |     144 B |
+|                          |      |             |             |           |       |         |        |        |           |
+|    WhereOrderBy_Standard |  100 |  1,560.1 ns |    52.27 ns |  34.57 ns |  1.00 |    0.00 | 0.3071 |      - |   1,936 B |
+|        WhereOrderBy_Meta |  100 |  1,057.5 ns |    39.42 ns |  26.07 ns |  0.68 |    0.02 | 0.1297 |      - |     816 B |
+| Array_Where_ToArray_Fast |  100 |  1,213.0 ns |    69.03 ns |  45.66 ns |  0.78 |    0.04 | 0.1564 |      - |     992 B |
+|                          |      |             |             |           |       |         |        |        |           |
+|    WhereOrderBy_Standard | 1000 | 20,692.4 ns | 1,070.25 ns | 707.90 ns |  1.00 |    0.00 | 2.0752 | 0.0305 |  13,040 B |
+|        WhereOrderBy_Meta | 1000 |  8,630.4 ns |   280.18 ns | 166.73 ns |  0.42 |    0.02 | 1.0986 | 0.0153 |   6,952 B |
+| Array_Where_ToArray_Fast | 1000 | 10,486.7 ns |   849.80 ns | 562.09 ns |  0.51 |    0.03 | 1.3275 | 0.0153 |   8,352 B |
 
 ## Sort Benchmark
 
@@ -127,13 +125,13 @@ current:
 
 ## Array_Where_OrderBy_Select_Where_OrderByDescending
 
-|                                                      Method |    N |         Mean |       Error |      StdDev | Ratio |  Gen 0 |  Gen 1 | Allocated |
-|------------------------------------------------------------ |----- |-------------:|------------:|------------:|------:|-------:|-------:|----------:|
-| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard |   10 |     640.6 ns |     7.64 ns |     4.54 ns |  1.00 | 0.1745 |      - |   1,096 B |
-|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta |   10 |     484.8 ns |     5.10 ns |     3.37 ns |  0.76 | 0.0629 |      - |     400 B |
-|                                                             |      |              |             |             |       |        |        |           |
-| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard |  100 |   8,288.9 ns |   105.52 ns |    69.80 ns |  1.00 | 0.9003 |      - |   5,672 B |
-|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta |  100 |   3,937.3 ns |    94.66 ns |    62.61 ns |  0.48 | 0.5264 |      - |   3,320 B |
-|                                                             |      |              |             |             |       |        |        |           |
-| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard | 1000 | 137,329.9 ns | 1,158.18 ns |   766.07 ns |  1.00 | 7.0801 |      - |  45,472 B |
-|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta | 1000 |  53,016.8 ns | 1,913.25 ns | 1,265.50 ns |  0.39 | 5.0659 | 0.1221 |  32,000 B |
+|                                                      Method |    N |         Mean |       Error |      StdDev | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |
+|------------------------------------------------------------ |----- |-------------:|------------:|------------:|------:|--------:|-------:|-------:|----------:|
+| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard |   10 |     635.8 ns |    26.23 ns |    17.35 ns |  1.00 |    0.00 | 0.1745 |      - |   1,096 B |
+|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta |   10 |     476.9 ns |    16.45 ns |    10.88 ns |  0.75 |    0.02 | 0.0634 |      - |     400 B |
+|                                                             |      |              |             |             |       |         |        |        |           |
+| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard |  100 |   8,078.7 ns |   214.48 ns |   141.87 ns |  1.00 |    0.00 | 0.9003 |      - |   5,672 B |
+|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta |  100 |   3,840.0 ns |   141.52 ns |    93.61 ns |  0.48 |    0.01 | 0.5264 |      - |   3,320 B |
+|                                                             |      |              |             |             |       |         |        |        |           |
+| Array_Where_OrderBy_Select_Where_OrderByDescending_Standard | 1000 | 136,372.3 ns | 4,101.88 ns | 2,713.14 ns |  1.00 |    0.00 | 7.0801 |      - |  45,472 B |
+|     Array_Where_OrderBy_Select_Where_OrderByDescending_Meta | 1000 |  56,658.0 ns | 1,866.28 ns | 1,234.43 ns |  0.42 |    0.01 | 5.0659 | 0.1221 |  32,000 B |
