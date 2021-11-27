@@ -5,34 +5,16 @@ using System.Runtime.CompilerServices;
 namespace MetaLinqSpikes;
 
 public static partial class SortMethods {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T[] Sort<T, TKey>(T[] source, int[] map, TKey[] sortKeys, bool descending) {
         var len = sortKeys.Length;
 
         T[] sorted;
         if(descending)
-            sorted = SortHelper.SortAndAllocateResultArray<T, KeysComparerDescending<TKey>>(map, new KeysComparerDescending<TKey>(sortKeys), len);
+            sorted = SortHelper.Sort(source, map, new KeysComparerDescending<TKey>(sortKeys), len);
         else
-            sorted = SortHelper.SortAndAllocateResultArray<T, KeysComparer<TKey>>(map, new KeysComparer<TKey>(sortKeys), len);
+            sorted = SortHelper.Sort(source, map, new KeysComparer<TKey>(sortKeys), len);
 
-        for(int i = 0; i != len; i++) {
-            sorted[i] = source[map[i]];
-        }
-        return sorted;
-    }
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T[] Sort<T, TKey>(IList<T> source, int[] map, TKey[] sortKeys, bool descending) {
-        var len = sortKeys.Length;
-
-        T[] sorted;
-        if(descending)
-            sorted = SortHelper.SortAndAllocateResultArray<T, KeysComparerDescending<TKey>>(map, new KeysComparerDescending<TKey>(sortKeys), len);
-        else
-            sorted = SortHelper.SortAndAllocateResultArray<T, KeysComparer<TKey>>(map, new KeysComparer<TKey>(sortKeys), len);
-
-        for(int i = 0; i != len; i++) {
-            sorted[i] = source[map[i]];
-        }
         return sorted;
     }
 
@@ -48,21 +30,23 @@ public static partial class SortMethods {
         return Sort(result, map, sortKeys, descending);
     }
 
-    public static TSource[] Array_Where_ToArray_Slow<TSource, TKey>(TSource[] source, Func<TSource, bool> predicate, Func<TSource, TKey> keySelector, bool descending) {
-        using var result = new LargeArrayBuilder<TSource>();
-        using var sortKeys = new LargeArrayBuilder<TKey>();
-        using var map = new LargeArrayBuilder<int>();
-        var source0 = source;
-        var len0 = source0.Length;
-        for(int i0 = 0; i0 < len0; i0++) {
-            var item0 = source0[i0];
-            var item1 = item0;
-            if(!predicate(item1))
-                continue;
-            var item2 = keySelector(item1);
-            sortKeys.Add(item2); result.Add(item1); map.Add(result.Count - 1);
+    public static TSource[] ArraySortToArray<TSource, TKey1, TKey2>(TSource[] source, Func<TSource, TKey1> keySelector1, Func<TSource, TKey2> keySelector2) {
+        var (keys1, keys2, map) = (new TKey1[source.Length], new TKey2[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
+        var len = source.Length;
+        for(int i = 0; i < len; i++) {
+            var item = source[i];
+            keys1[i] = keySelector1(item);
+            keys2[i] = keySelector2(item);
+            map[i] = i;
         }
-        return Sort(result.ToArray(), map.ToArray(), sortKeys.ToArray(), descending: true);
+        ArrayPool<int>.Shared.Return(map);
+
+        return SortHelper.Sort(
+            source,
+            map, 
+            new KeysComparer<TKey1, KeysComparer<TKey2>>(keys1, new KeysComparer<TKey2>(keys2)), 
+            len
+        );
     }
 
     public static TSource[] Array_Where_ToArray_Fast<TSource, TKey>(TSource[] source, Func<TSource, bool> predicate, Func<TSource, TKey> keySelector) {
@@ -93,20 +77,6 @@ public static partial class SortMethods {
             }
             return Sort(result1, map, sortKeys, descending: false);
         }
-    }
-
-    public static TResult[] Array_Select_ToArray<TSource, TResult, TKey>(TSource[] source, Func<TSource, TResult> selector, Func<TResult, TKey> keySelector, bool descending) {
-        var (result, sortKeys, map) = (new TResult[source.Length], new TKey[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
-        var len = source.Length;
-        for(int i = 0; i < len; i++) {
-            var item = source[i];
-            var item2 = selector(item);
-            result[i] = item2;
-            sortKeys[i] = keySelector(item2);
-            map[i] = i;
-        }
-        ArrayPool<int>.Shared.Return(map);
-        return Sort(result, map, sortKeys, descending);
     }
 
     public static TSource[] Sort_Map_Comparer<TSource>(TSource[] source, Func<TSource, int> keySelector) {
@@ -141,6 +111,7 @@ public static partial class SortMethods {
             return 0;
         }
     }
+
     public static TSource[] Sort_ArraySortHelper_TComparer<TSource>(TSource[] source, Func<TSource, int> keySelector) {
         var len0 = source.Length;
 

@@ -37,27 +37,27 @@ public class SpikeOrderByTests {
 
     [Test]
 	public void TestCopiedSort() {
-		SortHelperTests.AssertSortMethod(x => x.OrderBy__(x => x.Int).ToArray(), isStable: true);
+		SortHelperTests.AssertSortMethod(x => x.OrderBy__(x => x.Int).ToArray(), isStable: true, thenBy: false);
 	}
 	[Test]
 	public void Sort_Direct_Comparer() {
-		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_Direct_Comparer(x, x => x.Int), isStable: false);
+		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_Direct_Comparer(x, x => x.Int), isStable: false, thenBy: false);
 	}
 	[Test]
 	public void Sort_Direct_Comparison() {
-		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_Direct_Comparison(x, x => x.Int), isStable: false);
+		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_Direct_Comparison(x, x => x.Int), isStable: false, thenBy: false);
 	}
 	[Test]
 	public void Sort_Map_Comparison() {
-		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_Map_Comparison(x, x => x.Int), isStable: true);
+		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_Map_Comparison(x, x => x.Int), isStable: true, thenBy: false);
 	}
 	[Test]
 	public void Sort_Map_Comparer() {
-		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_Map_Comparer(x, x => x.Int), isStable: true);
+		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_Map_Comparer(x, x => x.Int), isStable: true, thenBy: false);
 	}
 	[Test]
 	public void Sort_ArraySortHelper_TComparer() {
-		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_ArraySortHelper_TComparer(x, x => x.Int), isStable: true);
+		SortHelperTests.AssertSortMethod(x => SortMethods.Sort_ArraySortHelper_TComparer(x, x => x.Int), isStable: true, thenBy: false);
 	}
 	//[Test]
 	//public void Sort_Direct_QuickSort() {

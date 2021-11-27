@@ -11,15 +11,20 @@ namespace MetaLinqTests.SortHelperTests;
 public class SortHelperTests : BaseFixture {
     [Test]
     public void SortHelper_SortToArray() {
-        AssertSortMethod(x => SortMethods.ArraySortToArray(x, x => x.Int, descending: false), isStable: true);
+        AssertSortMethod(x => SortMethods.ArraySortToArray(x, x => x.Int, descending: false), isStable: true, thenBy: false);
     }
     [Test]
     public void SortHelper_SortToArrayDescending() {
-        AssertSortMethod(x => SortMethods.ArraySortToArray(x, x => -x.Int, descending: true), isStable: true);
+        AssertSortMethod(x => SortMethods.ArraySortToArray(x, x => -x.Int, descending: true), isStable: true, thenBy: false);
     }
 
-    public static void AssertSortMethod(Func<Data[], Data[]> sort, bool isStable) {
-        DataExtensions.AssertSortMethod(sort, isStable, CollectionAssert.AreEqual);
+    [Test]
+    public void SortHelper_SortToArray_ThenBy() {
+        AssertSortMethod(x => SortMethods.ArraySortToArray(x, x => x.Long, x => x.Int), isStable: true, thenBy: true);
+    }
+
+    public static void AssertSortMethod(Func<Data[], Data[]> sort, bool isStable, bool thenBy) {
+        DataExtensions.AssertSortMethod(sort, isStable, CollectionAssert.AreEqual, thenBy);
     }
 
     [Test]

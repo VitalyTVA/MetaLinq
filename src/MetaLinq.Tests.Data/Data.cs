@@ -27,7 +27,7 @@ public class Data {
     }
 
     public override string ToString() {
-        return "Int: " + @int;
+        return $"Int: {@int}, Long: {@long}";
     }
 
     public int DataList_GetCount { get; private set; }
@@ -46,6 +46,16 @@ public class Data {
             Int_GetCount++;
             return @int;
         }
+    }
+
+    public long Long_GetCount { get; private set; }
+    int @long;
+    public int Long {
+        get {
+            Long_GetCount++;
+            return @long;
+        }
+        set { @long = value; }
     }
 
     public int IntArray_GetCount { get; private set; }
@@ -85,21 +95,18 @@ public static class DataExtensions {
         }
     }
 
-    public static void AssertSortMethod(Func<Data[], Data[]> sort, bool isStable, Action<IEnumerable, IEnumerable> assertion) {
-        AssertSort(sort, isStable, new[] { 1, 0, 1 }, assertion);
+    public static void AssertSortMethod(Func<Data[], Data[]> sort, bool isStable, Action<IEnumerable, IEnumerable> assertion, bool thenBy = false) {
+        AssertSort(sort, isStable, new[] { 1, 0, 1 }.Select(x => new Data(x)).ToArray(), assertion, thenBy);
         foreach(var size in new[] { 0, 1, 2, 3, 4, 5, 8, 13, 21, 35, 1000 }) {
             var rnd = new Random(0);
             for(int i = 0; i < 3; i++) {
-                var array = Enumerable.Repeat(0, size).Select(_ => new Data(rnd.Next(size))).ToArray();
-                AssertSort(sort, isStable, array, assertion);
+                var array = Enumerable.Repeat(0, size).Select(_ => new Data(rnd.Next(size)) { Long = rnd.Next(size / 5) }).ToArray();
+                AssertSort(sort, isStable, array, assertion, thenBy);
             }
         }
     }
-    static void AssertSort(Func<Data[], Data[]> sort, bool isStable, int[] array, Action<IEnumerable, IEnumerable> assertion) {
-        AssertSort(sort, isStable, array.Select(x => new Data(x)).ToArray(), assertion);
-    }
-    static void AssertSort(Func<Data[], Data[]> sort, bool isStable, Data[] array, Action<IEnumerable, IEnumerable> assertion) {
-        var expected = array.OrderBy(x => x.Int).ToArray();
+    static void AssertSort(Func<Data[], Data[]> sort, bool isStable, Data[] array, Action<IEnumerable, IEnumerable> assertion, bool thenBy) {
+        var expected = (thenBy ? array.OrderBy(x => x.Long).ThenBy(x => x.Int) : array.OrderBy(x => x.Int)).ToArray();
         var actual = sort(array);
         assertion(
             expected.Select(x => x.Int).ToArray(),

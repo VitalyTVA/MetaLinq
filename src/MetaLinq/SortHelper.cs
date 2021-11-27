@@ -24,7 +24,7 @@ public static class SortHelper {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T[] SortAndAllocateResultArray<T, TComparer>(int[] map, TComparer comparer, int len) where TComparer: IComparer<int> {
+    static T[] SortAndAllocateResultArray<T, TComparer>(int[] map, TComparer comparer, int len) where TComparer: IComparer<int> {
         var mapSpan = map.AsSpan().Slice(0, len);
         ArraySorter<TComparer>.IntrospectiveSort(mapSpan, comparer);
         var sorted = new T[len];
