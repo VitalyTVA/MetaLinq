@@ -58,11 +58,14 @@ public class LinqModelTests : BaseFixture {
         model.AddChain(SourceType.List, new[] { ChainElement.Select });
         model.AddChain(SourceType.List, new[] { ChainElement.OrderBy });
         model.AddChain(SourceType.List, new[] { ChainElement.OrderBy, ChainElement.ToArray });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderBy, ChainElement.ThenBy });
         AssertModel(model,
 @"List
     Root
         OrderBy
             -Enumerable
+            ThenBy
+                -Enumerable
             -ToArray
         Select
             -Enumerable");
@@ -73,11 +76,14 @@ public class LinqModelTests : BaseFixture {
         model.AddChain(SourceType.List, new[] { ChainElement.Select });
         model.AddChain(SourceType.List, new[] { ChainElement.OrderByDescending });
         model.AddChain(SourceType.List, new[] { ChainElement.OrderByDescending, ChainElement.ToArray });
+        model.AddChain(SourceType.List, new[] { ChainElement.OrderByDescending, ChainElement.ThenByDescending });
         AssertModel(model,
 @"List
     Root
         OrderByDescending
             -Enumerable
+            ThenByDescending
+                -Enumerable
             -ToArray
         Select
             -Enumerable");

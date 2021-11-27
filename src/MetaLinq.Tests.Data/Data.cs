@@ -78,8 +78,13 @@ public class Data {
 }
 
 public static class DataExtensions {
-    public static TList Shuffle<TList>(this TList list) where TList : IList<Data> {
+    public static TList Shuffle<TList>(this TList list, int longMaxValue = 0) where TList : IList<Data> {
         var rnd = new Random(0);
+        if(longMaxValue != 0) { 
+            for(int i = 0; i < list.Count; i++) {
+                list[i].Long = rnd.Next(longMaxValue);
+            }
+        }
         for(int i = 0; i < list.Count; i++) {
             var i1 = rnd.Next(list.Count);
             var i2 = rnd.Next(list.Count);

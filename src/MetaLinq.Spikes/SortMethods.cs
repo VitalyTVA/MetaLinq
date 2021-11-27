@@ -49,6 +49,26 @@ public static partial class SortMethods {
         );
     }
 
+    public static TSource[] ArraySortToArray<TSource, TKey1, TKey2, TKey3>(TSource[] source, Func<TSource, TKey1> keySelector1, Func<TSource, TKey2> keySelector2, Func<TSource, TKey3> keySelector3) {
+        var (keys1, keys2, keys3, map) = (new TKey1[source.Length], new TKey2[source.Length], new TKey3[source.Length], ArrayPool<int>.Shared.Rent(source.Length));
+        var len = source.Length;
+        for(int i = 0; i < len; i++) {
+            var item = source[i];
+            keys1[i] = keySelector1(item);
+            keys2[i] = keySelector2(item);
+            keys3[i] = keySelector3(item);
+            map[i] = i;
+        }
+        ArrayPool<int>.Shared.Return(map);
+
+        return SortHelper.Sort(
+            source,
+            map,
+            new KeysComparer<TKey1, KeysComparer<TKey2, KeysComparer<TKey3>>>(keys1, new KeysComparer<TKey2, KeysComparer<TKey3>>(keys2, new KeysComparer<TKey3>(keys3))),
+            len
+        );
+    }
+
     public static TSource[] Array_Where_ToArray_Fast<TSource, TKey>(TSource[] source, Func<TSource, bool> predicate, Func<TSource, TKey> keySelector) {
         TSource[] result1;
         {

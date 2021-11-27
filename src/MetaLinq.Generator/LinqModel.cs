@@ -67,6 +67,10 @@ public abstract class IntermediateNode : LinqNode {
                 return (IntermediateNode)Nodes.GetOrAdd(element, static () => new OrderByNode());
             case OrderByDescendingChainElement:
                 return (IntermediateNode)Nodes.GetOrAdd(element, static () => new OrderByDescendingNode());
+            case ThenByChainElement:
+                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new ThenByNode());
+            case ThenByDescendingChainElement:
+                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new ThenByDescendingNode());
             case SelectManyChainElement selectManyNode:
                 return (IntermediateNode)Nodes.GetOrAdd(element, () => new SelectManyNode(selectManyNode.SourceType));
             case ToArrayChainElement:
@@ -124,6 +128,15 @@ public sealed class OrderByDescendingNode : IntermediateNode {
     public OrderByDescendingNode() { }
     protected internal override string Type => "OrderByDescending";
 }
+public sealed class ThenByNode : IntermediateNode {
+    public ThenByNode() { }
+    protected internal override string Type => "ThenBy";
+}
+public sealed class ThenByDescendingNode : IntermediateNode {
+    public ThenByDescendingNode() { }
+    protected internal override string Type => "ThenByDescending";
+}
+
 public sealed class SelectManyNode : IntermediateNode {
     public readonly SourceType SourceType;
     public SelectManyNode(SourceType sourceType) {

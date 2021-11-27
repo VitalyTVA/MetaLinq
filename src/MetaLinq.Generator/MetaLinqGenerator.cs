@@ -112,6 +112,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "Select" => ChainElement.Select,
             "OrderBy" => ChainElement.OrderBy,
             "OrderByDescending" => ChainElement.OrderByDescending,
+            "ThenBy" => ChainElement.ThenBy,
+            "ThenByDescending" => ChainElement.ThenByDescending,
             "ToArray" => ChainElement.ToArray,
             "ToList" => ChainElement.ToList,
             _ => null

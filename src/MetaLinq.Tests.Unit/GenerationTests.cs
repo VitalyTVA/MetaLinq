@@ -31,6 +31,45 @@ public class GenerationTests : BaseFixture {
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
+
+    [Test]
+    public void Array_OrderBy_ThenBy_ToArray() {
+        AssertGeneration(
+@"(Data[] source, Data[] result) __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    return (source, source.OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray());
+}}",
+        ((Data[] source, Data[] result) x) => CollectionAssert.AreEqual(x.source.OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray(), x.result),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("ThenBy", new[] {
+                        new StructMethod("ToArray"),
+                    })
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_OrderBy_ThenByDescending_ToArray() {
+        AssertGeneration(
+@"(Data[] source, Data[] result) __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    return (source, source.OrderBy(x => x.Long).ThenByDescending(x => -x.Int).ToArray());
+}}",
+        ((Data[] source, Data[] result) x) => CollectionAssert.AreEqual(x.source.OrderBy(x => x.Long).ThenByDescending(x => -x.Int).ToArray(), x.result),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("ThenByDescending", new[] {
+                        new StructMethod("ToArray"),
+                    })
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
     [Test]
     public void List_OrderBy_ToArray() {
         AssertGeneration(
@@ -1043,12 +1082,10 @@ static Data[] source = Data.Array(3);",
     }
 
 
-    static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null)
-        where T : class {
+    static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null) {
         AssertGeneration(new[] { (code, assert) }, methods, addMetaLinqUsing, addStadardLinqUsing, additionalClassCode);
     }
-    static void AssertGeneration<T>((string code, Action<T> assert)[] cases, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null)
-        where T : class {
+    static void AssertGeneration<T>((string code, Action<T> assert)[] cases, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null) {
         var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
         var references = new[] {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),

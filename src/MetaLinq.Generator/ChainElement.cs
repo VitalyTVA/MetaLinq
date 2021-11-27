@@ -7,6 +7,8 @@ public abstract record ChainElement {
     public static ChainElement Select => SelectChainElement.Instance;
     public static ChainElement OrderBy => OrderByChainElement.Instance;
     public static ChainElement OrderByDescending => OrderByDescendingChainElement.Instance;
+    public static ChainElement ThenBy => ThenByChainElement.Instance;
+    public static ChainElement ThenByDescending => ThenByDescendingChainElement.Instance;
     public static ChainElement SelectMany(SourceType sourceType) => new SelectManyChainElement(sourceType);
     public static ChainElement ToArray => ToArrayChainElement.Instance;
     public static ChainElement ToList => ToListChainElement.Instance;
@@ -53,6 +55,16 @@ public sealed record OrderByChainElement : ChainElement {
 public sealed record OrderByDescendingChainElement : ChainElement {
     public static readonly OrderByDescendingChainElement Instance = new OrderByDescendingChainElement();
     OrderByDescendingChainElement() { }
+}
+
+public sealed record ThenByChainElement : ChainElement {
+    public static readonly ThenByChainElement Instance = new ThenByChainElement();
+    ThenByChainElement() { }
+}
+
+public sealed record ThenByDescendingChainElement : ChainElement {
+    public static readonly ThenByDescendingChainElement Instance = new ThenByDescendingChainElement();
+    ThenByDescendingChainElement() { }
 }
 
 public sealed record SelectManyChainElement(SourceType SourceType) : ChainElement {

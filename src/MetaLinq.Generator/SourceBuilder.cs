@@ -81,7 +81,7 @@ public static {sourceName}<TSource>.{enumerableTypeName} {enumerableKind}<TSourc
         static void EmitStruct(SourceType source, CodeBuilder builder, EmitContext context) {
             IntermediateNode intermediate = context.Node;
             var argumentName = intermediate.GetArgumentName();
-            var argumentType = intermediate.GetArgumentType(context.SourceGenericArg, "Result".GetLevelGenericType(context.Level));
+            var argumentType = intermediate.GetArgumentType(context.SourceGenericArg, context.GetResultGenericType());
             var nodes = intermediate.GetNodes().ToList();
             bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
             var outputType = context.GetOutputType();
@@ -249,11 +249,11 @@ foreach(var item{level} in source{level}) {{");
             builder.AppendLine($"public {outputType}[] ToArray() {{");
 
             foreach(var piece in context.GetPieces()) {
-                bool first = piece.Contexts.First().Level == 0;
+                bool first = piece.TopLevel == 0;
                 EmitPieceOrWork(
                     first ? source : SourceType.Array, 
                     builder,
-                    first ? "this" + sourcePath : "result_" + (piece.Contexts.First().Level - 1), 
+                    first ? "this" + sourcePath : "result_" + (piece.TopLevel - 1), 
                     piece,
                     context.Level);
             }
@@ -261,60 +261,97 @@ foreach(var item{level} in source{level}) {{");
             builder.AppendLine("}");
         }
 
-        private static void EmitPieceOrWork(SourceType source, CodeBuilder builder, string sourcePath, PieceOfWork piece, int totalLevels) {
-            var builderType = (piece.SameSize, piece.ResultType);
+        static void EmitPieceOrWork(SourceType source, CodeBuilder builder, string sourcePath, PieceOfWork piece, int totalLevels) {
             var lastContext = piece.Contexts.Last();
             var outputType = lastContext.GetOutputType();
 
-            var topLevel = piece.Contexts.First().Level;
-            var lastLevel = piece.Contexts.Last().Level;
+            var topLevel = piece.TopLevel;
+            var lastLevel = piece.LastLevel;
 
-            string arrayBuilder = builderType switch {
-                (false, ResultType.ToArray) => $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
-                (true, ResultType.ToArray) => $"var result{topLevel} = new {outputType}[{sourcePath}.{source.GetCountName()}];",
-                (true, ResultType.OrderBy) =>
-@$"var result{topLevel} = {(piece.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{sourcePath}.{source.GetCountName()}]")};
-var sortKeys{topLevel} = new {"Result".GetLevelGenericType(lastContext.Level)}[{sourcePath}.{source.GetCountName()}];
-var map{topLevel} = ArrayPool<int>.Shared.Rent({sourcePath}.{source.GetCountName()});",
-                _ => throw new NotImplementedException(),
-            };
+            var (arrayBuilder, addValue, result) = GetArrayBuilder(source, sourcePath, piece);
             builder.Tab.AppendMultipleLines(arrayBuilder);
 
             EmitLoop(source, builder.Tab, topLevel, sourcePath,
-                bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece.Contexts, (b, level) => {
-                    string addValue = builderType switch {
-                        (false, ResultType.ToArray) => $"result{topLevel}.Add(item{level});",
-                        (true, ResultType.ToArray) => $"result{topLevel}[i{topLevel}] = item{level};",
-                        (true, ResultType.OrderBy) => $"sortKeys{topLevel}[i{topLevel}] = item{level}; map{topLevel}[i{topLevel}] = i{topLevel};{(piece.SameType ? null : $"result{topLevel}[i{topLevel}] = item{level - 1};")}",
-                        _ => throw new NotImplementedException(),
-                    };
-                    b.AppendLine(addValue);
-                }, totalLevels));
-
-            string result = builderType switch {
-                (false, ResultType.ToArray) => $@"var result_{lastLevel} = result{topLevel}.ToArray();",
-                (true, ResultType.ToArray) => $@"var result_{lastLevel} = result{topLevel};",
-                (true, ResultType.OrderBy) =>
-$@"ArrayPool<int>.Shared.Return(map{topLevel});
-var comparer{lastLevel} = new KeysComparer{(lastContext.Node is OrderByDescendingNode ? "Descending" : null)}<{"Result".GetLevelGenericType(lastContext.Level)}>(sortKeys{topLevel});
-var result_{lastLevel} = SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}.Length);",
-                _ => throw new NotImplementedException(),
-            };
-
+                bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
             builder.Tab.AppendMultipleLines(result);
+        }
+
+        static (string init, string add, string result) GetArrayBuilder(SourceType source, string sourcePath, PieceOfWork piece) {
+            var builderType = (piece.SameSize, piece.ResultType);
+            var lastContext = piece.Contexts.Last();
+            var outputType = lastContext.GetOutputType();
+            var topLevel = piece.TopLevel;
+            var lastLevel = piece.LastLevel;
+
+            switch(builderType) {
+                case (false, ResultType.ToArray):
+                    return (
+                        $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
+                        $"result{topLevel}.Add(item{lastLevel + 1});",
+                        $@"var result_{lastLevel} = result{topLevel}.ToArray();"
+                    );
+
+                case (true, ResultType.ToArray):
+                    return (
+                        $"var result{topLevel} = new {outputType}[{sourcePath}.{source.GetCountName()}];",
+                        $"result{topLevel}[i{topLevel}] = item{lastLevel + 1};",
+                        $@"var result_{lastLevel} = result{topLevel};"
+                    );
+
+                case (true, ResultType.OrderBy):
+                    var order = piece.Contexts
+                        .SkipWhile(x => x.Node is not (OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode))
+                        .Select(x => (sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
+                        .ToArray();
+                    var sortKeyVars = order.Select((x, i) => {
+                        return $"var sortKeys{topLevel}_{i} = new {x.sortKeyGenericType}[{sourcePath}.{source.GetCountName()}];\r\n";
+                    });
+                    var sortKeyAssigns = order.Select((x, i) => {
+                        return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{lastLevel + 2 - order.Length + i};\r\n";
+                    });
+                    List<string> comparerTypes = new();
+                    foreach(var (sortKeyGenericType, descending) in order.Reverse()) {
+                        var last = comparerTypes.LastOrDefault();
+                        var suffix = descending ? "Descending" : null;
+                        if(last != null)
+                            comparerTypes.Add($"KeysComparer{suffix}<{sortKeyGenericType}, {last}>");
+                        else
+                            comparerTypes.Add($"KeysComparer{suffix}<{sortKeyGenericType}>");
+                    }
+                    var parts = comparerTypes
+                        .ToArray()
+                        .Reverse()
+                        .Select((type, i) => $"new {type}(sortKeys{topLevel}_{i}")
+                        .ToArray();
+                    var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
+                    return (
+@$"var result{topLevel} = {(piece.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{sourcePath}.{source.GetCountName()}]")};
+{string.Join(null, sortKeyVars)}
+var map{topLevel} = ArrayPool<int>.Shared.Rent({sourcePath}.{source.GetCountName()});",
+
+string.Join(null, sortKeyAssigns) + $"map{topLevel}[i{topLevel}] = i{topLevel};{(piece.SameType ? null : $"result{topLevel}[i{topLevel}] = item{lastLevel};")}",
+
+$@"ArrayPool<int>.Shared.Return(map{topLevel});
+var comparer{lastLevel} = {comparerExpression};
+var result_{lastLevel} = SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length);"
+                    );
+
+                default:
+                    throw new NotImplementedException();
+            };
         }
 
         static void EmitToList(SourceType source, CodeBuilder builder, EmitContext context) {
             var outputType = context.GetOutputType();
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
-        static void EmitLoopBody(int level, CodeBuilder builder, EmitContext[] contexts, Action<CodeBuilder, int> finish, int totalLevels) {
-            if(level > contexts.Last().Level) {
-                finish(builder, level);
+        static void EmitLoopBody(int level, CodeBuilder builder, PieceOfWork piece, Action<CodeBuilder> finish, int totalLevels) {
+            if(level > piece.LastLevel) {
+                finish(builder);
                 return;
             }
-            void EmitNext(CodeBuilder nextBuilder) => EmitLoopBody(level + 1, nextBuilder, contexts, finish, totalLevels);
-            var intermediate = contexts[level - contexts.First().Level].Node;
+            void EmitNext(CodeBuilder nextBuilder) => EmitLoopBody(level + 1, nextBuilder, piece, finish, totalLevels);
+            var intermediate = piece.Contexts[level - piece.TopLevel].Node;
             var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels - level);
             switch(intermediate) {
                 case WhereNode:
@@ -334,6 +371,10 @@ if(!this{sourcePath}.predicate(item{level + 1}))
                     break;
                 case OrderByNode or OrderByDescendingNode:
                     builder.AppendLine($"var item{level + 1} = this{sourcePath}.keySelector(item{level});");
+                    EmitNext(builder);
+                    break;
+                case ThenByNode or ThenByDescendingNode:
+                    builder.AppendLine($"var item{level + 1} = this{sourcePath}.keySelector(item{level - 1});");
                     EmitNext(builder);
                     break;
                 default:
@@ -382,12 +423,12 @@ if(!this{sourcePath}.predicate(item{level + 1}))
         public static string GetArgumentType(this IntermediateNode intermediate, string inType, string outType) {
             return intermediate switch {
                 WhereNode => $"Func<{inType}, bool>",
-                SelectNode or OrderByNode or OrderByDescendingNode => $"Func<{inType}, {outType}>",
+                SelectNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => $"Func<{inType}, {outType}>",
                 SelectManyNode selectMany => $"Func<{inType}, {selectMany.SourceType.GetSourceTypeName(outType)}>",
                 _ => throw new NotImplementedException(),
             };
         }
-        public static string GetLevelGenericType(this string name, int level) => $"T{level}_{name}";
+        public static string GetResultGenericType(this EmitContext context) => $"T{context.Level}_{"Result"}";
         public const string RootStaticTypePrefix = "Meta_";
         public static string GetEnumerableSourceName(this SourceType source) {
             return RootStaticTypePrefix + source.GetEnumerableSourceNameShort();
@@ -406,11 +447,13 @@ if(!this{sourcePath}.predicate(item{level + 1}))
                 SelectManyNode => "SelectMany",
                 OrderByNode => "OrderBy",
                 OrderByDescendingNode => "OrderByDescending",
+                ThenByNode => "ThenBy",
+                ThenByDescendingNode => "ThenByDescending",
                 _ => throw new NotImplementedException(),
             };
         }
         public static string? GetOwnTypeArgsList(this EmitContext context) {
-            return context.Node.GetOwnTypeArgsList("Result".GetLevelGenericType(context.Level));
+            return context.Node.GetOwnTypeArgsList(context.GetResultGenericType());
         }
         public static string? GetOwnTypeArgsList(this IntermediateNode intermediate, string argName) {
             var ownTypeArg = intermediate.GetOwnTypeArg(argName);
@@ -420,15 +463,15 @@ if(!this{sourcePath}.predicate(item{level + 1}))
         public static string? GetOwnTypeArg(this IntermediateNode intermediate, string argName) {
             return intermediate switch {
                 WhereNode => null,
-                SelectNode or SelectManyNode or OrderByNode or OrderByDescendingNode => argName,
+                SelectNode or SelectManyNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => argName,
                 _ => throw new NotImplementedException(),
             };
         }
 
         public static string GetOutputType(this EmitContext context) {
             return context.Node switch {
-                WhereNode or OrderByNode or OrderByDescendingNode => context.SourceGenericArg,
-                SelectNode or SelectManyNode => "Result".GetLevelGenericType(context.Level),
+                WhereNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => context.SourceGenericArg,
+                SelectNode or SelectManyNode => context.GetResultGenericType(),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -436,7 +479,7 @@ if(!this{sourcePath}.predicate(item{level + 1}))
             return intermediate switch {
                 WhereNode => "predicate",
                 SelectNode or SelectManyNode => "selector",
-                OrderByNode or OrderByDescendingNode => "keySelector",
+                OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => "keySelector",
                 _ => throw new NotImplementedException(),
             };
         }
