@@ -52,6 +52,50 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_Select_OrderBy_ThenBy_ToArray() {
+        AssertGeneration(
+@"(Data[] source, Data[] result) __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    return (source, source.Select(x => x.Self).OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray());
+}}",
+        ((Data[] source, Data[] result) x) => CollectionAssert.AreEqual(x.source.Select(x => x.Self).OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray(), x.result),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("ThenBy", new[] {
+                            new StructMethod("ToArray"),
+                        })
+
+                    })
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Where_OrderBy_ThenBy_ToArray() {
+        AssertGeneration(
+@"(Data[] source, Data[] result) __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    return (source, source.Where(x => x.Int > 1).OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray());
+}}",
+        ((Data[] source, Data[] result) x) => CollectionAssert.AreEqual(x.source.Where(x => x.Int > 1).OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray(), x.result),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("ThenBy", new[] {
+                            new StructMethod("ToArray"),
+                        })
+                    })
+                })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+
+    [Test]
     public void Array_OrderBy_ThenByDescending_ToArray() {
         AssertGeneration(
 @"(Data[] source, Data[] result) __() {{
@@ -69,6 +113,54 @@ public class GenerationTests : BaseFixture {
     );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
+
+    [Test]
+    public void Array_OrderByDescending_ThenByDescending_ThenBy_ToArray() {
+        AssertGeneration(
+@"(Data[] source, Data[] result) __() {{
+    var source = Data.Array(20).Shuffle(longMaxValue: 4, shortMaxValue: 2);
+    return (source, source.OrderByDescending(x => -x.Short).ThenByDescending(x => -x.Long).ThenBy(x => x.Int).ToArray());
+}}",
+        ((Data[] source, Data[] result) x) => CollectionAssert.AreEqual(x.source.OrderByDescending(x => -x.Short).ThenByDescending(x => -x.Long).ThenBy(x => x.Int).ToArray(), x.result),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("ThenByDescending", new[] {
+                        new StructMethod("ThenBy", new[] {
+                            new StructMethod("ToArray"),
+                        })
+                    })
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Where_OrderBy_Select_OrderBy_ThenBy_ToArray() {
+        AssertGeneration(
+@"(int, long)[] __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 4);
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => (x.Int, x.Long)).OrderBy(x => x.Int).ThenBy(x => x.Long).ToArray();
+}}",
+        ((int, long)[] x) => { },
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("OrderBy", new[] {
+                            new StructMethod("ThenBy", new[] {
+                                new StructMethod("ToArray"),
+                            })
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    //benchmark OrderBy_ThenBy_ThenBy
+    //memory test OrderBy_ThenBy_ThenBy
 
     [Test]
     public void List_OrderBy_ToArray() {

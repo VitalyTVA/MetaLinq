@@ -273,17 +273,17 @@ foreach(var item{level} in source{level}) {{");
 
             EmitLoop(source, builder.Tab, topLevel, sourcePath,
                 bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
+
             builder.Tab.AppendMultipleLines(result);
         }
 
         static (string init, string add, string result) GetArrayBuilder(SourceType source, string sourcePath, PieceOfWork piece) {
-            var builderType = (piece.SameSize, piece.ResultType);
             var lastContext = piece.Contexts.Last();
             var outputType = lastContext.GetOutputType();
             var topLevel = piece.TopLevel;
             var lastLevel = piece.LastLevel;
 
-            switch(builderType) {
+            switch((piece.SameSize, piece.ResultType)) {
                 case (false, ResultType.ToArray):
                     return (
                         $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
@@ -329,7 +329,7 @@ foreach(var item{level} in source{level}) {{");
 {string.Join(null, sortKeyVars)}
 var map{topLevel} = ArrayPool<int>.Shared.Rent({sourcePath}.{source.GetCountName()});",
 
-string.Join(null, sortKeyAssigns) + $"map{topLevel}[i{topLevel}] = i{topLevel};{(piece.SameType ? null : $"result{topLevel}[i{topLevel}] = item{lastLevel};")}",
+string.Join(null, sortKeyAssigns) + $"map{topLevel}[i{topLevel}] = i{topLevel};{(piece.SameType ? null : $"result{topLevel}[i{topLevel}] = item{piece.GetOrderByLevel()};")}",
 
 $@"ArrayPool<int>.Shared.Return(map{topLevel});
 var comparer{lastLevel} = {comparerExpression};
@@ -374,7 +374,7 @@ if(!this{sourcePath}.predicate(item{level + 1}))
                     EmitNext(builder);
                     break;
                 case ThenByNode or ThenByDescendingNode:
-                    builder.AppendLine($"var item{level + 1} = this{sourcePath}.keySelector(item{level - 1});");
+                    builder.AppendLine($"var item{level + 1} = this{sourcePath}.keySelector(item{piece.GetOrderByLevel()});");
                     EmitNext(builder);
                     break;
                 default:
@@ -395,6 +395,7 @@ if(!this{sourcePath}.predicate(item{level + 1}))
     }
 
     public static class CodeGenerationTraits {
+        public static int GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Node is OrderByNode or OrderByDescendingNode).Level;
         public static string GetEnumerableTypeName(this IntermediateNode intermediate, int level) {
             var enumerableKind = intermediate.GetEnumerableKind();
             var sourceTypePart = intermediate switch {

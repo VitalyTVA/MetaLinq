@@ -17,6 +17,7 @@ public class Data {
         intList = intArray.ToList();
         dataList = new List<Data>();
     }
+    public Data Self => this;
     public Data(int @int, int[] intArray, bool isRoot) {
         this.@int = @int;
         this.intArray = intArray;
@@ -48,14 +49,24 @@ public class Data {
         }
     }
 
-    public long Long_GetCount { get; private set; }
-    int @long;
-    public int Long {
+    public int Long_GetCount { get; private set; }
+    long @long;
+    public long Long {
         get {
             Long_GetCount++;
             return @long;
         }
         set { @long = value; }
+    }
+
+    public int Short_GetCount { get; private set; }
+    short @short;
+    public short Short {
+        get {
+            Short_GetCount++;
+            return @short;
+        }
+        set { @short = value; }
     }
 
     public int IntArray_GetCount { get; private set; }
@@ -78,11 +89,16 @@ public class Data {
 }
 
 public static class DataExtensions {
-    public static TList Shuffle<TList>(this TList list, int longMaxValue = 0) where TList : IList<Data> {
+    public static TList Shuffle<TList>(this TList list, int longMaxValue = 0, int shortMaxValue = 0) where TList : IList<Data> {
         var rnd = new Random(0);
         if(longMaxValue != 0) { 
             for(int i = 0; i < list.Count; i++) {
                 list[i].Long = rnd.Next(longMaxValue);
+            }
+        }
+        if(shortMaxValue != 0) {
+            for(int i = 0; i < list.Count; i++) {
+                list[i].Short = (short)rnd.Next(shortMaxValue);
             }
         }
         for(int i = 0; i < list.Count; i++) {

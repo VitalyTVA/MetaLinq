@@ -19,6 +19,14 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void Where_OrderBy_ThenBy() {
+        AssertPieces(new[] { Where, OrderBy, ThenBy }, new[] {
+"SameType: True, SameSize: False, ResultType: ToArray, Nodes: [Where]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenBy]"
+        });
+    }
+
+    [Test]
     public void OrderBy_ThenByDescending() {
         AssertPieces(new[] { OrderBy, ThenByDescending }, new[] {
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenByDescending]"
@@ -141,7 +149,7 @@ public class PieceOfWorkTests {
                 var node = context.Node.GetNodes().OfType<IntermediateNode>().SingleOrDefault();
                 return node != null ? context.Next(node) : null;
             }).Last();
-        var result = lastContext.GetPieces().Select(x => x.ToString()).ToArray();
+        var result = lastContext.GetPieces().ToArray().Select(x => x.ToString()).ToArray();
         CollectionAssert.AreEqual(expected, result);
     }
 }

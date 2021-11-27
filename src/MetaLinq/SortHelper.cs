@@ -48,14 +48,17 @@ public static class SortHelper {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static int CompareValues<T>(T val1, T val2) {
-        if(typeof(T) == typeof(int)) {
 #nullable disable
-            var result = (int)(object)val1 - (int)(object)val2;
-            return result;
-#nullable restore
+        if(typeof(T) == typeof(int)) {
+            return (int)(object)val1 - (int)(object)val2;
+        } else if(typeof(T) == typeof(long)) {
+            return (int)((long)(object)val1 - (long)(object)val2);
+        } else if(typeof(T) == typeof(short)) {
+            return (short)(object)val1 - (short)(object)val2;
         } else {
             throw new InvalidOperationException();
         }
+#nullable restore
     }
 }
 
