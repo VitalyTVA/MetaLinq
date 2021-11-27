@@ -45,6 +45,67 @@ public static class SortHelper {
         15, 17, 24, 7, 19, 27, 23, 6, 26, 5,
         4, 31
     };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static int CompareValues<T>(T val1, T val2) {
+        if(typeof(T) == typeof(int)) {
+#nullable disable
+            var result = (int)(object)val1 - (int)(object)val2;
+            return result;
+#nullable restore
+        } else {
+            throw new InvalidOperationException();
+        }
+    }
+}
+
+public readonly struct NoComparer : IComparer<int> {
+    public int Compare(int x, int y) {
+        throw new InvalidOperationException();
+    }
+}
+public readonly struct KeysComparer<TKey, TNextComparer> : IComparer<int> where TNextComparer : struct, IComparer<int> {
+    readonly TKey[] keys;
+    readonly TNextComparer next;
+
+    public KeysComparer(TKey[] keys, TNextComparer next) {
+        this.keys = keys;
+        this.next = next;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    readonly public int Compare(int val1, int val2) {
+        var value1 = keys[val1];
+        var value2 = keys[val2];
+        var result = SortHelper.CompareValues(value1, value2);
+        if(typeof(TNextComparer) != typeof(NoComparer)) {
+            if(result == 0)
+                result = next.Compare(val1, val2);
+        }
+        return result;
+    }
+}
+
+public readonly struct KeysComparerDescending<TKey, TNextComparer> : IComparer<int> where TNextComparer : struct, IComparer<int> {
+    readonly TKey[] keys;
+    readonly TNextComparer next;
+
+    public KeysComparerDescending(TKey[] keys, TNextComparer next) {
+        this.keys = keys;
+        this.next = next;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    readonly public int Compare(int val1, int val2) {
+        var value1 = keys[val1];
+        var value2 = keys[val2];
+        var result = SortHelper.CompareValues(value2, value1);
+        if(typeof(TNextComparer) != typeof(NoComparer)) {
+            if(result == 0)
+                result = next.Compare(val1, val2);
+        }
+        return result;
+    }
 }
 
 public readonly struct KeysComparer<TKey> : IComparer<int> {
@@ -58,13 +119,7 @@ public readonly struct KeysComparer<TKey> : IComparer<int> {
     readonly public int Compare(int val1, int val2) {
         var value1 = keys[val1];
         var value2 = keys[val2];
-        if(typeof(TKey) == typeof(int)) {
-#nullable disable
-            return (int)(object)value1 - (int)(object)value2;
-#nullable restore
-        } else {
-            throw new InvalidOperationException();
-        }
+        return SortHelper.CompareValues(value1, value2);
     }
 }
 
@@ -79,13 +134,7 @@ public readonly struct KeysComparerDescending<TKey> : IComparer<int> {
     readonly public int Compare(int val1, int val2) {
         var value1 = keys[val1];
         var value2 = keys[val2];
-        if(typeof(TKey) == typeof(int)) {
-#nullable disable
-            return (int)(object)value2 - (int)(object)value1;
-#nullable restore
-        } else {
-            throw new InvalidOperationException();
-        }
+        return SortHelper.CompareValues(value2, value1);
     }
 }
 

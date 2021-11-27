@@ -68,6 +68,8 @@ make editor.config
 
 mark generated methods readonly
 
+use CallerMemberExpression in Assert and Guard
+
 #OrderBy
 
 OrderBy(x => x) special case for array of primitive types
