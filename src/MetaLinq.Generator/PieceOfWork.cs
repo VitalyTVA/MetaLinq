@@ -1,9 +1,11 @@
 ﻿namespace MetaLinq.Generator;
 
 public enum ResultType { ToArray, OrderBy }
-public record PieceOfWork(EmitContext[] Contexts, bool SameType, bool SameSize) {
+public record PieceOfWork(EmitContext[] Contexts) {
     public int LastLevel => Contexts.Last().Level;
     public int TopLevel = Contexts.First().Level;
+    public bool SameSize => Contexts.All(x => x.Node is not (WhereNode or SelectManyNode));
+    public bool SameType => Contexts.All(x => x.Node is not (SelectNode or SelectManyNode));
     public ResultType ResultType 
         => Contexts.Last().Node is OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode 
         ? ResultType.OrderBy 
@@ -19,11 +21,9 @@ public static class PieceOfWorkExtensions {
     static IEnumerable<PieceOfWork> GetPiecesCore(this EmitContext lastContext) {
         var contexts = lastContext.GetReversedContexts().ToList();
         List<EmitContext> current = new();
-        bool sameType = true;
         bool sameSize = true;
         PieceOfWork CreateAndReset() {
-            var result = new PieceOfWork(current.ToArray(), sameType, sameSize);
-            sameType = true;
+            var result = new PieceOfWork(current.ToArray());
             sameSize = true;
             current.Clear();
             return result;
@@ -38,13 +38,11 @@ public static class PieceOfWorkExtensions {
                 case SelectNode:
                     if(IsOrderBy())
                         yield return CreateAndReset();
-                    sameType = false;
                     current.Add(context);
                     break;
                 case SelectManyNode:
                     if(IsOrderBy())
                         yield return CreateAndReset();
-                    sameType = false;
                     sameSize = false;
                     current.Add(context);
                     break;
