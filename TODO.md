@@ -30,7 +30,7 @@ implement efficient ToArray/ToList direct implementation: "Data[] __() => Data.A
 
 ExactSizeOrderByArrayBuilder.ToArray overload for List<T> (or generate it fo each type with public indexer public T[int index]). This way we can use indexer without virtual calls
 
-#Posponed2
+# Posponed2
 
 arguments null checks (source, predicate, selector, etc.)
 
@@ -42,7 +42,12 @@ diagnostics error if no reference to MetaLinq.dll (INamedTypeSymbol for MetaLinq
 
 ArrayPool<TKey>.Shared.Return(sortKeys, clearArray: false); - should clear when T is not a primitive value type 
 
-#Tests
+# Postponed3
+
+Regression query optimizer for large queries
+
+
+# Tests
 
 check state inside array pools after unit-test via reflection (verify all arrays returned)
 
@@ -56,11 +61,11 @@ randoms tests - generate chains, source arrays, shuffle data, etc.
 
 test that sort performed every time we call OrderBy.TArray for the same instance of OrderByEn (keys not cached). Can't write such test now - var s = source.OrderBy(x => x.Int); s.ToArray(); chains not supported
 
-#Ideas
+# Ideas
 
 linq to rented pools??? source.Where().ToRentedArray(ArrayPool<T>.Shared)
 
-#Housekeeping
+# Housekeeping
 
 make tests internals visible to assembly and mark all classes in generator private
 

@@ -5,6 +5,12 @@ namespace MetaLinqTests.Unit.Spikes;
 [TestFixture]
 public class SpikesTests {
     [Test]
+    public void ToHashSet() {
+        var s = Data.Array(10).Shuffle();
+        s.Select(x => x).ToHashSet();
+        s.OrderBy(x => x.Int).ToHashSet();
+    }
+    [Test]
     public void OrderByNotReused() {
         var s = Data.Array(10).Shuffle();
         var ordered = s.OrderBy(x => x.Int);
