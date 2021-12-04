@@ -11,8 +11,11 @@ namespace MetaLinqBenchmark;
 
 class Program {
     static void Main(string[] args) {
+        //BenchmarkRunner.Run<Where_ToDictionaryBenchmarks>();
+        BenchmarkRunner.Run<Select_ToDictionaryBenchmarks>();
+
         //BenchmarkRunner.Run<Where_ToHashSetBenchmarks>();
-        BenchmarkRunner.Run<Select_ToHashSetBenchmarks>();
+        //BenchmarkRunner.Run<Select_ToHashSetBenchmarks>();
 
         //BenchmarkRunner.Run<OrderBy_ThenBy_ThenByBenchmarks>();
         //BenchmarkRunner.Run<Array_Where_OrderBy_Select_Where_OrderByDescendingBenchmarks>();

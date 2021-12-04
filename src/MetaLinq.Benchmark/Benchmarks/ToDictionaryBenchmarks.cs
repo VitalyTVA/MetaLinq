@@ -8,7 +8,7 @@ namespace MetaLinqBenchmark;
 //[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MeanColumn]
 [MemoryDiagnoser]
-public class Select_ToHashSetBenchmarks {
+public class Select_ToDictionaryBenchmarks {
     TestData[] testData = { };
 
     [Params(10, 100, 1000)]
@@ -29,7 +29,21 @@ public class Select_ToHashSetBenchmarks {
 
     [Benchmark]
     public void Meta_() {
-        Meta.Select_ToHashSet(testData);
+        //Meta.Select_ToDictionary(testData);
+
+        Func<TestData, int> getKey = x => x.Value;
+
+        DoWork(x => x, getKey);
+    }
+
+    private void DoWork(Func<TestData, TestData> selector, Func<TestData, int> getKey) {
+        var resutl = new Dictionary<int, TestData>(testData.Length);
+        var length = testData.Length;
+        for(int i = 0; i < length; i++) {
+            var item = testData[i];
+            var item2 = selector(item);
+            resutl.Add(getKey(item), item2);
+        }
     }
 }
 
@@ -37,7 +51,7 @@ public class Select_ToHashSetBenchmarks {
 //[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MeanColumn]
 [MemoryDiagnoser]
-public class Where_ToHashSetBenchmarks {
+public class Where_ToDictionaryBenchmarks {
     TestData[] testData = { };
 
     [Params(10, 100, 1000)]
@@ -53,24 +67,25 @@ public class Where_ToHashSetBenchmarks {
 
     [Benchmark(Baseline = true)]
     public void Standard_() {
-        Standard.Where_ToHashSet(testData);
+        Standard.Where_ToDictionary(testData);
     }
 
     [Benchmark]
     public void Meta_() {
-        Meta.Where_ToHashSet(testData);
+        //Meta.Where_ToDictionary(testData);
 
-        //Func<TestData, bool> predicate = x => x.Value % 4 == 0;
-        //FillSet(predicate);
+        Func<TestData, bool> predicate = x => x.Value % 4 == 0;
+        FillSet(predicate, x => x.Value);
     }
 
-    private void FillSet(Func<TestData, bool> predicate) {
+    private void FillSet(Func<TestData, bool> predicate, Func<TestData, int> getKey) {
         var length = testData.Length;
-        var resutl = new HashSet<TestData>();
+        var resutl = new Dictionary<int, TestData>();
         for(int i = 0; i < length; i++) {
             var item = testData[i];
-            if(predicate(item))
-                resutl.Add(item);
+            if(predicate(item)) {
+                resutl.Add(getKey(item), item);
+            }
         }
     }
 }

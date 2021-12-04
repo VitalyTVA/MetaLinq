@@ -16,4 +16,7 @@ static class Meta {
 
     public static HashSet<TestData> Where_ToHashSet(TestData[] data) => data.Where(static x => x.Value % 4 == 0).ToHashSet();
     public static HashSet<TestData> Select_ToHashSet(TestData[] data) => data.Select(static x => x).ToHashSet();
+
+    public static Dictionary<int, TestData> Where_ToDictionary(TestData[] data) => data.Where(static x => x.Value % 4 == 0).ToDictionary(static x => x.Value);
+    public static Dictionary<int, TestData> Select_ToDictionary(TestData[] data) => data.Select(static x => x).ToDictionary(static x => x.Value);
 }
