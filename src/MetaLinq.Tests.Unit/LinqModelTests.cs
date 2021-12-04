@@ -33,6 +33,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void ToArrayAndToHashSet() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { ToArray });
+        model.AddChain(SourceType.List, new[] { ToHashSet });
+        AssertModel(model,
+@"List
+    Root
+        -ToArray
+        -ToHashSet");
+    }
+    [Test]
     public void Where_() {
         var model = new LinqModel();
         model.AddChain(SourceType.List, new[] { Where });
@@ -190,6 +201,19 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void WhereToArrayAndToHashSet() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, ToHashSet });
+        model.AddChain(SourceType.Array, new[] { Where, ToArray });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -ToArray
+            -ToHashSet");
+    }
+
+    [Test]
     public void WhereAndSelect() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where });
@@ -225,6 +249,18 @@ public class LinqModelTests : BaseFixture {
             Select
                 -ToArray
                 -ToList");
+    }
+
+    [Test]
+    public void WhereSelectToHashSet() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, Select, ToHashSet });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            Select
+                -ToHashSet");
     }
 
     [Test]
@@ -361,6 +397,10 @@ Array
         AssertNodeComparison(0, ToList, ToList);
         AssertNodeComparison(1, ToList, ToArray);
         AssertNodeComparison(-1, ToArray, ToList);
+
+        AssertNodeComparison(0, ToHashSet, ToHashSet);
+        AssertNodeComparison(1, ToHashSet, ToArray);
+        AssertNodeComparison(-1, ToArray, ToHashSet);
 
         AssertNodeComparison(0, SelectMany(SourceType.Array), SelectMany(SourceType.Array));
         AssertNodeComparison(-1, SelectMany(SourceType.Array), SelectMany(SourceType.List));

@@ -34,12 +34,13 @@ public class LinqModel {
 public abstract class LinqNode {
 }
 
-public enum TerminalNodeType { ToArray, ToList, Enumerable }
+public enum TerminalNodeType { ToArray, ToList, ToHashSet, Enumerable }
 
 public sealed class TerminalNode : LinqNode {
     public static readonly TerminalNode ToArray = new(TerminalNodeType.ToArray);
     public static readonly TerminalNode ToList = new (TerminalNodeType.ToList);
-    public static readonly TerminalNode Enumerable = new (TerminalNodeType.Enumerable);
+    public static readonly TerminalNode ToHashSet = new (TerminalNodeType.ToHashSet);
+    public static readonly TerminalNode Enumerable = new(TerminalNodeType.Enumerable);
     public readonly TerminalNodeType Type;
     TerminalNode(TerminalNodeType type) {
         Type = type;
@@ -58,27 +59,29 @@ public abstract class IntermediateNode : LinqNode {
     })*/);
 
     public IntermediateNode? AddElement(ChainElement element) {
+        IntermediateNode? Add<T>(Func<T> create) where T : LinqNode 
+            => Nodes.GetOrAdd(element, create) as IntermediateNode;
         switch(element) {
             case WhereChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new WhereNode());
+                return Add(static () => new WhereNode());
             case SelectChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new SelectNode());
+                return Add(static () => new SelectNode());
             case OrderByChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new OrderByNode());
+                return Add(static () => new OrderByNode());
             case OrderByDescendingChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new OrderByDescendingNode());
+                return Add(static () => new OrderByDescendingNode());
             case ThenByChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new ThenByNode());
+                return Add(static () => new ThenByNode());
             case ThenByDescendingChainElement:
-                return (IntermediateNode)Nodes.GetOrAdd(element, static () => new ThenByDescendingNode());
+                return Add(static () => new ThenByDescendingNode());
             case SelectManyChainElement selectManyNode:
-                return (IntermediateNode)Nodes.GetOrAdd(element, () => new SelectManyNode(selectManyNode.SourceType));
+                return Add(() => new SelectManyNode(selectManyNode.SourceType));
             case ToArrayChainElement:
-                Nodes.GetOrAdd(element, static () => TerminalNode.ToArray);
-                return null;
+                return Add(static () => TerminalNode.ToArray);
             case ToListChainElement:
-                Nodes.GetOrAdd(element, static () => TerminalNode.ToList);
-                return null;
+                return Add(static () => TerminalNode.ToList);
+            case ToHashSetChainElement:
+                return Add(static () => TerminalNode.ToHashSet);
             default:
                 throw new InvalidOperationException();
         }

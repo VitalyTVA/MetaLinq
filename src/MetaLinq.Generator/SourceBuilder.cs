@@ -102,14 +102,19 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
 
                 foreach(var node in nodes) {
                     switch(node) {
-                        case TerminalNode { Type: TerminalNodeType.ToArray }:
-                            EmitToArray(source, structBuilder, context);
-                            break;
                         case TerminalNode { Type: TerminalNodeType.ToList }:
                             EmitToList(source, structBuilder, context);
                             break;
                         case TerminalNode { Type: TerminalNodeType.Enumerable }:
                             EmitGetEnumerator(source, structBuilder, context);
+                            break;
+                        case TerminalNode terminalNode:
+                            var toInstanceType = terminalNode.Type switch { 
+                                TerminalNodeType.ToArray => ToInstanceType.ToArray, 
+                                TerminalNodeType.ToHashSet => ToInstanceType.ToHashSet, 
+                                _ => throw new InvalidOperationException()
+                            };
+                            EmitToInstance(source, structBuilder, context, toInstanceType);
                             break;
                         case IntermediateNode nextIntermediate:
                             var nextContext = context.Next(nextIntermediate);
@@ -123,7 +128,6 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
 
             }
         }
-
         static void EmitGetEnumerator(SourceType source, CodeBuilder builder, EmitContext context) {
             IntermediateNode intermediate = context.Node;
             var countName = source.GetCountName();
@@ -239,19 +243,27 @@ foreach(var item{level} in source{level}) {{");
                 builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
-
-        static void EmitToArray(SourceType source, CodeBuilder builder, EmitContext context) {
+        enum ToInstanceType { ToArray, ToHashSet };
+        static void EmitToInstance(SourceType source, CodeBuilder builder, EmitContext context, ToInstanceType toInstanceType) {
             IntermediateNode intermediate = context.Node;
             var outputType = context.GetOutputType();
 
             var sourcePath = CodeGenerationTraits.GetSourcePath(context.Level + 1);
 
-            builder.AppendLine($"public {outputType}[] ToArray() {{");
+            var resultType = toInstanceType switch {
+                ToInstanceType.ToArray => $"{outputType}[]",
+                ToInstanceType.ToHashSet => $"HashSet<{outputType}>",
+                _ => throw new NotImplementedException(),
+            };
+            builder.AppendLine($"public {resultType} {toInstanceType}() {{");
 
-            foreach(var piece in context.GetPieces()) {
-                bool first = piece.TopLevel == 0;
+            var pieces = context.GetPieces();
+            foreach(var piece in pieces) {
+                bool first = pieces.First() == piece;
+                bool last = pieces.Last() == piece;
                 EmitPieceOrWork(
-                    first ? source : SourceType.Array, 
+                    first ? source : SourceType.Array,
+                    last ? toInstanceType : default,
                     builder,
                     first ? "this" + sourcePath : "result_" + (piece.TopLevel - 1), 
                     piece,
@@ -261,14 +273,14 @@ foreach(var item{level} in source{level}) {{");
             builder.AppendLine("}");
         }
 
-        static void EmitPieceOrWork(SourceType source, CodeBuilder builder, string sourcePath, PieceOfWork piece, int totalLevels) {
+        static void EmitPieceOrWork(SourceType source, ToInstanceType toInstanceType, CodeBuilder builder, string sourcePath, PieceOfWork piece, int totalLevels) {
             var lastContext = piece.Contexts.Last();
             var outputType = lastContext.GetOutputType();
 
             var topLevel = piece.TopLevel;
             var lastLevel = piece.LastLevel;
 
-            var (arrayBuilder, addValue, result) = GetArrayBuilder(source, sourcePath, piece);
+            var (arrayBuilder, addValue, result) = GetArrayBuilder(source, toInstanceType, sourcePath, piece);
             builder.Tab.AppendMultipleLines(arrayBuilder);
 
             EmitLoop(source, builder.Tab, topLevel, sourcePath,
@@ -277,28 +289,32 @@ foreach(var item{level} in source{level}) {{");
             builder.Tab.AppendMultipleLines(result);
         }
 
-        static (string init, string add, string result) GetArrayBuilder(SourceType source, string sourcePath, PieceOfWork piece) {
+        static (string init, string add, string result) GetArrayBuilder(SourceType source, ToInstanceType? toInstanceType, string sourcePath, PieceOfWork piece) {
             var lastContext = piece.Contexts.Last();
             var outputType = lastContext.GetOutputType();
             var topLevel = piece.TopLevel;
             var lastLevel = piece.LastLevel;
 
-            switch((piece.SameSize, piece.ResultType)) {
-                case (false, ResultType.ToArray):
+            switch((piece.SameSize, piece.ResultType, toInstanceType)) {
+                case (false, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
                         $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
                         $"result{topLevel}.Add(item{lastLevel + 1});",
                         $@"var result_{lastLevel} = result{topLevel}.ToArray();"
                     );
-
-                case (true, ResultType.ToArray):
+                case (true, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
                         $"var result{topLevel} = new {outputType}[{sourcePath}.{source.GetCountName()}];",
                         $"result{topLevel}[i{topLevel}] = item{lastLevel + 1};",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
-
-                case (true, ResultType.OrderBy):
+                case (_, ResultType.ToInstance, ToInstanceType.ToHashSet):
+                    return (
+                        $"var result{topLevel} = new HashSet<{outputType}>({(piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null)});",
+                        $"result{topLevel}.Add(item{lastLevel + 1});",
+                        $@"var result_{lastLevel} = result{topLevel};"
+                    );
+                case (true, ResultType.OrderBy, null or ToInstanceType.ToArray):
                     var order = piece.Contexts
                         .SkipWhile(x => x.Node is not (OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode))
                         .Select(x => (sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))

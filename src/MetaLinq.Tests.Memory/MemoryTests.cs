@@ -155,6 +155,10 @@ public class Tests {
 
     #region where
     [Test]
+    public static void Array_Where_ToHashSet() {
+        MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x < 3).ToHashSet(), ExpectedHashSetOfIntsAllocations());
+    }
+    [Test]
     public static void Array_Where_ToArray() {
         MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
     }
@@ -185,6 +189,12 @@ public class Tests {
     #endregion
 
     #region select
+    [Test]
+    public static void Array_Select_ToHashSet() {
+        MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 2).ToHashSet(), ExpectedHashSetOfIntsAllocations()
+        );
+    }
+
     [Test]
     public static void Array_Select_ToArray() {
         MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 2).ToArray(), ExpectedArrayOfIntsAllocations());
@@ -237,4 +247,9 @@ public class Tests {
                 ("System.Int32[]", 1),
             };
     }
+    static (string, int)[] ExpectedHashSetOfIntsAllocations() => new[] {
+        ("System.Collections.Generic.HashSet`1[System.Int32]", 1),
+        ("System.Collections.Generic.HashSet`1+Entry[System.Int32][]", 1),
+        ("System.Int32[]", 1),
+    };
 }

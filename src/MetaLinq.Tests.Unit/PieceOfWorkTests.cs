@@ -21,7 +21,7 @@ public class PieceOfWorkTests {
     [Test]
     public void Where_OrderBy_ThenBy() {
         AssertPieces(new[] { Where, OrderBy, ThenBy }, new[] {
-"SameType: True, SameSize: False, ResultType: ToArray, Nodes: [Where]",
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [Where]",
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenBy]"
         });
     }
@@ -37,7 +37,7 @@ public class PieceOfWorkTests {
     public void OrderBy_Select() {
         AssertPieces(new[] { OrderBy, Select }, new[] {
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: True, ResultType: ToArray, Nodes: [Select]"
+"SameType: False, SameSize: True, ResultType: ToInstance, Nodes: [Select]"
         });
     }
 
@@ -60,7 +60,7 @@ public class PieceOfWorkTests {
     [Test]
     public void Select_() {
         AssertPieces(new[] { Select }, new[] {
-"SameType: False, SameSize: True, ResultType: ToArray, Nodes: [Select]"
+"SameType: False, SameSize: True, ResultType: ToInstance, Nodes: [Select]"
         });
     }
 
@@ -74,14 +74,14 @@ public class PieceOfWorkTests {
     [Test]
     public void SelectMany_() {
         AssertPieces(new[] { SelectMany(SourceType.List) }, new[] {
-"SameType: False, SameSize: False, ResultType: ToArray, Nodes: [SelectMany List]"
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [SelectMany List]"
         });
     }
 
     [Test]
     public void Where_OrderBy() {
         AssertPieces(new[] { Where, OrderBy }, new[] {
-"SameType: True, SameSize: False, ResultType: ToArray, Nodes: [Where]",
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [Where]",
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
         });
     }
@@ -89,7 +89,7 @@ public class PieceOfWorkTests {
     [Test]
     public void Where_Select_OrderBy() {
         AssertPieces(new[] { Where, Select, OrderBy }, new[] {
-"SameType: False, SameSize: False, ResultType: ToArray, Nodes: [Where, Select]",
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [Where, Select]",
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
         });
     }
@@ -97,18 +97,18 @@ public class PieceOfWorkTests {
     [Test]
     public void Where_Select_OrderBy_SelectMany_Where() {
         AssertPieces(new[] { Where, Select, OrderBy, SelectMany(SourceType.List), Where}, new[] {
-"SameType: False, SameSize: False, ResultType: ToArray, Nodes: [Where, Select]",
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [Where, Select]",
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: False, ResultType: ToArray, Nodes: [SelectMany List, Where]",
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [SelectMany List, Where]",
         });
     }
 
     [Test]
     public void Where_OrderBy_Select() {
         AssertPieces(new[] { Where, OrderBy, Select }, new[] {
-"SameType: True, SameSize: False, ResultType: ToArray, Nodes: [Where]",
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [Where]",
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: True, ResultType: ToArray, Nodes: [Select]",
+"SameType: False, SameSize: True, ResultType: ToInstance, Nodes: [Select]",
         });
     }
 
@@ -116,7 +116,7 @@ public class PieceOfWorkTests {
     public void Select_OrderBy_Where() {
         AssertPieces(new[] { Select, OrderBy, Where }, new[] {
 "SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]",
-"SameType: True, SameSize: False, ResultType: ToArray, Nodes: [Where]",
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [Where]",
         });
     }
 
@@ -124,17 +124,17 @@ public class PieceOfWorkTests {
     [Test]
     public void Where_() {
         AssertPieces(new[] { Where }, new[] {
-"SameType: True, SameSize: False, ResultType: ToArray, Nodes: [Where]"
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [Where]"
         });
     }
 
     [Test]
     public void Select_Where() {
         AssertPieces(new[] { Select, Where }, new[] {
-"SameType: False, SameSize: False, ResultType: ToArray, Nodes: [Select, Where]"
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [Select, Where]"
         });
         AssertPieces(new[] { Where, Select }, new[] {
-"SameType: False, SameSize: False, ResultType: ToArray, Nodes: [Where, Select]"
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [Where, Select]"
         });
     }
 

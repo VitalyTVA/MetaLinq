@@ -23,17 +23,19 @@ public class Select_ToHashSetBenchmarks {
     }
 
     [Benchmark(Baseline = true)]
-    public void Standard() {
-        testData.Select(x => x).ToHashSet();
+    public void Standard_() {
+        Standard.Select_ToHashSet(testData);
     }
 
     [Benchmark]
-    public void Meta() {
-        var resutl = new HashSet<TestData>(testData.Length);
-        var length = testData.Length;
-        for(int i = 0; i < length; i++) {
-            resutl.Add(testData[i]);
-        }
+    public void Meta_() {
+        Meta.Select_ToHashSet(testData);
+
+        //var resutl = new HashSet<TestData>(testData.Length);
+        //var length = testData.Length;
+        //for(int i = 0; i < length; i++) {
+        //    resutl.Add(testData[i]);
+        //}
     }
 }
 
@@ -56,19 +58,21 @@ public class Where_ToHashSetBenchmarks {
     }
 
     [Benchmark(Baseline = true)]
-    public void Standard() {
-        testData.Where(x => x.Value % 4 == 0).ToHashSet();
+    public void Standard_() {
+        Standard.Where_ToHashSet(testData);
     }
 
     [Benchmark]
-    public void Meta() {
-        Func<TestData, bool> predicate = x => x.Value % 4 == 0;
-        FillSet(predicate);
+    public void Meta_() {
+        Meta.Where_ToHashSet(testData);
+
+        //Func<TestData, bool> predicate = x => x.Value % 4 == 0;
+        //FillSet(predicate);
     }
 
     private void FillSet(Func<TestData, bool> predicate) {
-        var resutl = new HashSet<TestData>();
         var length = testData.Length;
+        var resutl = new HashSet<TestData>();
         for(int i = 0; i < length; i++) {
             var item = testData[i];
             if(predicate(item))

@@ -11,6 +11,7 @@ public abstract record ChainElement {
     public static ChainElement ThenByDescending => ThenByDescendingChainElement.Instance;
     public static ChainElement SelectMany(SourceType sourceType) => new SelectManyChainElement(sourceType);
     public static ChainElement ToArray => ToArrayChainElement.Instance;
+    public static ChainElement ToHashSet => ToHashSetChainElement.Instance;
     public static ChainElement ToList => ToListChainElement.Instance;
     public static ChainElement Enumerable => EnumerableChainElement.Instance;
 
@@ -25,6 +26,11 @@ public abstract record ChainElement {
 public sealed record ToArrayChainElement : ChainElement {
     public static readonly ToArrayChainElement Instance = new ToArrayChainElement();
     ToArrayChainElement() { }
+}
+
+public sealed record ToHashSetChainElement : ChainElement {
+    public static readonly ToHashSetChainElement Instance = new ToHashSetChainElement();
+    ToHashSetChainElement() { }
 }
 
 public sealed record ToListChainElement : ChainElement {

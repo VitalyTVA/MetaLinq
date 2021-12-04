@@ -406,6 +406,20 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
+    public void Array_Where_ToHashSet() {
+        AssertGeneration(
+            "HashSet<Data> __() => Data.Array(10).Where(x => x.Int < 5).ToHashSet();",
+            (HashSet<Data> x) => CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4 }, x.Select(x => x.Int)),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("ToHashSet")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("new HashSet<TSource>()", x.Single())
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
     public void Array_Where_ToList() {
         AssertGeneration(
             "List<Data> __() => Data.Array(10).Where(x => x.Int < 5).ToList();",
@@ -617,6 +631,31 @@ public class GenerationTests : BaseFixture {
             }
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Select_ToHashSet() {
+        AssertGeneration(
+            "HashSet<int> __() => Data.Array(5).Select(x => x.Int).ToHashSet();",
+            (HashSet<int> x) => CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4 }, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("ToHashSet")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T0_Result>(this.source.Length)", x.Single())
+        );
+    }
+    [Test]
+    public void List_Select_ToHashSet() {
+        AssertGeneration(
+            "HashSet<int> __() => Data.List(5).Select(x => x.Int).ToHashSet();",
+            (HashSet<int> x) => CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4 }, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("ToHashSet")
+                })
+            }
+        );
     }
     [Test]
     public void Array_Select_Select_ToArray() {
@@ -1172,10 +1211,10 @@ static Data[] source = Data.Array(3);",
     }
 
 
-    static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null) {
-        AssertGeneration(new[] { (code, assert) }, methods, addMetaLinqUsing, addStadardLinqUsing, additionalClassCode);
+    static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null, Action<IEnumerable<string>>? assertGeneratedCode = null) {
+        AssertGeneration(new[] { (code, assert) }, methods, addMetaLinqUsing, addStadardLinqUsing, additionalClassCode, assertGeneratedCode);
     }
-    static void AssertGeneration<T>((string code, Action<T> assert)[] cases, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null) {
+    static void AssertGeneration<T>((string code, Action<T> assert)[] cases, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null, Action<IEnumerable<string>>? assertGeneratedCode = null) {
         var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
         var references = new[] {
                 MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
@@ -1242,6 +1281,7 @@ public static class Executor {{
         CollectionAssert.IsEmpty(runResult.Diagnostics);
         GeneratorRunResult generatorResult = runResult.Results[0];
         var generatedCode = generatorResult.GeneratedSources.Select(x => x.SourceText.ToString());
+        assertGeneratedCode?.Invoke(generatedCode);
 
         var emitResult = outputCompilation.Emit(dllPath, pdbPath: DebugMode ? Path.ChangeExtension(dllPath, "pdb") : null);
         var severeDiagnostics = emitResult.Diagnostics.Where(x => x.Severity != DiagnosticSeverity.Hidden).ToArray();

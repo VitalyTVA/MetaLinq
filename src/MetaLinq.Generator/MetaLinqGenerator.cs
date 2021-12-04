@@ -116,6 +116,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "ThenByDescending" => ChainElement.ThenByDescending,
             "ToArray" => ChainElement.ToArray,
             "ToList" => ChainElement.ToList,
+            "ToHashSet" => ChainElement.ToHashSet,
             _ => null
         };
     }

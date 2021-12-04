@@ -1,6 +1,6 @@
 ﻿namespace MetaLinq.Generator;
 
-public enum ResultType { ToArray, OrderBy }
+public enum ResultType { ToInstance, OrderBy }
 public record PieceOfWork(EmitContext[] Contexts) {
     public int LastLevel => Contexts.Last().Level;
     public int TopLevel = Contexts.First().Level;
@@ -9,7 +9,7 @@ public record PieceOfWork(EmitContext[] Contexts) {
     public ResultType ResultType 
         => Contexts.Last().Node is OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode 
         ? ResultType.OrderBy 
-        : ResultType.ToArray; 
+        : ResultType.ToInstance; 
     public override string ToString() {
         return $"SameType: {SameType}, SameSize: {SameSize}, ResultType: {ResultType}, Nodes: [{string.Join(", ", Contexts.Select(x => x.Node.Type))}]";
     }
