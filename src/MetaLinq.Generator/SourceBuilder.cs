@@ -314,7 +314,7 @@ foreach(var item{level} in source{level}) {{");
                         $"result{topLevel}.Add(item{lastLevel + 1});",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
-                case (true, ResultType.OrderBy, null or ToInstanceType.ToArray):
+                case (true, ResultType.OrderBy, _):
                     var order = piece.Contexts
                         .SkipWhile(x => x.Node is not (OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode))
                         .Select(x => (sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
@@ -340,6 +340,9 @@ foreach(var item{level} in source{level}) {{");
                         .Select((type, i) => $"new {type}(sortKeys{topLevel}_{i}")
                         .ToArray();
                     var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
+                    var resultExpression = $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)";
+                    if(toInstanceType == ToInstanceType.ToHashSet)
+                        resultExpression = $"new HashSet<{lastContext.SourceGenericArg}>({resultExpression})";
                     return (
 @$"var result{topLevel} = {(piece.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{sourcePath}.{source.GetCountName()}]")};
 {string.Join(null, sortKeyVars)}
@@ -349,7 +352,7 @@ string.Join(null, sortKeyAssigns) + $"map{topLevel}[i{topLevel}] = i{topLevel};{
 
 $@"ArrayPool<int>.Shared.Return(map{topLevel});
 var comparer{lastLevel} = {comparerExpression};
-var result_{lastLevel} = SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length);"
+var result_{lastLevel} = {resultExpression};"
                     );
 
                 default:

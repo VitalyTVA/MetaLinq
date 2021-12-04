@@ -1,4 +1,4 @@
-bool useKeySelector - KILL
+simplify senseless chains like OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray
  
 BuilderType.UnknownSizeOrderBy => - KILL
 

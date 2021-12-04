@@ -52,6 +52,24 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_ThenBy_ToHashSet() {
+        AssertGeneration(
+@"(Data[] source, HashSet<Data> result) __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    return (source, source.OrderBy(x => x.Long).ThenBy(x => x.Int).ToHashSet());
+}}",
+        ((Data[] source, HashSet<Data> result) x) => CollectionAssert.AreEquivalent(x.source, x.result),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                new StructMethod("ThenBy", new[] {
+                    new StructMethod("ToHashSet"),
+                })
+            })
+        });
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
     public void Array_Select_OrderBy_ThenBy_ToArray() {
         AssertGeneration(
 @"(Data[] source, Data[] result) __() {{
@@ -343,6 +361,29 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_Where_OrderBy_Select_ToHashSet() {
+        AssertGeneration(
+@"HashSet<int> __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).ToHashSet();
+}}",
+        (HashSet<int> x) => CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4, 5, 6 }, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("ToHashSet"),
+                    })
+                })
+            })
+        },
+        assertGeneratedCode: x => StringAssert.Contains("new HashSet<T2_Result>(result_1.Length)", x.Single())
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+
+    [Test]
     public void Array_Where_OrderBy_Select_OrderByDescending_ToArray() {
         AssertGeneration(
 @"int[] __() {{
@@ -380,6 +421,31 @@ public class GenerationTests : BaseFixture {
                         new StructMethod("Where", new[] {
                             new StructMethod("OrderByDescending", new[] {
                                 new StructMethod("ToArray"),
+                            })
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Where_OrderBy_Select_Where_OrderByDescending_ToHashSet() {
+        AssertGeneration(
+@"HashSet<int> __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).Where(x => x > 2).OrderByDescending(x => 2 * x).ToHashSet();
+}}",
+        (HashSet<int> x) => CollectionAssert.AreEquivalent(new[] { 6, 5, 4, 3 }, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("OrderByDescending", new[] {
+                                new StructMethod("ToHashSet"),
                             })
                         })
                     })
@@ -673,6 +739,21 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
+    public void Array_Select_Select_ToHashSet() {
+        AssertGeneration(
+            "HashSet<int> __() => Data.Array(5).Select(x => x.Int - 1).Select(x => x + 1).ToHashSet();",
+            (HashSet<int> x) => CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4 }, x),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Select", new[] {
+                            new StructMethod("ToHashSet")
+                        })
+                    })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
     public void List_Select_ToArray() {
         AssertGeneration(
             "int[] __() => Data.List(5).Select(x => x.Int).ToArray();",
@@ -765,6 +846,25 @@ public class GenerationTests : BaseFixture {
             }
         );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_SelectManyArray_ToHashSet() {
+        AssertGeneration(
+@"HashSet<int> __() {{
+    var source = Data.Array(3);
+    var result = source.SelectMany(x => x.IntArray).ToHashSet();
+    source.AssertAll(x => Assert.AreEqual(1, x.IntArray_GetCount));
+    return result;
+}}",
+            (HashSet<int> x) => CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4, 5 }, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("ToHashSet")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T0_Result>()", x.Single())
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void Array_SelectManyArrayNewArrayExpression_ToArray() {
@@ -1019,6 +1119,22 @@ static Data[] source = Data.Array(3);",
             }
         );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Select_Where_ToHashSet() {
+        AssertGeneration(
+            "HashSet<int> __() => Data.Array(10).Select(x => x.Int).Where(x => x < 5).ToHashSet();",
+            (HashSet<int> x) =>CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4 }, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Where", new[] {
+                        new StructMethod("ToHashSet")
+                    })
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T0_Result>()", x.Single())
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
     public void List_Select_Where_ToArray() {
