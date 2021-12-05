@@ -155,6 +155,10 @@ public class Tests {
 
     #region where
     [Test]
+    public static void Array_Where_ToDictionary() {
+        MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x < 3).ToDictionary(x => x * 10), ExpectedDictionaryOfIntsAllocations());
+    }
+    [Test]
     public static void Array_Where_ToHashSet() {
         MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x < 3).ToHashSet(), ExpectedHashSetOfIntsAllocations());
     }
@@ -189,6 +193,12 @@ public class Tests {
     #endregion
 
     #region select
+    [Test]
+    public static void Array_Select_ToDictionary() {
+        MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 2).ToDictionary(x => x * 10), ExpectedDictionaryOfIntsAllocations()
+        );
+    }
+
     [Test]
     public static void Array_Select_ToHashSet() {
         MemoryTestHelper.AssertDifference(() => intArray.Select(static x => x * 2).ToHashSet(), ExpectedHashSetOfIntsAllocations()
@@ -250,6 +260,11 @@ public class Tests {
     static (string, int)[] ExpectedHashSetOfIntsAllocations() => new[] {
         ("System.Collections.Generic.HashSet`1[System.Int32]", 1),
         ("System.Collections.Generic.HashSet`1+Entry[System.Int32][]", 1),
+        ("System.Int32[]", 1),
+    };
+    static (string, int)[] ExpectedDictionaryOfIntsAllocations() => new[] {
+        ("System.Collections.Generic.Dictionary`2[System.Int32,System.Int32]", 1),
+        ("System.Collections.Generic.Dictionary`2+Entry[System.Int32,System.Int32][]", 1),
         ("System.Int32[]", 1),
     };
 }
