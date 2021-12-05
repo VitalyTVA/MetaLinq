@@ -34,12 +34,13 @@ public class LinqModel {
 public abstract class LinqNode {
 }
 
-public enum TerminalNodeType { ToArray, ToList, ToHashSet, Enumerable }
+public enum TerminalNodeType { ToArray, ToList, ToHashSet, ToDictionary, Enumerable }
 
 public sealed class TerminalNode : LinqNode {
     public static readonly TerminalNode ToArray = new(TerminalNodeType.ToArray);
     public static readonly TerminalNode ToList = new (TerminalNodeType.ToList);
     public static readonly TerminalNode ToHashSet = new (TerminalNodeType.ToHashSet);
+    public static readonly TerminalNode ToDictionary = new (TerminalNodeType.ToDictionary);
     public static readonly TerminalNode Enumerable = new(TerminalNodeType.Enumerable);
     public readonly TerminalNodeType Type;
     TerminalNode(TerminalNodeType type) {
@@ -76,12 +77,14 @@ public abstract class IntermediateNode : LinqNode {
                 return Add(static () => new ThenByDescendingNode());
             case SelectManyChainElement selectManyNode:
                 return Add(() => new SelectManyNode(selectManyNode.SourceType));
-            case ToArrayChainElement:
+            case ToInstanceChainElement { Type: ToInstanceChainElementType.ToArray }:
                 return Add(static () => TerminalNode.ToArray);
-            case ToListChainElement:
+            case ToInstanceChainElement { Type: ToInstanceChainElementType.ToList }:
                 return Add(static () => TerminalNode.ToList);
-            case ToHashSetChainElement:
+            case ToInstanceChainElement { Type: ToInstanceChainElementType.ToHashSet }:
                 return Add(static () => TerminalNode.ToHashSet);
+            case ToInstanceChainElement { Type: ToInstanceChainElementType.ToDictionary }:
+                return Add(static () => TerminalNode.ToDictionary);
             default:
                 throw new InvalidOperationException();
         }

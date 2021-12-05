@@ -112,6 +112,7 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
                             var toInstanceType = terminalNode.Type switch { 
                                 TerminalNodeType.ToArray => ToInstanceType.ToArray, 
                                 TerminalNodeType.ToHashSet => ToInstanceType.ToHashSet, 
+                                TerminalNodeType.ToDictionary => ToInstanceType.ToDictionary, 
                                 _ => throw new InvalidOperationException()
                             };
                             EmitToInstance(source, structBuilder, context, toInstanceType);
@@ -243,19 +244,20 @@ foreach(var item{level} in source{level}) {{");
                 builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
-        enum ToInstanceType { ToArray, ToHashSet };
+        enum ToInstanceType { ToArray, ToHashSet, ToDictionary };
         static void EmitToInstance(SourceType source, CodeBuilder builder, EmitContext context, ToInstanceType toInstanceType) {
             IntermediateNode intermediate = context.Node;
             var outputType = context.GetOutputType();
 
             var sourcePath = CodeGenerationTraits.GetSourcePath(context.Level + 1);
 
-            var resultType = toInstanceType switch {
-                ToInstanceType.ToArray => $"{outputType}[]",
-                ToInstanceType.ToHashSet => $"HashSet<{outputType}>",
+            var methodDefinition = toInstanceType switch {
+                ToInstanceType.ToArray => $"{outputType}[] ToArray()",
+                ToInstanceType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
+                ToInstanceType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
                 _ => throw new NotImplementedException(),
             };
-            builder.AppendLine($"public {resultType} {toInstanceType}() {{");
+            builder.AppendLine($"public {methodDefinition} {{");
 
             var pieces = context.GetPieces();
             foreach(var piece in pieces) {
@@ -295,6 +297,9 @@ foreach(var item{level} in source{level}) {{");
             var topLevel = piece.TopLevel;
             var lastLevel = piece.LastLevel;
 
+            var countExpression = $"{sourcePath}.{source.GetCountName()}";
+            var capacityExpression = piece.SameSize ? countExpression : null;
+
             switch((piece.SameSize, piece.ResultType, toInstanceType)) {
                 case (false, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
@@ -304,14 +309,20 @@ foreach(var item{level} in source{level}) {{");
                     );
                 case (true, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
-                        $"var result{topLevel} = new {outputType}[{sourcePath}.{source.GetCountName()}];",
+                        $"var result{topLevel} = new {outputType}[{countExpression}];",
                         $"result{topLevel}[i{topLevel}] = item{lastLevel + 1};",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
                 case (_, ResultType.ToInstance, ToInstanceType.ToHashSet):
                     return (
-                        $"var result{topLevel} = new HashSet<{outputType}>({(piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null)});",
+                        $"var result{topLevel} = new HashSet<{outputType}>({capacityExpression});",
                         $"result{topLevel}.Add(item{lastLevel + 1});",
+                        $@"var result_{lastLevel} = result{topLevel};"
+                    );
+                case (_, ResultType.ToInstance, ToInstanceType.ToDictionary):
+                    return (
+                        $"var result{topLevel} = new Dictionary<TKey, {outputType}>({capacityExpression});",
+                        $"result{topLevel}.Add(keySelector(item{lastLevel + 1}), item{lastLevel + 1});",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
                 case (true, ResultType.OrderBy, _):
@@ -320,7 +331,7 @@ foreach(var item{level} in source{level}) {{");
                         .Select(x => (sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
                         .ToArray();
                     var sortKeyVars = order.Select((x, i) => {
-                        return $"var sortKeys{topLevel}_{i} = new {x.sortKeyGenericType}[{sourcePath}.{source.GetCountName()}];\r\n";
+                        return $"var sortKeys{topLevel}_{i} = new {x.sortKeyGenericType}[{countExpression}];\r\n";
                     });
                     var sortKeyAssigns = order.Select((x, i) => {
                         return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{lastLevel + 2 - order.Length + i};\r\n";
@@ -343,10 +354,12 @@ foreach(var item{level} in source{level}) {{");
                     var resultExpression = $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)";
                     if(toInstanceType == ToInstanceType.ToHashSet)
                         resultExpression = $"new HashSet<{lastContext.SourceGenericArg}>({resultExpression})";
+                    if(toInstanceType == ToInstanceType.ToDictionary)
+                        resultExpression = $"new Dictionary<TKey, {lastContext.SourceGenericArg}>({resultExpression})";
                     return (
-@$"var result{topLevel} = {(piece.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{sourcePath}.{source.GetCountName()}]")};
+@$"var result{topLevel} = {(piece.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{capacityExpression}]")};
 {string.Join(null, sortKeyVars)}
-var map{topLevel} = ArrayPool<int>.Shared.Rent({sourcePath}.{source.GetCountName()});",
+var map{topLevel} = ArrayPool<int>.Shared.Rent({capacityExpression});",
 
 string.Join(null, sortKeyAssigns) + $"map{topLevel}[i{topLevel}] = i{topLevel};{(piece.SameType ? null : $"result{topLevel}[i{topLevel}] = item{piece.GetOrderByLevel()};")}",
 

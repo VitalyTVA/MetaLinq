@@ -486,6 +486,20 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
+    public void Array_Where_ToDictionary() {
+        AssertGeneration(
+            "(Data[], Dictionary<int, Data>) __() { var source = Data.Array(10); return (source, source.Where(x => x.Int < 5).ToDictionary(x => x.Int)); }",
+            ((Data[], Dictionary<int, Data>) x) => CollectionAssert.AreEquivalent(x.Item1.Where(x => x.Int < 5).ToDictionary(x => x.Int), x.Item2),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("ToDictionary")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, TSource>()", x.Single())
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
     public void Array_Where_ToList() {
         AssertGeneration(
             "List<Data> __() => Data.Array(10).Where(x => x.Int < 5).ToList();",
@@ -808,7 +822,7 @@ public class GenerationTests : BaseFixture {
         AssertGeneration(
             new (string code, Action<Data[]> assert)[] {
                     (
-                        "Data[] __() => Data.Array(5).Select(x => x).ToArray();",
+                        "Data[] __() => Data.Array(5).Select(x => x.Self).ToArray();",
                         Get0To4DataArrayAssert()
                     ),
                     (

@@ -10,9 +10,10 @@ public abstract record ChainElement {
     public static ChainElement ThenBy => ThenByChainElement.Instance;
     public static ChainElement ThenByDescending => ThenByDescendingChainElement.Instance;
     public static ChainElement SelectMany(SourceType sourceType) => new SelectManyChainElement(sourceType);
-    public static ChainElement ToArray => ToArrayChainElement.Instance;
-    public static ChainElement ToHashSet => ToHashSetChainElement.Instance;
-    public static ChainElement ToList => ToListChainElement.Instance;
+    public static readonly ChainElement ToArray = new ToInstanceChainElement(ToInstanceChainElementType.ToArray);
+    public static readonly ChainElement ToList = new ToInstanceChainElement(ToInstanceChainElementType.ToList);
+    public static readonly ChainElement ToHashSet = new ToInstanceChainElement(ToInstanceChainElementType.ToHashSet);
+    public static readonly ChainElement ToDictionary = new ToInstanceChainElement(ToInstanceChainElementType.ToDictionary);
     public static ChainElement Enumerable => EnumerableChainElement.Instance;
 
     public static readonly IComparer<ChainElement> Comparer = Comparer<ChainElement>.Create((x1, x2) => {
@@ -23,19 +24,8 @@ public abstract record ChainElement {
     });
 }
 
-public sealed record ToArrayChainElement : ChainElement {
-    public static readonly ToArrayChainElement Instance = new ToArrayChainElement();
-    ToArrayChainElement() { }
-}
-
-public sealed record ToHashSetChainElement : ChainElement {
-    public static readonly ToHashSetChainElement Instance = new ToHashSetChainElement();
-    ToHashSetChainElement() { }
-}
-
-public sealed record ToListChainElement : ChainElement {
-    public static readonly ToListChainElement Instance = new ToListChainElement();
-    ToListChainElement() { }
+public enum ToInstanceChainElementType { ToArray, ToList, ToHashSet, ToDictionary }
+public sealed record ToInstanceChainElement(ToInstanceChainElementType Type) : ChainElement {
 }
 
 public sealed record EnumerableChainElement : ChainElement {

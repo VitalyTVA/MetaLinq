@@ -117,6 +117,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "ToArray" => ChainElement.ToArray,
             "ToList" => ChainElement.ToList,
             "ToHashSet" => ChainElement.ToHashSet,
+            "ToDictionary" => ChainElement.ToDictionary,
             _ => null
         };
     }

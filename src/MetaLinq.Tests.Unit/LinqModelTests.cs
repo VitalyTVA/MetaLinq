@@ -43,6 +43,19 @@ public class LinqModelTests : BaseFixture {
         -ToArray
         -ToHashSet");
     }
+
+    [Test]
+    public void ToArrayAndToDictionary() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { ToArray });
+        model.AddChain(SourceType.List, new[] { ToDictionary });
+        AssertModel(model,
+@"List
+    Root
+        -ToArray
+        -ToDictionary");
+    }
+
     [Test]
     public void Where_() {
         var model = new LinqModel();
@@ -401,6 +414,10 @@ Array
         AssertNodeComparison(0, ToHashSet, ToHashSet);
         AssertNodeComparison(1, ToHashSet, ToArray);
         AssertNodeComparison(-1, ToArray, ToHashSet);
+
+        AssertNodeComparison(0, ToDictionary, ToDictionary);
+        AssertNodeComparison(-1, ToDictionary, ToHashSet);
+        AssertNodeComparison(1, ToHashSet, ToDictionary);
 
         AssertNodeComparison(0, SelectMany(SourceType.Array), SelectMany(SourceType.Array));
         AssertNodeComparison(-1, SelectMany(SourceType.Array), SelectMany(SourceType.List));
