@@ -285,8 +285,18 @@ foreach(var item{level} in source{level}) {{");
             var (arrayBuilder, addValue, result) = GetArrayBuilder(source, toInstanceType, sourcePath, piece);
             builder.Tab.AppendMultipleLines(arrayBuilder);
 
+            foreach(var item in piece.Contexts) {
+                if(item.Node is SkipWhileNode)
+                    builder.Tab.AppendLine($"var skipWhile{item.Level + 1} = true;");
+            }
+
             EmitLoop(source, builder.Tab, topLevel, sourcePath,
                 bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
+
+            foreach(var item in piece.Contexts) {
+                if(item.Node is TakeWhileNode)
+                    builder.Tab.AppendLine($"takeWhile{item.Level + 1}:");
+            }
 
             builder.Tab.AppendMultipleLines(result);
         }
@@ -397,14 +407,19 @@ if(!this{sourcePath}.predicate(item{level + 1}))
                     builder.AppendMultipleLines($@"
 var item{level + 1} = item{level};
 if(!this{sourcePath}.predicate(item{level + 1}))
-    break;");
+    goto takeWhile{level + 1};");
                     EmitNext(builder);
                     break;
                 case SkipWhileNode:
                     builder.AppendMultipleLines($@"
 var item{level + 1} = item{level};
-if(this{sourcePath}.predicate(item{level + 1}))
-    continue;");
+if(skipWhile{level + 1}) {{
+    if(this{sourcePath}.predicate(item{level + 1})) {{
+        continue;
+    }} else {{
+        skipWhile{level + 1} = false;
+    }}
+}}");
                     EmitNext(builder);
                     break;
                 case SelectNode:

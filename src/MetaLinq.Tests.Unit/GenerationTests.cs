@@ -548,6 +548,66 @@ public class GenerationTests : BaseFixture {
         );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
+    [Test]
+    public void Array_Select_TakeWhile_ToArray() {
+        AssertGeneration(
+            "int[] __() => Data.Array(20).Select(x => x.Int % 10).TakeWhile(x => x < 5).ToArray();",
+            Get0ToNIntArrayAssert(4),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("TakeWhile", new[] {
+                            new StructMethod("ToArray")
+                        })
+                    })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Select_SkipWhile_ToArray() {
+        AssertGeneration(
+            "int[] __() => Data.Array(20).Select(x => x.Int % 10).SkipWhile(x => x < 5).ToArray();",
+            GetIntArrayAssert(Enumerable.Range(5, 15).Select(x => x % 10).ToArray()),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("SkipWhile", new[] {
+                            new StructMethod("ToArray")
+                        })
+                    })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_SelectMany_TakeWhile_ToArray() {
+        AssertGeneration(
+            "int[] __() => Data.Array(5).SelectMany(x => new[] { 2 * x.Int, 2 * x.Int + 1 }).TakeWhile(x => x % 2 == 0).ToArray();",
+            Get0ToNIntArrayAssert(0),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                        new StructMethod("TakeWhile", new[] {
+                            new StructMethod("ToArray")
+                        })
+                    })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_SelectMany_SkipWhile_ToArray() {
+        AssertGeneration(
+            "int[] __() => Data.Array(5).SelectMany(x => new[] { 2 * x.Int, 2 * x.Int + 1 }).SkipWhile(x => x % 2 == 0).ToArray();",
+            GetIntArrayAssert(Enumerable.Range(1, 9).ToArray()),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                        new StructMethod("SkipWhile", new[] {
+                            new StructMethod("ToArray")
+                        })
+                    })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region where
