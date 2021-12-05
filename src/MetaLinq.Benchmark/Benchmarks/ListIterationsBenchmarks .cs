@@ -16,6 +16,7 @@ public class ListIterationsBenchmarks {
 
     [GlobalSetup]
     public void Setup() {
+        testData = new(N);
         for(int i = 0; i < N; i++) {
             testData.Add(new TestData(new[] { i * 10, i * 10 + 1 }, i));
         }
