@@ -70,6 +70,24 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_ThenBy_ToDictionary() {
+        AssertGeneration(
+@"(Data[] source, Dictionary<int, Data> result) __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    return (source, source.OrderBy(x => x.Long).ThenBy(x => x.Int).ToDictionary(x => x.Int));
+}}",
+        ((Data[] source, Dictionary<int, Data> result) x) => CollectionAssert.AreEquivalent(x.source.ToDictionary(x => x.Int), x.result),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                new StructMethod("ThenBy", new[] {
+                    new StructMethod("ToDictionary"),
+                })
+            })
+        });
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
     public void Array_Select_OrderBy_ThenBy_ToArray() {
         AssertGeneration(
 @"(Data[] source, Data[] result) __() {{
@@ -382,6 +400,27 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
+    [Test]
+    public void Array_Where_OrderBy_Select_ToDictionary() {
+        AssertGeneration(
+@"Dictionary<int, int> __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).ToDictionary(x => x * 10);
+}}",
+        (Dictionary<int, int> x) => CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4, 5, 6 }.ToDictionary(x => x * 10), x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("ToDictionary"),
+                    })
+                })
+            })
+        },
+        assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T2_Result>(result_1.Length)", x.Single())
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
 
     [Test]
     public void Array_Where_OrderBy_Select_OrderByDescending_ToArray() {
@@ -446,6 +485,31 @@ public class GenerationTests : BaseFixture {
                         new StructMethod("Where", new[] {
                             new StructMethod("OrderByDescending", new[] {
                                 new StructMethod("ToHashSet"),
+                            })
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Where_OrderBy_Select_Where_OrderByDescending_ToDictionary() {
+        AssertGeneration(
+@"Dictionary<int, int> __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).Where(x => x > 2).OrderByDescending(x => 2 * x).ToDictionary(x => x * 10);
+}}",
+        (Dictionary<int, int> x) => CollectionAssert.AreEquivalent(new[] { 6, 5, 4, 3 }.ToDictionary(x => x * 10), x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("Where", new[] {
+                            new StructMethod("OrderByDescending", new[] {
+                                new StructMethod("ToDictionary"),
                             })
                         })
                     })
@@ -726,6 +790,19 @@ public class GenerationTests : BaseFixture {
         );
     }
     [Test]
+    public void Array_Select_ToDictionay() {
+        AssertGeneration(
+            "(Data[], Dictionary<int, Data>) __() { var source = Data.Array(5); return (source, source.Select(x => x.Self).ToDictionary(x => x.Int)); }",
+            ((Data[], Dictionary<int, Data>) x) => CollectionAssert.AreEquivalent(x.Item1.ToDictionary(x => x.Int), x.Item2),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("ToDictionary")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T0_Result>(this.source.Length)", x.Single())
+        );
+    }
+    [Test]
     public void List_Select_ToHashSet() {
         AssertGeneration(
             "HashSet<int> __() => Data.List(5).Select(x => x.Int).ToHashSet();",
@@ -735,6 +812,19 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ToHashSet")
                 })
             }
+        );
+    }
+    [Test]
+    public void List_Select_ToDictionay() {
+        AssertGeneration(
+            "(List<Data>, Dictionary<int, Data>) __() { var source = Data.List(5); return (source, source.Select(x => x.Self).ToDictionary(x => x.Int)); }",
+            ((List<Data>, Dictionary<int, Data>) x) => CollectionAssert.AreEquivalent(x.Item1.ToDictionary(x => x.Int), x.Item2),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("ToDictionary")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T0_Result>(this.source.Count)", x.Single())
         );
     }
     [Test]
@@ -763,6 +853,21 @@ public class GenerationTests : BaseFixture {
                             new StructMethod("ToHashSet")
                         })
                     })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Select_Select_ToDictionary() {
+        AssertGeneration(
+            "Dictionary<int, long> __() => Data.Array(5).Select(x => x.Int - 2).Select(x => (long)x * 10).ToDictionary(x => (int)x / 10 + 2);",
+            (Dictionary<int, long> x) => CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4 }.ToDictionary(x => x, x => (long)(x - 2) * 10), x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("ToDictionary")
+                    })
+                })
             }
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
@@ -877,6 +982,25 @@ public class GenerationTests : BaseFixture {
                 })
             },
             assertGeneratedCode: x => StringAssert.Contains("new HashSet<T0_Result>()", x.Single())
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_SelectManyArray_ToDictionary() {
+        AssertGeneration(
+@"Dictionary<int, int> __() {{
+    var source = Data.Array(3);
+    var result = source.SelectMany(x => x.IntArray).ToDictionary(x => x * 10);
+    source.AssertAll(x => Assert.AreEqual(1, x.IntArray_GetCount));
+    return result;
+}}",
+            (Dictionary<int, int> x) => CollectionAssert.AreEqual(new[] { 0, 1, 2, 3, 4, 5 }.ToDictionary(x => x * 10), x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("ToDictionary")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T0_Result>()", x.Single())
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }

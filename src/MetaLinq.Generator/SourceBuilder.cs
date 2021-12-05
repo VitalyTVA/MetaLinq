@@ -355,7 +355,7 @@ foreach(var item{level} in source{level}) {{");
                     if(toInstanceType == ToInstanceType.ToHashSet)
                         resultExpression = $"new HashSet<{lastContext.SourceGenericArg}>({resultExpression})";
                     if(toInstanceType == ToInstanceType.ToDictionary)
-                        resultExpression = $"new Dictionary<TKey, {lastContext.SourceGenericArg}>({resultExpression})";
+                        resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
                     return (
 @$"var result{topLevel} = {(piece.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{capacityExpression}]")};
 {string.Join(null, sortKeyVars)}
