@@ -608,6 +608,54 @@ public class GenerationTests : BaseFixture {
         );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
+    [Test]
+    public void Array_SkipWhile_OrderBy_Select_SkipWhile_OrderByDescending_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Enumerable.ToArray(Enumerable.Reverse(Data.Array(10)));
+    return source.SkipWhile(x => x.Int >= 7).OrderBy(x => x.Int).Select(x => x.Int).SkipWhile(x => x < 3).OrderByDescending(x => 2 * x).ToArray();
+}}",
+        GetIntArrayAssert(new[] { 6, 5, 4, 3 }),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "SkipWhile", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("SkipWhile", new[] {
+                            new StructMethod("OrderByDescending", new[] {
+                                new StructMethod("ToArray"),
+                            })
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_TakeWhile_OrderBy_Select_SkipWhile_OrderByDescending_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Enumerable.ToArray(Enumerable.Reverse(Data.Array(10)));
+    return source.TakeWhile(x => x.Int >= 3).OrderBy(x => x.Int).Select(x => x.Int).TakeWhile(x => x < 7).OrderByDescending(x => 2 * x).ToArray();
+}}",
+        GetIntArrayAssert(new[] { 6, 5, 4, 3 }),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "TakeWhile", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("TakeWhile", new[] {
+                            new StructMethod("OrderByDescending", new[] {
+                                new StructMethod("ToArray"),
+                            })
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region where
