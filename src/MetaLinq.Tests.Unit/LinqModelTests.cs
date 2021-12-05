@@ -68,6 +68,28 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void TakeWhile_() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { TakeWhile });
+        AssertModel(model,
+@"List
+    Root
+        TakeWhile
+            -Enumerable");
+    }
+
+    [Test]
+    public void SkipWhile_() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { SkipWhile });
+        AssertModel(model,
+@"List
+    Root
+        SkipWhile
+            -Enumerable");
+    }
+
+    [Test]
     public void Select_() {
         var model = new LinqModel();
         model.AddChain(SourceType.List, new[] { Select });

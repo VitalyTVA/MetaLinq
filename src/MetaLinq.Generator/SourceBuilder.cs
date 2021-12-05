@@ -393,6 +393,20 @@ if(!this{sourcePath}.predicate(item{level + 1}))
     continue;");
                     EmitNext(builder);
                     break;
+                case TakeWhileNode:
+                    builder.AppendMultipleLines($@"
+var item{level + 1} = item{level};
+if(!this{sourcePath}.predicate(item{level + 1}))
+    break;");
+                    EmitNext(builder);
+                    break;
+                case SkipWhileNode:
+                    builder.AppendMultipleLines($@"
+var item{level + 1} = item{level};
+if(this{sourcePath}.predicate(item{level + 1}))
+    continue;");
+                    EmitNext(builder);
+                    break;
                 case SelectNode:
                     builder.AppendLine($@"var item{level + 1} = this{sourcePath}.selector(item{level});");
                     EmitNext(builder);
@@ -455,7 +469,7 @@ if(!this{sourcePath}.predicate(item{level + 1}))
         }
         public static string GetArgumentType(this IntermediateNode intermediate, string inType, string outType) {
             return intermediate switch {
-                WhereNode => $"Func<{inType}, bool>",
+                WhereNode or TakeWhileNode or SkipWhileNode => $"Func<{inType}, bool>",
                 SelectNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => $"Func<{inType}, {outType}>",
                 SelectManyNode selectMany => $"Func<{inType}, {selectMany.SourceType.GetSourceTypeName(outType)}>",
                 _ => throw new NotImplementedException(),
@@ -476,6 +490,8 @@ if(!this{sourcePath}.predicate(item{level + 1}))
         public static string GetEnumerableKind(this IntermediateNode intermediate) {
             return intermediate switch {
                 WhereNode => "Where",
+                TakeWhileNode => "TakeWhile",
+                SkipWhileNode => "SkipWhile",
                 SelectNode => "Select",
                 SelectManyNode => "SelectMany",
                 OrderByNode => "OrderBy",
@@ -495,7 +511,7 @@ if(!this{sourcePath}.predicate(item{level + 1}))
 
         public static string? GetOwnTypeArg(this IntermediateNode intermediate, string argName) {
             return intermediate switch {
-                WhereNode => null,
+                WhereNode or TakeWhileNode or SkipWhileNode => null,
                 SelectNode or SelectManyNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => argName,
                 _ => throw new NotImplementedException(),
             };
@@ -503,14 +519,14 @@ if(!this{sourcePath}.predicate(item{level + 1}))
 
         public static string GetOutputType(this EmitContext context) {
             return context.Node switch {
-                WhereNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => context.SourceGenericArg,
+                WhereNode or TakeWhileNode or SkipWhileNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => context.SourceGenericArg,
                 SelectNode or SelectManyNode => context.GetResultGenericType(),
                 _ => throw new NotImplementedException(),
             };
         }
         public static string GetArgumentName(this IntermediateNode intermediate) {
             return intermediate switch {
-                WhereNode => "predicate",
+                WhereNode or TakeWhileNode or SkipWhileNode => "predicate",
                 SelectNode or SelectManyNode => "selector",
                 OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => "keySelector",
                 _ => throw new NotImplementedException(),

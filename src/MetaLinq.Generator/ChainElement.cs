@@ -4,6 +4,8 @@ public enum SourceType { List, Array }
 
 public abstract record ChainElement {
     public static ChainElement Where => WhereChainElement.Instance;
+    public static ChainElement TakeWhile => TakeWhileChainElement.Instance;
+    public static ChainElement SkipWhile => SkipWhileChainElement.Instance;
     public static ChainElement Select => SelectChainElement.Instance;
     public static ChainElement OrderBy => OrderByChainElement.Instance;
     public static ChainElement OrderByDescending => OrderByDescendingChainElement.Instance;
@@ -36,6 +38,16 @@ public sealed record EnumerableChainElement : ChainElement {
 public sealed record WhereChainElement : ChainElement {
     public static readonly WhereChainElement Instance = new WhereChainElement();
     WhereChainElement() { }
+}
+
+public sealed record TakeWhileChainElement : ChainElement {
+    public static readonly TakeWhileChainElement Instance = new TakeWhileChainElement();
+    TakeWhileChainElement() { }
+}
+
+public sealed record SkipWhileChainElement : ChainElement {
+    public static readonly SkipWhileChainElement Instance = new SkipWhileChainElement();
+    SkipWhileChainElement() { }
 }
 
 public sealed record SelectChainElement : ChainElement {

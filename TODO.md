@@ -1,3 +1,5 @@
+TakeWhile inside selectmany loop - break won't work
+
 simplify senseless chains like OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray
  
 BuilderType.UnknownSizeOrderBy => - KILL

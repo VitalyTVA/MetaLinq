@@ -4,7 +4,7 @@ public enum ResultType { ToInstance, OrderBy }
 public record PieceOfWork(EmitContext[] Contexts) {
     public int LastLevel => Contexts.Last().Level;
     public int TopLevel = Contexts.First().Level;
-    public bool SameSize => Contexts.All(x => x.Node is not (WhereNode or SelectManyNode));
+    public bool SameSize => Contexts.All(x => x.Node is not (WhereNode or SkipWhileNode or TakeWhileNode or SelectManyNode));
     public bool SameType => Contexts.All(x => x.Node is not (SelectNode or SelectManyNode));
     public ResultType ResultType 
         => Contexts.Last().Node is OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode 
@@ -46,7 +46,7 @@ public static class PieceOfWorkExtensions {
                     sameSize = false;
                     current.Add(context);
                     break;
-                case WhereNode:
+                case WhereNode or SkipWhileNode or TakeWhileNode:
                     if(IsOrderBy())
                         yield return CreateAndReset();
                     sameSize = false;

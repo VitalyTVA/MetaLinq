@@ -521,6 +521,35 @@ public class GenerationTests : BaseFixture {
     }
     #endregion
 
+    #region skip/take while
+    [Test]
+    public void Array_TakeWhile_ToArray() {
+        AssertGeneration(
+            "Data[] __() => Data.Array(20).TakeWhile(x => x.Int < 10).ToArray();",
+            Get0ToNDataArrayAssert(9),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "TakeWhile", new[] {
+                        new StructMethod("ToArray")
+                    })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_SkipWhile_ToArray() {
+        AssertGeneration(
+            "Data[] __() => Data.Array(10).SkipWhile(x => x.Int < 5).ToArray();",
+            GetDataArrayAssert(5, 6, 7, 8, 9),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "SkipWhile", new[] {
+                        new StructMethod("ToArray")
+                    })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    #endregion
+
     #region where
     [Test]
     public void Array_Where_ToArray() {

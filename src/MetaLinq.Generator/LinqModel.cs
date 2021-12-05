@@ -65,6 +65,10 @@ public abstract class IntermediateNode : LinqNode {
         switch(element) {
             case WhereChainElement:
                 return Add(static () => new WhereNode());
+            case TakeWhileChainElement:
+                return Add(static () => new TakeWhileNode());
+            case SkipWhileChainElement:
+                return Add(static () => new SkipWhileNode());
             case SelectChainElement:
                 return Add(static () => new SelectNode());
             case OrderByChainElement:
@@ -122,6 +126,17 @@ public sealed class WhereNode : IntermediateNode {
     public WhereNode() { }
     protected internal override string Type => "Where";
 }
+
+public sealed class TakeWhileNode : IntermediateNode {
+    public TakeWhileNode() { }
+    protected internal override string Type => "TakeWhile";
+}
+
+public sealed class SkipWhileNode : IntermediateNode {
+    public SkipWhileNode() { }
+    protected internal override string Type => "SkipWhile";
+}
+
 public sealed class SelectNode : IntermediateNode {
     public SelectNode() { }
     protected internal override string Type => "Select";

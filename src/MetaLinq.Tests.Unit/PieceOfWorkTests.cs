@@ -27,6 +27,14 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void TakeWhile_OrderBy_ThenBy() {
+        AssertPieces(new[] { TakeWhile, OrderBy, ThenBy }, new[] {
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [TakeWhile]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenBy]"
+        });
+    }
+
+    [Test]
     public void OrderBy_ThenByDescending() {
         AssertPieces(new[] { OrderBy, ThenByDescending }, new[] {
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenByDescending]"
@@ -87,9 +95,25 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void SkipWhile_OrderBy() {
+        AssertPieces(new[] { SkipWhile, OrderBy }, new[] {
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [SkipWhile]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+        });
+    }
+
+    [Test]
     public void Where_Select_OrderBy() {
         AssertPieces(new[] { Where, Select, OrderBy }, new[] {
 "SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [Where, Select]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+        });
+    }
+
+    [Test]
+    public void TakeWhile_Select_OrderBy() {
+        AssertPieces(new[] { TakeWhile, Select, OrderBy }, new[] {
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [TakeWhile, Select]",
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
         });
     }
@@ -104,9 +128,45 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void TakeWhile_Select_OrderBy_SelectMany_Where() {
+        AssertPieces(new[] { TakeWhile, Select, OrderBy, SelectMany(SourceType.List), Where }, new[] {
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [TakeWhile, Select]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [SelectMany List, Where]",
+        });
+    }
+
+    [Test]
+    public void SkipWhile_Select_OrderBy_SelectMany_TakeWhile() {
+        AssertPieces(new[] { SkipWhile, Select, OrderBy, SelectMany(SourceType.List), TakeWhile }, new[] {
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [SkipWhile, Select]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [SelectMany List, TakeWhile]",
+        });
+    }
+
+    [Test]
     public void Where_OrderBy_Select() {
         AssertPieces(new[] { Where, OrderBy, Select }, new[] {
 "SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [Where]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
+"SameType: False, SameSize: True, ResultType: ToInstance, Nodes: [Select]",
+        });
+    }
+
+    [Test]
+    public void TakeWhile_OrderBy_Select() {
+        AssertPieces(new[] { TakeWhile, OrderBy, Select }, new[] {
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [TakeWhile]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
+"SameType: False, SameSize: True, ResultType: ToInstance, Nodes: [Select]",
+        });
+    }
+
+    [Test]
+    public void SkipWhile_OrderBy_Select() {
+        AssertPieces(new[] { SkipWhile, OrderBy, Select }, new[] {
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [SkipWhile]",
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
 "SameType: False, SameSize: True, ResultType: ToInstance, Nodes: [Select]",
         });
@@ -120,11 +180,40 @@ public class PieceOfWorkTests {
         });
     }
 
+    [Test]
+    public void Select_OrderBy_TakeWhile() {
+        AssertPieces(new[] { Select, OrderBy, TakeWhile }, new[] {
+"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]",
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [TakeWhile]",
+        });
+    }
+
+    [Test]
+    public void Select_OrderBy_SkipWhile() {
+        AssertPieces(new[] { Select, OrderBy, SkipWhile }, new[] {
+"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]",
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [SkipWhile]",
+        });
+    }
 
     [Test]
     public void Where_() {
         AssertPieces(new[] { Where }, new[] {
 "SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [Where]"
+        });
+    }
+
+    [Test]
+    public void SkipWhile_() {
+        AssertPieces(new[] { SkipWhile }, new[] {
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [SkipWhile]"
+        });
+    }
+
+    [Test]
+    public void TakeWhile_() {
+        AssertPieces(new[] { TakeWhile }, new[] {
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: [TakeWhile]"
         });
     }
 
@@ -138,6 +227,25 @@ public class PieceOfWorkTests {
         });
     }
 
+    [Test]
+    public void Select_TakeWhile() {
+        AssertPieces(new[] { Select, TakeWhile }, new[] {
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [Select, TakeWhile]"
+        });
+        AssertPieces(new[] { TakeWhile, Select }, new[] {
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [TakeWhile, Select]"
+        });
+    }
+
+    [Test]
+    public void Select_SkipWhile() {
+        AssertPieces(new[] { Select, SkipWhile }, new[] {
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [Select, SkipWhile]"
+        });
+        AssertPieces(new[] { SkipWhile, Select }, new[] {
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [SkipWhile, Select]"
+        });
+    }
 
     static void AssertPieces(ChainElement[] chain, string[] expected) {
         var model = new LinqModel();

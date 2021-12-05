@@ -11,6 +11,12 @@ public class SpikesTests {
         s.OrderBy(x => x.Int).ToHashSet();
     }
     [Test]
+    public void ToLookup() {
+        var s = Data.Array(10).Shuffle();
+        ILookup<int, Data>? lookup = s.Select(x => x).ToLookup(x => x.Int);
+        //s.OrderBy(x => x.Int).ToHashSet();
+    }
+    [Test]
     public void OrderByNotReused() {
         var s = Data.Array(10).Shuffle();
         var ordered = s.OrderBy(x => x.Int);

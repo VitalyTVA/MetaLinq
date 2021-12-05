@@ -109,6 +109,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
     static ChainElement? TryGetSimpleChainElement(string funcName) {
         return funcName switch {
             "Where" => ChainElement.Where,
+            "TakeWhile" => ChainElement.TakeWhile,
+            "SkipWhile" => ChainElement.SkipWhile,
             "Select" => ChainElement.Select,
             "OrderBy" => ChainElement.OrderBy,
             "OrderByDescending" => ChainElement.OrderByDescending,
