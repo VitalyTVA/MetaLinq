@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MetaLinq.Spikes\MetaLinq.Spikes.csproj" />
+    <ProjectReference Include="..\MetaLinq.Tests.Data\MetaLinq.Tests.Data.csproj" />
     <ProjectReference Include="..\MetaLinq\MetaLinq.csproj" />
   </ItemGroup>
 

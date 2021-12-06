@@ -7,6 +7,9 @@ public class Data {
     public static List<Data> List(int count) {
         return IEnumerable(count).ToList();
     }
+    //public static CustomEnumerable<Data> CustomEnumerable(int count) {
+    //    return new CustomEnumerable<Data>(Array(count));
+    //}
     public static IEnumerable<Data> IEnumerable(int count) {
         return Enumerable.Range(0, count).Select(x => new Data(x, new[] {  2 * x, 2 * x + 1 }, true));
     }

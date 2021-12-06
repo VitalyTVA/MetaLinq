@@ -1,5 +1,6 @@
 ﻿using JetBrains.dotMemoryUnit;
 using MetaLinq;
+using MetaLinq.Tests;
 using MetaLinqSpikes;
 
 //[assembly: Apartment(System.Threading.ApartmentState.STA)]
@@ -46,6 +47,7 @@ public class Tests {
     static List<TestData> testDataList;
     static int[] intArray = Enumerable.ToArray(Enumerable.Range(0, 5));
     static List<int> intList = Enumerable.ToList(Enumerable.Range(0, 5));
+    static CustomEnumerable<int> intCustomEnumerable = new CustomEnumerable<int>(Enumerable.ToArray(Enumerable.Range(0, 5)));
 
     class Foo { }
     class Bar { }
@@ -179,6 +181,10 @@ public class Tests {
     [Test]
     public static void List_Where_ToArray() {
         MemoryTestHelper.AssertDifference(() => intList.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
+    }
+    [Test]
+    public static void CustomEnumerable_Where_ToArray() {
+        MemoryTestHelper.AssertDifference(() => intCustomEnumerable.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
     }
     [Test]
     public static void List_Where_Foreach() {

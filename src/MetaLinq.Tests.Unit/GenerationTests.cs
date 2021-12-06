@@ -215,6 +215,26 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
+
+    [Test]
+    public void CustomEnumerable_OrderBy_ToArray() {
+        AssertGeneration(
+@"Data[] __() {{
+    var source = new CustomEnumerable<Data>(Data.Array(10).Shuffle());
+    var result = source.OrderBy(x => x.Int).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return result;
+}}",
+        Get0ToNDataArrayAssert(9),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "OrderBy", new[] {
+                    new StructMethod("ToArray")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
     [Test]
     public void Array_Select_OrderByDescending_ToArray() {
         AssertGeneration(
@@ -248,6 +268,27 @@ public class GenerationTests : BaseFixture {
         Get0ToNIntArrayAssert(9),
         new[] {
             new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("ToArray"),
+                })
+            })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void CustomEnumerable_Select_OrderBy_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = new CustomEnumerable<Data>(Data.Array(10).Shuffle());
+    var result = source.Select(x => new { Value = x.Int }).OrderBy(x => x.Value).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return Enumerable.ToArray(Enumerable.Select(result, x => x.Value));
+}}",
+        Get0ToNIntArrayAssert(9),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Select", new[] {
                 new StructMethod("OrderBy", new[] {
                     new StructMethod("ToArray"),
                 })
@@ -320,6 +361,29 @@ public class GenerationTests : BaseFixture {
         Get0ToNIntArrayAssert(5),
         new[] {
             new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                new StructMethod("Where", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("ToArray"),
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void CustomEnumerable_Select_Where_OrderBy_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = new CustomEnumerable<Data>(Data.Array(10).Shuffle());
+    var result = source.Select(x => new { Value = x.Int }).Where(x => x.Value < 6).OrderBy(x => x.Value).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return Enumerable.ToArray(Enumerable.Select(result, x => x.Value));
+}}",
+        Get0ToNIntArrayAssert(5),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Select", new[] {
                 new StructMethod("Where", new[] {
                     new StructMethod("OrderBy", new[] {
                         new StructMethod("ToArray"),
@@ -812,6 +876,19 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
+    public void CustomEnumerable_Where_ToArray() {
+        AssertGeneration(
+            "Data[] __() => new CustomEnumerable<Data>(Data.Array(10)).Where(x => x.Int < 5).ToArray();",
+            Get0To4DataArrayAssert(),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Where", new[] {
+                        new StructMethod("ToArray")
+                    })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
     public void Array_Where_StandardToArray() {
         AssertGeneration(
             "Data[] __() => System.Linq.Enumerable.ToArray(Data.Array(10).Where(x => x.Int < 5));",
@@ -1022,6 +1099,18 @@ public class GenerationTests : BaseFixture {
         );
     }
     [Test]
+    public void CustomEnumerable_Select_ToArray() {
+        AssertGeneration(
+            "int[] __() => new CustomEnumerable<Data>(Data.Array(5)).Select(x => x.Int).ToArray();",
+            Get0ToNIntArrayAssert(),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Select", new[] {
+                        new StructMethod("ToArray")
+                    })
+            }
+        );
+    }
+    [Test]
     public void Array_Select_StandardToArray() {
         AssertGeneration(
             "int[] __() => System.Linq.Enumerable.ToArray(Data.Array(5).Select(x => x.Int));",
@@ -1157,6 +1246,18 @@ public class GenerationTests : BaseFixture {
     public void List_SelectManyList_ToArray() {
         AssertGeneration(
             "int[] __() => Data.List(3).SelectMany(x => x.IntList).ToArray();",
+            Get0ToNIntArrayAssert(5),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "SelectMany", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_SelectManyCustomEnumerable_ToArray() {
+        AssertGeneration(
+            "int[] __() => Data.List(3).SelectMany(x => new CustomEnumerable<int>(x.IntArray)).ToArray();",
             Get0ToNIntArrayAssert(5),
             new[] {
                 new MetaLinqMethodInfo(SourceType.List, "SelectMany", new[] {
@@ -1581,7 +1682,7 @@ static Data[] source = Data.Array(3);",
             return $"Name: {Name}, IEnumerable: {ImplementsIEnumerable}, Methods: [ {methods} ]";
         }
     }
-    enum SourceType { Array, List }
+    enum SourceType { Array, List, CustomEnumerable }
     sealed class MetaLinqMethodInfo : StructMethod {
         public readonly SourceType SourceType;
 
@@ -1736,6 +1837,7 @@ public static class Executor {{
                 var sourceType = x.GetParameters()[0].ParameterType.Name switch {
                     "TSource[]" => SourceType.Array,
                     "List`1" => SourceType.List,
+                    "CustomEnumerable`1" => SourceType.CustomEnumerable,
                     _ => throw new InvalidOperationException()
                 };
                 Assert.AreEqual(CodeGenerationTraits.RootStaticTypePrefix + sourceType.ToString() + "`1", x.ReturnType.DeclaringType!.Name);

@@ -40,9 +40,15 @@ public class MetaLinqGenerator : ISourceGenerator {
 class SyntaxContextReceiver : ISyntaxContextReceiver {
     public readonly LinqModel Model = new();
 
-    INamedTypeSymbol? metaEnumerableType;
-    INamedTypeSymbol? enumerableType;
-    INamedTypeSymbol? listType;
+    record Types(
+        INamedTypeSymbol metaEnumerableType,
+        INamedTypeSymbol enumerableType,
+        INamedTypeSymbol listType,
+        INamedTypeSymbol? customEnumerableType
+    );
+
+    Types? types;
+
     TypeSyntax metaEnumerableTypeSyntax = SyntaxFactory.ParseTypeName("MetaEnumerable");
 
     List<MemberAccessExpressionSyntax> visited = new();
@@ -60,12 +66,12 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         }
     }
     void OnVisitSyntaxNodeCore(GeneratorSyntaxContext context) {
-        if(metaEnumerableType == null)
-            metaEnumerableType = context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.MetaEnumerable");
-        if(enumerableType == null)
-            enumerableType = context.SemanticModel.Compilation.GetTypeByMetadataName("System.Linq.Enumerable");
-        if(listType == null)
-            listType = context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.Generic.List`1");
+        types = types ?? new Types(
+            metaEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.MetaEnumerable")!,
+            enumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Linq.Enumerable")!,
+            listType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.Generic.List`1")!,
+            customEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomEnumerable`1")
+        );
 
         if(context.Node is InvocationExpressionSyntax invocation
             && !visitedExpressions.Contains(invocation)
@@ -78,7 +84,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 if(currentExpression is InvocationExpressionSyntax currentInvocation && currentInvocation.Expression is MemberAccessExpressionSyntax currentMemberAccess) {
                     var currentSymbolInfo = context.SemanticModel.GetSymbolInfo(currentMemberAccess.Name);
                     if(currentSymbolInfo.Symbol is IMethodSymbol currentMethodSymbol
-                        && SymbolEqualityComparer.Default.Equals(currentMethodSymbol.OriginalDefinition.ContainingType, enumerableType)) {
+                        && SymbolEqualityComparer.Default.Equals(currentMethodSymbol.OriginalDefinition.ContainingType, types!.enumerableType)) {
                         var element = TryGetSimpleChainElement(currentMethodSymbol.Name);
                         if(element != null) {
                             chain.Push(element);
@@ -130,12 +136,14 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             return null;
         if(returnType!.TypeKind == TypeKind.Array)
             return SourceType.Array;
-        if(SymbolEqualityComparer.Default.Equals(listType, returnType.OriginalDefinition))
+        if(SymbolEqualityComparer.Default.Equals(types!.listType, returnType.OriginalDefinition))
             return SourceType.List;
+        if(SymbolEqualityComparer.Default.Equals(types!.customEnumerableType, returnType.OriginalDefinition))
+            return SourceType.CustomEnumerable;
         throw new InvalidOperationException();
     }
     bool IsMetaEnumerableAccessible(GeneratorSyntaxContext context) {
         var typeInfo = context.SemanticModel.GetSpeculativeTypeInfo(context.Node.SpanStart, metaEnumerableTypeSyntax, SpeculativeBindingOption.BindAsTypeOrNamespace);
-        return SymbolEqualityComparer.Default.Equals(typeInfo.Type, metaEnumerableType);
+        return SymbolEqualityComparer.Default.Equals(typeInfo.Type, types!.metaEnumerableType);
     }
 }

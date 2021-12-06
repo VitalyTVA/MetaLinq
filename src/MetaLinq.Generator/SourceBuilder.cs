@@ -235,12 +235,12 @@ var len{level} = source{level}.Length;
 for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
     var item{level} = source{level}[i{level}];");
             }
-            if(source == SourceType.List)
+            if(source == SourceType.List || source == SourceType.CustomEnumerable)
                 builder.AppendMultipleLines($@"
 int i{level} = 0;
 foreach(var item{level} in source{level}) {{");
             emitBody(builder.Tab);
-            if(source == SourceType.List)
+            if(source == SourceType.List || source == SourceType.CustomEnumerable)
                 builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
@@ -366,12 +366,13 @@ foreach(var item{level} in source{level}) {{");
                         resultExpression = $"new HashSet<{lastContext.SourceGenericArg}>({resultExpression})";
                     if(toInstanceType == ToInstanceType.ToDictionary)
                         resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
+                    bool useSourceInSort = piece.SameType && source != SourceType.CustomEnumerable;
                     return (
-@$"var result{topLevel} = {(piece.SameType ? sourcePath : $"new {lastContext.SourceGenericArg}[{capacityExpression}]")};
+@$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"new {lastContext.SourceGenericArg}[{capacityExpression}]")};
 {string.Join(null, sortKeyVars)}
 var map{topLevel} = ArrayPool<int>.Shared.Rent({capacityExpression});",
 
-string.Join(null, sortKeyAssigns) + $"map{topLevel}[i{topLevel}] = i{topLevel};{(piece.SameType ? null : $"result{topLevel}[i{topLevel}] = item{piece.GetOrderByLevel()};")}",
+string.Join(null, sortKeyAssigns) + $"map{topLevel}[i{topLevel}] = i{topLevel};{(useSourceInSort ? null : $"result{topLevel}[i{topLevel}] = item{piece.GetOrderByLevel()};")}",
 
 $@"ArrayPool<int>.Shared.Return(map{topLevel});
 var comparer{lastLevel} = {comparerExpression};
@@ -479,6 +480,7 @@ if(skipWhile{level + 1}) {{
             return source switch {
                 SourceType.List => $"List<{sourceGenericArg}>",
                 SourceType.Array => $"{sourceGenericArg}[]",
+                SourceType.CustomEnumerable => $"MetaLinq.Tests.CustomEnumerable<{sourceGenericArg}>",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -499,6 +501,7 @@ if(skipWhile{level + 1}) {{
             return source switch {
                 SourceType.List => "List",
                 SourceType.Array => "Array",
+                SourceType.CustomEnumerable => "CustomEnumerable",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -551,6 +554,7 @@ if(skipWhile{level + 1}) {{
             return source switch {
                 SourceType.List => "Count",
                 SourceType.Array => "Length",
+                SourceType.CustomEnumerable => "Count",
                 _ => throw new NotImplementedException(),
             };
         }

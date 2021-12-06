@@ -1,4 +1,4 @@
-TakeWhile inside selectmany loop - break won't work
+!!!Iterate List<T> via For, not Foreach
 
 simplify senseless chains like OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray
  
@@ -13,6 +13,10 @@ ArrayPool rent/return tests
 Add max capacity to large array builder (like in LargeArrayBuilder from net6)
 
 see how large array builder it works without dispose int net6 (dispose on ToArray???)
+
+CustomEnumerable should not be a special case
+
+CustomEnumerable Should Not have Count
 
 #Posponed0
 
