@@ -12,6 +12,14 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void OrderBy_CustomEnumerable() {
+        AssertPieces(new[] { OrderBy }, new[] {
+"SameType: True, SameSize: False, ResultType: ToInstance, Nodes: []",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+        }, SourceType.CustomEnumerable);
+    }
+
+    [Test]
     public void OrderBy_ThenBy() {
         AssertPieces(new[] { OrderBy, ThenBy}, new[] {
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenBy]"
@@ -70,6 +78,13 @@ public class PieceOfWorkTests {
         AssertPieces(new[] { Select }, new[] {
 "SameType: False, SameSize: True, ResultType: ToInstance, Nodes: [Select]"
         });
+    }
+
+    [Test]
+    public void Select_CustomEnumerable() {
+        AssertPieces(new[] { Select }, new[] {
+"SameType: False, SameSize: False, ResultType: ToInstance, Nodes: [Select]"
+        }, SourceType.CustomEnumerable);
     }
 
     [Test]
@@ -247,17 +262,17 @@ public class PieceOfWorkTests {
         });
     }
 
-    static void AssertPieces(ChainElement[] chain, string[] expected) {
+    static void AssertPieces(ChainElement[] chain, string[] expected, SourceType sourceType = SourceType.List) {
         var model = new LinqModel();
-        model.AddChain(SourceType.List, chain);
+        model.AddChain(sourceType, chain);
         var firstNode = (IntermediateNode)model.GetTrees().Single().Item2.GetNodes().Single();
         var lastContext = Extensions.Unfold(
-            EmitContext.Root(SourceType.List, firstNode),
+            EmitContext.Root(sourceType, firstNode),
             context => {
                 var node = context.Node.GetNodes().OfType<IntermediateNode>().SingleOrDefault();
                 return node != null ? context.Next(node) : null;
             }).Last();
-        var result = lastContext.GetPieces().ToArray().Select(x => x.ToString()).ToArray();
+        var result = lastContext.GetPieces(sourceType).ToArray().Select(x => x.ToString()).ToArray();
         CollectionAssert.AreEqual(expected, result);
     }
 }

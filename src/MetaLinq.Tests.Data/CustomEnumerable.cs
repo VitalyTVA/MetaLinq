@@ -1,11 +1,9 @@
 ﻿namespace MetaLinq.Tests;
 
-public class CustomCollection<T> : IEnumerable<T> {
-    readonly T[] data;
+public class CustomEnumerable<T> : IEnumerable<T> {
+    protected readonly T[] data;
 
-    public int Count => data.Length;
-
-    public CustomCollection(T[] data) {
+    public CustomEnumerable(T[] data) {
         this.data = data;
     }
 
@@ -30,4 +28,18 @@ public class CustomCollection<T> : IEnumerable<T> {
 
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+}
+
+public class CustomCollection<T> : CustomEnumerable<T>, ICollection<T> {
+    public CustomCollection(T[] data) : base(data) {
+    }
+
+    public int Count => data.Length;
+
+    bool ICollection<T>.IsReadOnly => throw new NotImplementedException();
+    void ICollection<T>.Add(T item) => throw new NotImplementedException();
+    void ICollection<T>.Clear() => throw new NotImplementedException();
+    bool ICollection<T>.Contains(T item) => throw new NotImplementedException();
+    void ICollection<T>.CopyTo(T[] array, int arrayIndex) => throw new NotImplementedException();
+    bool ICollection<T>.Remove(T item) => throw new NotImplementedException();
 }

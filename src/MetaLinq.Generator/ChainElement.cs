@@ -1,6 +1,23 @@
 ﻿namespace MetaLinq.Generator;
 
-public enum SourceType { List, Array, CustomCollection }
+public enum SourceType { List, Array, CustomCollection, CustomEnumerable }
+
+public static class SourceTypeExtensions {
+    public static bool HasCount(this SourceType sourceType) {
+        return sourceType switch {
+            SourceType.List or SourceType.Array or SourceType.CustomCollection => true,
+            SourceType.CustomEnumerable => false,
+            _ => throw new NotImplementedException(),
+        };
+    }
+    public static bool HasIndexer(this SourceType sourceType) {
+        return sourceType switch {
+            SourceType.List or SourceType.Array => true,
+            SourceType.CustomCollection or SourceType.CustomEnumerable => false,
+            _ => throw new NotImplementedException(),
+        };
+    }
+}
 
 public abstract record ChainElement {
     public static ChainElement Where => WhereChainElement.Instance;

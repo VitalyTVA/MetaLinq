@@ -1,13 +1,13 @@
 ﻿namespace MetaLinq.Generator;
 
 public enum ResultType { ToInstance, OrderBy }
-public record PieceOfWork(EmitContext[] Contexts) {
-    public int LastLevel => Contexts.Last().Level;
-    public int TopLevel = Contexts.First().Level;
-    public bool SameSize => Contexts.All(x => x.Node is not (WhereNode or SkipWhileNode or TakeWhileNode or SelectManyNode));
+public record PieceOfWork(EmitContext[] Contexts, bool SameSize) {
+    public int LastLevel => Contexts.LastOrDefault()?.Level ?? 100000 - 1; //TODO index
+    public int TopLevel => Contexts.FirstOrDefault()?.Level ?? 100000; //TODO index
+    //public bool SameSize => Contexts.Any() && Contexts.All(x => x.Node is not (WhereNode or SkipWhileNode or TakeWhileNode or SelectManyNode));
     public bool SameType => Contexts.All(x => x.Node is not (SelectNode or SelectManyNode));
     public ResultType ResultType 
-        => Contexts.Last().Node is OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode 
+        => Contexts.LastOrDefault()?.Node is OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode 
         ? ResultType.OrderBy 
         : ResultType.ToInstance; 
     public override string ToString() {
@@ -16,14 +16,15 @@ public record PieceOfWork(EmitContext[] Contexts) {
 }
 
 public static class PieceOfWorkExtensions {
-    public static PieceOfWork[] GetPieces(this EmitContext context) => context.GetPiecesCore().ToArray();
+    public static PieceOfWork[] GetPieces(this EmitContext context, SourceType sourceType) 
+        => context.GetPiecesCore(sourceType).ToArray();
 
-    static IEnumerable<PieceOfWork> GetPiecesCore(this EmitContext lastContext) {
+    static IEnumerable<PieceOfWork> GetPiecesCore(this EmitContext lastContext, SourceType sourceType) {
         var contexts = lastContext.GetReversedContexts().ToList();
         List<EmitContext> current = new();
-        bool sameSize = true;
+        bool sameSize = sourceType.HasCount();
         PieceOfWork CreateAndReset() {
-            var result = new PieceOfWork(current.ToArray());
+            var result = new PieceOfWork(current.ToArray(), sameSize);
             sameSize = true;
             current.Clear();
             return result;

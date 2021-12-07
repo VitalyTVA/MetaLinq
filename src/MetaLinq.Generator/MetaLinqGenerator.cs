@@ -44,6 +44,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         INamedTypeSymbol metaEnumerableType,
         INamedTypeSymbol enumerableType,
         INamedTypeSymbol listType,
+        INamedTypeSymbol? customCollectionType,
         INamedTypeSymbol? customEnumerableType
     );
 
@@ -70,7 +71,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             metaEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.MetaEnumerable")!,
             enumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Linq.Enumerable")!,
             listType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.Generic.List`1")!,
-            customEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomCollection`1")
+            customCollectionType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomCollection`1"),
+            customEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomEnumerable`1")
         );
 
         if(context.Node is InvocationExpressionSyntax invocation
@@ -139,6 +141,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         if(SymbolEqualityComparer.Default.Equals(types!.listType, returnType.OriginalDefinition))
             return SourceType.List;
         if(SymbolEqualityComparer.Default.Equals(types!.customEnumerableType, returnType.OriginalDefinition))
+            return SourceType.CustomEnumerable;
+        if(SymbolEqualityComparer.Default.Equals(types!.customCollectionType, returnType.OriginalDefinition))
             return SourceType.CustomCollection;
         throw new InvalidOperationException();
     }

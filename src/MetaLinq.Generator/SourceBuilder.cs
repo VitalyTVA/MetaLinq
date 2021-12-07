@@ -37,12 +37,11 @@ using MetaLinq.Internal;");
         }
         static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
             EmitExtensionMethod(source, builder, intermediate);
-            var sourceGenericArg = "TSource";
             using (builder.BuildType(out CodeBuilder sourceTypeBuilder, 
                 TypeModifiers.StaticClass, 
                 source.GetEnumerableSourceName(), 
                 partial: true, 
-                generics: sourceGenericArg)
+                generics: EmitContext.RootSourceType)
             ) {
                 var context = EmitContext.Root(source, intermediate);
                 EmitStruct(source, sourceTypeBuilder, context);
@@ -53,8 +52,8 @@ using MetaLinq.Internal;");
             var sourceName = source.GetEnumerableSourceName();
             var argumentName = intermediate.GetArgumentName();
             var enumerableKind = intermediate.GetEnumerableKind();
-            var methodArgumentType = intermediate.GetArgumentType("TSource", "TResult");
-            var methodEnumerableSourceType = source.GetSourceTypeName("TSource");
+            var methodArgumentType = intermediate.GetArgumentType(EmitContext.RootSourceType, "TResult");
+            var methodEnumerableSourceType = source.GetSourceTypeName(EmitContext.RootSourceType);
             var ownTypeArgsList = intermediate.GetOwnTypeArgsList("TResult");
             var ownTypeArg = intermediate.GetOwnTypeArg("TResult");
             var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(0)}{ownTypeArgsList}";
@@ -229,18 +228,18 @@ next{level + 1}:
 
         static void EmitLoop(SourceType source, CodeBuilder builder, int level, string sourceExpression, Action<CodeBuilder> emitBody) {
             builder.AppendLine($"var source{level} = {sourceExpression};");
-            if(source == SourceType.Array) {
+            if(source.HasIndexer()) {
                 builder.AppendMultipleLines($@"
-var len{level} = source{level}.Length;
+var len{level} = source{level}.{source.GetCountName()};
 for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
     var item{level} = source{level}[i{level}];");
             }
-            if(source == SourceType.List || source == SourceType.CustomCollection)
+            if(!source.HasIndexer())
                 builder.AppendMultipleLines($@"
 int i{level} = 0;
 foreach(var item{level} in source{level}) {{");
             emitBody(builder.Tab);
-            if(source == SourceType.List || source == SourceType.CustomCollection)
+            if(!source.HasIndexer())
                 builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
@@ -259,7 +258,7 @@ foreach(var item{level} in source{level}) {{");
             };
             builder.AppendLine($"public {methodDefinition} {{");
 
-            var pieces = context.GetPieces();
+            var pieces = context.GetPieces(source);
             foreach(var piece in pieces) {
                 bool first = pieces.First() == piece;
                 bool last = pieces.Last() == piece;
@@ -267,7 +266,7 @@ foreach(var item{level} in source{level}) {{");
                     first ? source : SourceType.Array,
                     last ? toInstanceType : default,
                     builder,
-                    first ? "this" + sourcePath : "result_" + (piece.TopLevel - 1), 
+                    first ? "this" + sourcePath : "result_" +((piece.TopLevel - 1) >= 0 ? piece.TopLevel - 1 : 100000), //TODO index 
                     piece,
                     context.Level);
             }
@@ -276,8 +275,6 @@ foreach(var item{level} in source{level}) {{");
         }
 
         static void EmitPieceOrWork(SourceType source, ToInstanceType toInstanceType, CodeBuilder builder, string sourcePath, PieceOfWork piece, int totalLevels) {
-            var lastContext = piece.Contexts.Last();
-            var outputType = lastContext.GetOutputType();
 
             var topLevel = piece.TopLevel;
             var lastLevel = piece.LastLevel;
@@ -302,24 +299,23 @@ foreach(var item{level} in source{level}) {{");
         }
 
         static (string init, string add, string result) GetArrayBuilder(SourceType source, ToInstanceType? toInstanceType, string sourcePath, PieceOfWork piece) {
-            var lastContext = piece.Contexts.Last();
-            var outputType = lastContext.GetOutputType();
+            var sourceGenericArg = piece.Contexts.LastOrDefault()?.SourceGenericArg ?? EmitContext.RootSourceType;
+            var outputType = piece.Contexts.LastOrDefault()?.GetOutputType() ?? EmitContext.RootSourceType;
             var topLevel = piece.TopLevel;
             var lastLevel = piece.LastLevel;
 
-            var countExpression = $"{sourcePath}.{source.GetCountName()}";
-            var capacityExpression = piece.SameSize ? countExpression : null;
+            var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
             switch((piece.SameSize, piece.ResultType, toInstanceType)) {
                 case (false, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
                         $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
                         $"result{topLevel}.Add(item{lastLevel + 1});",
-                        $@"var result_{lastLevel} = result{topLevel}.ToArray();"
+                        $@"var result_{(topLevel == 100000 ? topLevel : lastLevel)} = result{topLevel}.ToArray();" //TODO index
                     );
                 case (true, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
-                        $"var result{topLevel} = new {outputType}[{countExpression}];",
+                        $"var result{topLevel} = new {outputType}[{capacityExpression}];",
                         $"result{topLevel}[i{topLevel}] = item{lastLevel + 1};",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
@@ -341,7 +337,7 @@ foreach(var item{level} in source{level}) {{");
                         .Select(x => (sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
                         .ToArray();
                     var sortKeyVars = order.Select((x, i) => {
-                        return $"var sortKeys{topLevel}_{i} = new {x.sortKeyGenericType}[{countExpression}];\r\n";
+                        return $"var sortKeys{topLevel}_{i} = new {x.sortKeyGenericType}[{capacityExpression}];\r\n";
                     });
                     var sortKeyAssigns = order.Select((x, i) => {
                         return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{lastLevel + 2 - order.Length + i};\r\n";
@@ -363,12 +359,12 @@ foreach(var item{level} in source{level}) {{");
                     var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
                     var resultExpression = $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)";
                     if(toInstanceType == ToInstanceType.ToHashSet)
-                        resultExpression = $"new HashSet<{lastContext.SourceGenericArg}>({resultExpression})";
+                        resultExpression = $"new HashSet<{sourceGenericArg}>({resultExpression})";
                     if(toInstanceType == ToInstanceType.ToDictionary)
                         resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
-                    bool useSourceInSort = piece.SameType && source != SourceType.CustomCollection;
+                    bool useSourceInSort = piece.SameType && source.HasIndexer();
                     return (
-@$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"new {lastContext.SourceGenericArg}[{capacityExpression}]")};
+@$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"new {sourceGenericArg}[{capacityExpression}]")};
 {string.Join(null, sortKeyVars)}
 var map{topLevel} = ArrayPool<int>.Shared.Rent({capacityExpression});",
 
@@ -389,7 +385,7 @@ var result_{lastLevel} = {resultExpression};"
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
         static void EmitLoopBody(int level, CodeBuilder builder, PieceOfWork piece, Action<CodeBuilder> finish, int totalLevels) {
-            if(level > piece.LastLevel) {
+            if(!piece.Contexts.Any() || level > piece.LastLevel) { //TODO index
                 finish(builder);
                 return;
             }
@@ -447,7 +443,7 @@ if(skipWhile{level + 1}) {{
     }
 
     public record EmitContext(int Level, IntermediateNode Node, string SourceType, string SourceGenericArg, EmitContext? Parent) {
-        const string RootSourceType = "TSource";
+        public const string RootSourceType = "TSource";
 
         public static EmitContext Root(SourceType source, IntermediateNode Node) 
             => new EmitContext(0, Node, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
@@ -481,6 +477,7 @@ if(skipWhile{level + 1}) {{
                 SourceType.List => $"List<{sourceGenericArg}>",
                 SourceType.Array => $"{sourceGenericArg}[]",
                 SourceType.CustomCollection => $"MetaLinq.Tests.CustomCollection<{sourceGenericArg}>",
+                SourceType.CustomEnumerable => $"MetaLinq.Tests.CustomEnumerable<{sourceGenericArg}>",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -502,6 +499,7 @@ if(skipWhile{level + 1}) {{
                 SourceType.List => "List",
                 SourceType.Array => "Array",
                 SourceType.CustomCollection => "CustomCollection",
+                SourceType.CustomEnumerable => "CustomEnumerable",
                 _ => throw new NotImplementedException(),
             };
         }
