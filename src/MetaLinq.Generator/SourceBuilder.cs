@@ -138,21 +138,21 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
             var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(context.Level)}{ownTypeArgsList}";
             builder.AppendLine("#nullable disable");
             var selectManyLevels = contexts
-                .Select((x, i) => (x, i))
-                .Where(x => x.x.Node is SelectManyNode)
-                .Select(x => (index: x.i + 1, node: (SelectManyNode)x.x.Node, outputType: x.x.GetOutputType()))
+                .Where(x => x.Node is SelectManyNode)
+                .Select(x => (index: x.Level.Next, node: (SelectManyNode)x.Node, outputType: x.GetOutputType()))
                 .ToArray();
             using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
+                
                 enumeratorBuilder.AppendMultipleLines($@"
 readonly {enumerableTypeName} source;
-int i0;
+int i{Level.Zero};
 {string.Concat(selectManyLevels.Select(x => $"int i{x.index};\r\n"))}
 {string.Concat(selectManyLevels.Select(x => $"{x.node.SourceType.GetSourceTypeName(x.outputType)} source{x.index};\r\n"))}
 {outputType} current;
 int state;
 public {CodeGenerationTraits.EnumeratorTypeName}({enumerableTypeName} source) {{
     this.source = source;
-    i0 = -1;
+    i{Level.Zero} = -1;
 {string.Concat(selectManyLevels.Select(x => $"    i{x.index} = -1;\r\n    source{x.index} = default;"))}
     current = default;
     state = -1;
@@ -162,20 +162,20 @@ public bool MoveNext() {{
     if(state == 0) //in progress
         goto next{(selectManyLevels.Any() ? selectManyLevels.Last().index : 0)};
     if(state == -1) //start
-        goto next0;
+        goto next{Level.Zero};
     return false; //finished
-next0:
-    i0++;
-    var source0 = this.source{CodeGenerationTraits.GetSourcePath(contexts.Length)};
-    if(i0 == source0.{countName}) {{
+next{Level.Zero}:
+    i{Level.Zero}++;
+    var source{Level.Zero} = this.source{CodeGenerationTraits.GetSourcePath(contexts.Length)};
+    if(i{Level.Zero} == source{Level.Zero}.{countName}) {{
         state = 1;
         return false;
     }}
-    var item0 = source0[i0];");
+    var item{Level.Zero} = source{Level.Zero}[i{Level.Zero}];");
                 foreach(var item in contexts) {
                     EmitEnumeratorLevel(enumeratorBuilder.Tab, item, contexts.Length);
                 }
-                builder.Tab.Tab.AppendLine($"current = item{contexts.Length};");
+                builder.Tab.Tab.AppendLine($"current = item{new Level(contexts.Length)};");
                 enumeratorBuilder.AppendMultipleLines($@"
     state = 0;
     return true;
@@ -196,29 +196,29 @@ IEnumerator IEnumerable.GetEnumerator() {{
 ");
         }
 
-        static void EmitEnumeratorLevel(CodeBuilder builder, EmitContext context, int totalLevels) {
+        static void EmitEnumeratorLevel(CodeBuilder builder, EmitContext context, Level totalLevels) {
             var level = context.Level;
             var intermediate = context.Node;
-            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels - 1 - level);
+            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Value - 1 - level.Value);
             switch(intermediate) {
                 case WhereNode:
                     builder.AppendMultipleLines($@"
-var item{level + 1} = item{level};
-if(!source{sourcePath}.predicate(item{level + 1}))
+var item{level.Next} = item{level};
+if(!source{sourcePath}.predicate(item{level.Next}))
     goto next{context.GetLabelIndex(skip: 0)};");
                     break;
                 case SelectNode:
-                    builder.AppendLine($@"var item{level + 1} = source{sourcePath}.selector(item{level});");
+                    builder.AppendLine($@"var item{level.Next} = source{sourcePath}.selector(item{level});");
                     break;
                 case SelectManyNode selectMany:
                     builder.Return!.AppendMultipleLines($@"
-    source{level + 1} = source{sourcePath}.selector(item{level});
-    i{level + 1} = -1;
-next{level + 1}:
-    i{level + 1}++;
-    if(i{level + 1} == source{level + 1}.{selectMany.SourceType.GetCountName()})
+    source{level.Next} = source{sourcePath}.selector(item{level});
+    i{level.Next} = -1;
+next{level.Next}:
+    i{level.Next}++;
+    if(i{level.Next} == source{level.Next}.{selectMany.SourceType.GetCountName()})
         goto next{context.GetLabelIndex(skip: 1)};
-    var item{level + 1} = source{level + 1}[i{level + 1}];");
+    var item{level.Next} = source{level.Next}[i{level.Next}];");
                     break;
                 default:
                     throw new NotImplementedException();
@@ -226,21 +226,21 @@ next{level + 1}:
             }
         }
 
-        static void EmitLoop(SourceType source, CodeBuilder builder, int level, string sourceExpression, Action<CodeBuilder> emitBody) {
-            builder.AppendLine($"var source{LevelToString(level)} = {sourceExpression};");
+        static void EmitLoop(SourceType source, CodeBuilder builder, Level level, string sourceExpression, Action<CodeBuilder> emitBody) {
+            builder.AppendLine($"var source{level} = {sourceExpression};");
             if(source.HasIndexer()) {
                 builder.AppendMultipleLines($@"
-var len{LevelToString(level)} = source{LevelToString(level)}.{source.GetCountName()};
-for(int i{LevelToString(level)} = 0; i{LevelToString(level)} < len{LevelToString(level)}; i{LevelToString(level)}++) {{
+var len{level} = source{level}.{source.GetCountName()};
+for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
     var item{level} = source{level}[i{level}];");
             }
             if(!source.HasIndexer())
                 builder.AppendMultipleLines($@"
-int i{LevelToString(level)} = 0;
-foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
+int i{level} = 0;
+foreach(var item{level} in source{level}) {{");
             emitBody(builder.Tab);
             if(!source.HasIndexer())
-                builder.AppendLine($"i{LevelToString(level)}++;");
+                builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
         enum ToInstanceType { ToArray, ToHashSet, ToDictionary };
@@ -248,7 +248,7 @@ foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
             IntermediateNode intermediate = context.Node;
             var outputType = context.GetOutputType();
 
-            var sourcePath = CodeGenerationTraits.GetSourcePath(context.Level + 1);
+            var sourcePath = CodeGenerationTraits.GetSourcePath(context.Level.Next.Value);
 
             var methodDefinition = toInstanceType switch {
                 ToInstanceType.ToArray => $"{outputType}[] ToArray()",
@@ -266,7 +266,7 @@ foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
                     first ? source : SourceType.Array,
                     last ? toInstanceType : default,
                     builder,
-                    first ? "this" + sourcePath : "result_" +LevelToString(piece.TopLevel - 1), //TODO index 
+                    first ? "this" + sourcePath : "result_" + piece.TopLevel.Prev,
                     piece,
                     context.Level);
             }
@@ -274,7 +274,7 @@ foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
             builder.AppendLine("}");
         }
 
-        static void EmitPieceOrWork(SourceType source, ToInstanceType toInstanceType, CodeBuilder builder, string sourcePath, PieceOfWork piece, int totalLevels) {
+        static void EmitPieceOrWork(SourceType source, ToInstanceType toInstanceType, CodeBuilder builder, string sourcePath, PieceOfWork piece, Level totalLevels) {
 
             var topLevel = piece.TopLevel;
             var lastLevel = piece.LastLevel;
@@ -284,7 +284,7 @@ foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
 
             foreach(var item in piece.Contexts) {
                 if(item.Node is SkipWhileNode)
-                    builder.Tab.AppendLine($"var skipWhile{item.Level + 1} = true;");
+                    builder.Tab.AppendLine($"var skipWhile{item.Level.Next} = true;");
             }
 
             EmitLoop(source, builder.Tab, topLevel, sourcePath,
@@ -292,12 +292,11 @@ foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
 
             foreach(var item in piece.Contexts) {
                 if(item.Node is TakeWhileNode)
-                    builder.Tab.AppendLine($"takeWhile{item.Level + 1}:");
+                    builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
             }
 
             builder.Tab.AppendMultipleLines(result);
         }
-        static string LevelToString(int level) => level >= 0 ? level.ToString() : "__" + (-level).ToString();
         static (string init, string add, string result) GetArrayBuilder(SourceType source, ToInstanceType? toInstanceType, string sourcePath, PieceOfWork piece) {
             var sourceGenericArg = piece.Contexts.LastOrDefault()?.SourceGenericArg ?? EmitContext.RootSourceType;
             var outputType = piece.Contexts.LastOrDefault()?.GetOutputType() ?? EmitContext.RootSourceType;
@@ -309,26 +308,26 @@ foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
             switch((piece.SameSize, piece.ResultType, toInstanceType)) {
                 case (false, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
-                        $"using var result{LevelToString(topLevel)} = new LargeArrayBuilder<{outputType}>();",
-                        $"result{LevelToString(topLevel)}.Add(item{LevelToString(lastLevel + 1)});",
-                        $@"var result_{LevelToString(lastLevel)} = result{LevelToString(topLevel)}.ToArray();" //TODO index
+                        $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
+                        $"result{topLevel}.Add(item{lastLevel.Next});",
+                        $@"var result_{lastLevel} = result{topLevel}.ToArray();"
                     );
                 case (true, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
                         $"var result{topLevel} = new {outputType}[{capacityExpression}];",
-                        $"result{topLevel}[i{topLevel}] = item{lastLevel + 1};",
+                        $"result{topLevel}[i{topLevel}] = item{lastLevel.Next};",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
                 case (_, ResultType.ToInstance, ToInstanceType.ToHashSet):
                     return (
                         $"var result{topLevel} = new HashSet<{outputType}>({capacityExpression});",
-                        $"result{topLevel}.Add(item{lastLevel + 1});",
+                        $"result{topLevel}.Add(item{lastLevel.Next});",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
                 case (_, ResultType.ToInstance, ToInstanceType.ToDictionary):
                     return (
                         $"var result{topLevel} = new Dictionary<TKey, {outputType}>({capacityExpression});",
-                        $"result{topLevel}.Add(keySelector(item{lastLevel + 1}), item{lastLevel + 1});",
+                        $"result{topLevel}.Add(keySelector(item{lastLevel.Next}), item{lastLevel.Next});",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
                 case (true, ResultType.OrderBy, _):
@@ -340,7 +339,7 @@ foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
                         return $"var sortKeys{topLevel}_{i} = new {x.sortKeyGenericType}[{capacityExpression}];\r\n";
                     });
                     var sortKeyAssigns = order.Select((x, i) => {
-                        return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{lastLevel + 2 - order.Length + i};\r\n";
+                        return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{new Level(lastLevel.Value + 2 - order.Length + i)};\r\n";
                     });
                     List<string> comparerTypes = new();
                     foreach(var (sortKeyGenericType, descending) in order.Reverse()) {
@@ -384,60 +383,60 @@ var result_{lastLevel} = {resultExpression};"
             var outputType = context.GetOutputType();
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
-        static void EmitLoopBody(int level, CodeBuilder builder, PieceOfWork piece, Action<CodeBuilder> finish, int totalLevels) {
-            if(level > piece.LastLevel) { //TODO index
+        static void EmitLoopBody(Level level, CodeBuilder builder, PieceOfWork piece, Action<CodeBuilder> finish, Level totalLevels) {
+            if(level.Value > piece.LastLevel.Value) {
                 finish(builder);
                 return;
             }
-            void EmitNext(CodeBuilder nextBuilder) => EmitLoopBody(level + 1, nextBuilder, piece, finish, totalLevels);
+            void EmitNext(CodeBuilder nextBuilder) => EmitLoopBody(level.Next, nextBuilder, piece, finish, totalLevels);
             if(!piece.Contexts.Any()) {
-                builder.AppendLine($@"var item{level + 1} = item{LevelToString(level)};");
+                builder.AppendLine($@"var item{level.Next} = item{level};");
                 EmitNext(builder.Tab);
                 return;
             }
-            var intermediate = piece.Contexts[level - piece.TopLevel].Node;
-            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels - level);
+            var intermediate = piece.Contexts[level.Value - piece.TopLevel.Value].Node;
+            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Value - level.Value);
             switch(intermediate) {
                 case WhereNode:
                     builder.AppendMultipleLines($@"
-var item{level + 1} = item{level};
-if(!this{sourcePath}.predicate(item{level + 1}))
+var item{level.Next} = item{level};
+if(!this{sourcePath}.predicate(item{level.Next}))
     continue;");
                     EmitNext(builder);
                     break;
                 case TakeWhileNode:
                     builder.AppendMultipleLines($@"
-var item{level + 1} = item{level};
-if(!this{sourcePath}.predicate(item{level + 1}))
-    goto takeWhile{level + 1};");
+var item{level.Next} = item{level};
+if(!this{sourcePath}.predicate(item{level.Next}))
+    goto takeWhile{level.Next};");
                     EmitNext(builder);
                     break;
                 case SkipWhileNode:
                     builder.AppendMultipleLines($@"
-var item{level + 1} = item{level};
-if(skipWhile{level + 1}) {{
-    if(this{sourcePath}.predicate(item{level + 1})) {{
+var item{level.Next} = item{level};
+if(skipWhile{level.Next}) {{
+    if(this{sourcePath}.predicate(item{level.Next})) {{
         continue;
     }} else {{
-        skipWhile{level + 1} = false;
+        skipWhile{level.Next} = false;
     }}
 }}");
                     EmitNext(builder);
                     break;
                 case SelectNode:
-                    builder.AppendLine($@"var item{level + 1} = this{sourcePath}.selector(item{level});");
+                    builder.AppendLine($@"var item{level.Next} = this{sourcePath}.selector(item{level});");
                     EmitNext(builder);
                     break;
                 case SelectManyNode selectMany:
-                    EmitLoop(selectMany.SourceType, builder, level + 1, $"this{sourcePath}.selector(item{level})",
+                    EmitLoop(selectMany.SourceType, builder, level.Next, $"this{sourcePath}.selector(item{level})",
                         bodyBuilder => EmitNext(bodyBuilder));
                     break;
                 case OrderByNode or OrderByDescendingNode:
-                    builder.AppendLine($"var item{level + 1} = this{sourcePath}.keySelector(item{level});");
+                    builder.AppendLine($"var item{level.Next} = this{sourcePath}.keySelector(item{level});");
                     EmitNext(builder);
                     break;
                 case ThenByNode or ThenByDescendingNode:
-                    builder.AppendLine($"var item{level + 1} = this{sourcePath}.keySelector(item{piece.GetOrderByLevel()});");
+                    builder.AppendLine($"var item{level.Next} = this{sourcePath}.keySelector(item{piece.GetOrderByLevel()});");
                     EmitNext(builder);
                     break;
                 default:
@@ -447,19 +446,31 @@ if(skipWhile{level + 1}) {{
         }
     }
 
-    public record EmitContext(int Level, IntermediateNode Node, string SourceType, string SourceGenericArg, EmitContext? Parent) {
+    public record EmitContext(Level Level, IntermediateNode Node, string SourceType, string SourceGenericArg, EmitContext? Parent) {
         public const string RootSourceType = "TSource";
 
         public static EmitContext Root(SourceType source, IntermediateNode Node) 
             => new EmitContext(0, Node, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
 
         public EmitContext Next(IntermediateNode node)
-            => new EmitContext(Level + 1, node, Node.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
+            => new EmitContext(Level.Next, node, Node.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
+    }
+    public record struct Level {
+        public static Level MinusOne => -1;
+        public static Level Zero => 0;
+        public static implicit operator Level(int value) => new Level(value);
+        public int Value { get; }
+        public Level(int value) {
+            Value = value;
+        }
+        public override string ToString() => (Value + 1).ToString();
+        public Level Next => Value + 1;
+        public Level Prev => Value - 1;
     }
 
     public static class CodeGenerationTraits {
-        public static int GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Node is OrderByNode or OrderByDescendingNode).Level;
-        public static string GetEnumerableTypeName(this IntermediateNode intermediate, int level) {
+        public static Level GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Node is OrderByNode or OrderByDescendingNode).Level;
+        public static string GetEnumerableTypeName(this IntermediateNode intermediate, Level level) {
             var enumerableKind = intermediate.GetEnumerableKind();
             var sourceTypePart = intermediate switch {
                 SelectManyNode selectMany => "_" + selectMany.SourceType.GetEnumerableSourceNameShort(),
@@ -561,8 +572,8 @@ if(skipWhile{level + 1}) {{
                 _ => throw new NotImplementedException(),
             };
         }
-        public static int GetLabelIndex(this EmitContext context, int skip) {
-            return context.GetContexts().Where(x => x.Node is SelectManyNode).Skip(skip).FirstOrDefault()?.Level + 1 ?? 0;
+        public static Level GetLabelIndex(this EmitContext context, int skip) {
+            return context.GetContexts().Where(x => x.Node is SelectManyNode).Skip(skip).FirstOrDefault()?.Level.Next ?? 0;
         }
     }
 }

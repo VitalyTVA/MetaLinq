@@ -522,7 +522,7 @@ public class GenerationTests : BaseFixture {
                 })
             })
         },
-        assertGeneratedCode: x => StringAssert.Contains("new HashSet<T2_Result>(result_1.Length)", x.Single())
+        assertGeneratedCode: x => StringAssert.Contains("new HashSet<T3_Result>(result_2.Length)", x.Single())
     );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
@@ -544,7 +544,7 @@ public class GenerationTests : BaseFixture {
                 })
             })
         },
-        assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T2_Result>(result_1.Length)", x.Single())
+        assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T3_Result>(result_2.Length)", x.Single())
     );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
@@ -1076,7 +1076,7 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ToHashSet")
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T0_Result>(this.source.Length)", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T1_Result>(this.source.Length)", x.Single())
         );
     }
     [Test]
@@ -1089,7 +1089,7 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ToDictionary")
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T0_Result>(this.source.Length)", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T1_Result>(this.source.Length)", x.Single())
         );
     }
     [Test]
@@ -1114,7 +1114,7 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ToDictionary")
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T0_Result>(this.source.Count)", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T1_Result>(this.source.Count)", x.Single())
         );
     }
     [Test]
@@ -1297,7 +1297,7 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ToHashSet")
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T0_Result>()", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T1_Result>()", x.Single())
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
@@ -1316,7 +1316,7 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ToDictionary")
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T0_Result>()", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T1_Result>()", x.Single())
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
@@ -1610,7 +1610,7 @@ static Data[] source = Data.Array(3);",
                     })
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T0_Result>()", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T1_Result>()", x.Single())
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
