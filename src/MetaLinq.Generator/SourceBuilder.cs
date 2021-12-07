@@ -56,7 +56,7 @@ using MetaLinq.Internal;");
             var methodEnumerableSourceType = source.GetSourceTypeName(EmitContext.RootSourceType);
             var ownTypeArgsList = intermediate.GetOwnTypeArgsList("TResult");
             var ownTypeArg = intermediate.GetOwnTypeArg("TResult");
-            var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(0)}{ownTypeArgsList}";
+            var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(Level.Zero)}{ownTypeArgsList}";
             
             using (builder.BuildType(out CodeBuilder classBuilder, TypeModifiers.StaticClass, "MetaEnumerable", partial: true))
             {
@@ -160,7 +160,7 @@ public {CodeGenerationTraits.EnumeratorTypeName}({enumerableTypeName} source) {{
 public {outputType} Current => current;
 public bool MoveNext() {{
     if(state == 0) //in progress
-        goto next{(selectManyLevels.Any() ? selectManyLevels.Last().index : 0)};
+        goto next{(selectManyLevels.Any() ? selectManyLevels.Last().index : Level.Zero)};
     if(state == -1) //start
         goto next{Level.Zero};
     return false; //finished
@@ -172,10 +172,11 @@ next{Level.Zero}:
         return false;
     }}
     var item{Level.Zero} = source{Level.Zero}[i{Level.Zero}];");
+                var finalLevel = contexts.Last().Level.Next;
                 foreach(var item in contexts) {
-                    EmitEnumeratorLevel(enumeratorBuilder.Tab, item, contexts.Length);
+                    EmitEnumeratorLevel(enumeratorBuilder.Tab, item, finalLevel);
                 }
-                builder.Tab.Tab.AppendLine($"current = item{new Level(contexts.Length)};");
+                builder.Tab.Tab.AppendLine($"current = item{finalLevel};");
                 enumeratorBuilder.AppendMultipleLines($@"
     state = 0;
     return true;
@@ -199,7 +200,7 @@ IEnumerator IEnumerable.GetEnumerator() {{
         static void EmitEnumeratorLevel(CodeBuilder builder, EmitContext context, Level totalLevels) {
             var level = context.Level;
             var intermediate = context.Node;
-            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Value - 1 - level.Value);
+            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Prev.Minus(level));
             switch(intermediate) {
                 case WhereNode:
                     builder.AppendMultipleLines($@"
@@ -333,16 +334,16 @@ foreach(var item{level} in source{level}) {{");
                 case (true, ResultType.OrderBy, _):
                     var order = piece.Contexts
                         .SkipWhile(x => x.Node is not (OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode))
-                        .Select(x => (sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
+                        .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
                         .ToArray();
                     var sortKeyVars = order.Select((x, i) => {
                         return $"var sortKeys{topLevel}_{i} = new {x.sortKeyGenericType}[{capacityExpression}];\r\n";
                     });
                     var sortKeyAssigns = order.Select((x, i) => {
-                        return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{new Level(lastLevel.Value + 2 - order.Length + i)};\r\n";
+                        return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{order.First().Level.Offset(i + 1)};\r\n";
                     });
                     List<string> comparerTypes = new();
-                    foreach(var (sortKeyGenericType, descending) in order.Reverse()) {
+                    foreach(var (_, sortKeyGenericType, descending) in order.Reverse()) {
                         var last = comparerTypes.LastOrDefault();
                         var suffix = descending ? "Descending" : null;
                         if(last != null)
@@ -384,7 +385,7 @@ var result_{lastLevel} = {resultExpression};"
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
         static void EmitLoopBody(Level level, CodeBuilder builder, PieceOfWork piece, Action<CodeBuilder> finish, Level totalLevels) {
-            if(level.Value > piece.LastLevel.Value) {
+            if(level.Minus(piece.LastLevel) > 0) {
                 finish(builder);
                 return;
             }
@@ -394,8 +395,8 @@ var result_{lastLevel} = {resultExpression};"
                 EmitNext(builder.Tab);
                 return;
             }
-            var intermediate = piece.Contexts[level.Value - piece.TopLevel.Value].Node;
-            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Value - level.Value);
+            var intermediate = piece.Contexts[level.Minus(piece.TopLevel)].Node;
+            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Minus(level));
             switch(intermediate) {
                 case WhereNode:
                     builder.AppendMultipleLines($@"
@@ -450,22 +451,23 @@ if(skipWhile{level.Next}) {{
         public const string RootSourceType = "TSource";
 
         public static EmitContext Root(SourceType source, IntermediateNode Node) 
-            => new EmitContext(0, Node, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
+            => new EmitContext(Level.Zero, Node, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
 
         public EmitContext Next(IntermediateNode node)
             => new EmitContext(Level.Next, node, Node.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
     }
     public record struct Level {
-        public static Level MinusOne => -1;
-        public static Level Zero => 0;
-        public static implicit operator Level(int value) => new Level(value);
+        public static Level MinusOne => new Level(-1);
+        public static Level Zero => new Level(0);
         public int Value { get; }
-        public Level(int value) {
+        Level(int value) {
             Value = value;
         }
         public override string ToString() => (Value + 1).ToString();
-        public Level Next => Value + 1;
-        public Level Prev => Value - 1;
+        public Level Next => new Level(Value + 1);
+        public Level Prev => new Level(Value - 1);
+        public int Minus(Level level) => Value - level.Value;
+        public Level Offset(int value) => new Level(Value + value);
     }
 
     public static class CodeGenerationTraits {
@@ -573,7 +575,7 @@ if(skipWhile{level.Next}) {{
             };
         }
         public static Level GetLabelIndex(this EmitContext context, int skip) {
-            return context.GetContexts().Where(x => x.Node is SelectManyNode).Skip(skip).FirstOrDefault()?.Level.Next ?? 0;
+            return context.GetContexts().Where(x => x.Node is SelectManyNode).Skip(skip).FirstOrDefault()?.Level.Next ?? Level.Zero;
         }
     }
 }
