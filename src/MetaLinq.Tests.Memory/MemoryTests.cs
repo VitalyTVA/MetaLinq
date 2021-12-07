@@ -47,7 +47,7 @@ public class Tests {
     static List<TestData> testDataList;
     static int[] intArray = Enumerable.ToArray(Enumerable.Range(0, 5));
     static List<int> intList = Enumerable.ToList(Enumerable.Range(0, 5));
-    static CustomEnumerable<int> intCustomEnumerable = new CustomEnumerable<int>(Enumerable.ToArray(Enumerable.Range(0, 5)));
+    static CustomCollection<int> intCustomCollection = new CustomCollection<int>(Enumerable.ToArray(Enumerable.Range(0, 5)));
 
     class Foo { }
     class Bar { }
@@ -183,8 +183,8 @@ public class Tests {
         MemoryTestHelper.AssertDifference(() => intList.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
     }
     [Test]
-    public static void CustomEnumerable_Where_ToArray() {
-        MemoryTestHelper.AssertDifference(() => intCustomEnumerable.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
+    public static void CustomCollection_Where_ToArray() {
+        MemoryTestHelper.AssertDifference(() => intCustomCollection.Where(static x => x < 3).ToArray(), ExpectedArrayOfIntsAllocations());
     }
     [Test]
     public static void List_Where_Foreach() {

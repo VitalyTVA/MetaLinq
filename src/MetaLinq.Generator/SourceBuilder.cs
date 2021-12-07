@@ -235,12 +235,12 @@ var len{level} = source{level}.Length;
 for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
     var item{level} = source{level}[i{level}];");
             }
-            if(source == SourceType.List || source == SourceType.CustomEnumerable)
+            if(source == SourceType.List || source == SourceType.CustomCollection)
                 builder.AppendMultipleLines($@"
 int i{level} = 0;
 foreach(var item{level} in source{level}) {{");
             emitBody(builder.Tab);
-            if(source == SourceType.List || source == SourceType.CustomEnumerable)
+            if(source == SourceType.List || source == SourceType.CustomCollection)
                 builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
@@ -366,7 +366,7 @@ foreach(var item{level} in source{level}) {{");
                         resultExpression = $"new HashSet<{lastContext.SourceGenericArg}>({resultExpression})";
                     if(toInstanceType == ToInstanceType.ToDictionary)
                         resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
-                    bool useSourceInSort = piece.SameType && source != SourceType.CustomEnumerable;
+                    bool useSourceInSort = piece.SameType && source != SourceType.CustomCollection;
                     return (
 @$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"new {lastContext.SourceGenericArg}[{capacityExpression}]")};
 {string.Join(null, sortKeyVars)}
@@ -480,7 +480,7 @@ if(skipWhile{level + 1}) {{
             return source switch {
                 SourceType.List => $"List<{sourceGenericArg}>",
                 SourceType.Array => $"{sourceGenericArg}[]",
-                SourceType.CustomEnumerable => $"MetaLinq.Tests.CustomEnumerable<{sourceGenericArg}>",
+                SourceType.CustomCollection => $"MetaLinq.Tests.CustomCollection<{sourceGenericArg}>",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -501,7 +501,7 @@ if(skipWhile{level + 1}) {{
             return source switch {
                 SourceType.List => "List",
                 SourceType.Array => "Array",
-                SourceType.CustomEnumerable => "CustomEnumerable",
+                SourceType.CustomCollection => "CustomCollection",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -554,7 +554,7 @@ if(skipWhile{level + 1}) {{
             return source switch {
                 SourceType.List => "Count",
                 SourceType.Array => "Length",
-                SourceType.CustomEnumerable => "Count",
+                SourceType.CustomCollection => "Count",
                 _ => throw new NotImplementedException(),
             };
         }

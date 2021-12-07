@@ -1,11 +1,11 @@
 ﻿namespace MetaLinq.Tests;
 
-public class CustomEnumerable<T> : IEnumerable<T> {
+public class CustomCollection<T> : IEnumerable<T> {
     readonly T[] data;
 
     public int Count => data.Length;
 
-    public CustomEnumerable(T[] data) {
+    public CustomCollection(T[] data) {
         this.data = data;
     }
 

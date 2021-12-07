@@ -1,6 +1,6 @@
 ﻿namespace MetaLinq.Generator;
 
-public enum SourceType { List, Array, CustomEnumerable }
+public enum SourceType { List, Array, CustomCollection }
 
 public abstract record ChainElement {
     public static ChainElement Where => WhereChainElement.Instance;
