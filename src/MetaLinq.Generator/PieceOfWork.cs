@@ -2,8 +2,8 @@
 
 public enum ResultType { ToInstance, OrderBy }
 public record PieceOfWork(EmitContext[] Contexts, bool SameSize) {
-    public int LastLevel => Contexts.LastOrDefault()?.Level ?? 100000 - 1; //TODO index
-    public int TopLevel => Contexts.FirstOrDefault()?.Level ?? 100000; //TODO index
+    public int LastLevel => Contexts.LastOrDefault()?.Level ?? -1; //TODO index
+    public int TopLevel => Contexts.FirstOrDefault()?.Level ?? -1; //TODO index
     //public bool SameSize => Contexts.Any() && Contexts.All(x => x.Node is not (WhereNode or SkipWhileNode or TakeWhileNode or SelectManyNode));
     public bool SameType => Contexts.All(x => x.Node is not (SelectNode or SelectManyNode));
     public ResultType ResultType 

@@ -227,20 +227,20 @@ next{level + 1}:
         }
 
         static void EmitLoop(SourceType source, CodeBuilder builder, int level, string sourceExpression, Action<CodeBuilder> emitBody) {
-            builder.AppendLine($"var source{level} = {sourceExpression};");
+            builder.AppendLine($"var source{LevelToString(level)} = {sourceExpression};");
             if(source.HasIndexer()) {
                 builder.AppendMultipleLines($@"
-var len{level} = source{level}.{source.GetCountName()};
-for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
+var len{LevelToString(level)} = source{LevelToString(level)}.{source.GetCountName()};
+for(int i{LevelToString(level)} = 0; i{LevelToString(level)} < len{LevelToString(level)}; i{LevelToString(level)}++) {{
     var item{level} = source{level}[i{level}];");
             }
             if(!source.HasIndexer())
                 builder.AppendMultipleLines($@"
-int i{level} = 0;
-foreach(var item{level} in source{level}) {{");
+int i{LevelToString(level)} = 0;
+foreach(var item{LevelToString(level)} in source{LevelToString(level)}) {{");
             emitBody(builder.Tab);
             if(!source.HasIndexer())
-                builder.AppendLine($"i{level}++;");
+                builder.AppendLine($"i{LevelToString(level)}++;");
             builder.AppendLine("}");
         }
         enum ToInstanceType { ToArray, ToHashSet, ToDictionary };
@@ -266,7 +266,7 @@ foreach(var item{level} in source{level}) {{");
                     first ? source : SourceType.Array,
                     last ? toInstanceType : default,
                     builder,
-                    first ? "this" + sourcePath : "result_" +((piece.TopLevel - 1) >= 0 ? piece.TopLevel - 1 : 100000), //TODO index 
+                    first ? "this" + sourcePath : "result_" +LevelToString(piece.TopLevel - 1), //TODO index 
                     piece,
                     context.Level);
             }
@@ -297,7 +297,7 @@ foreach(var item{level} in source{level}) {{");
 
             builder.Tab.AppendMultipleLines(result);
         }
-
+        static string LevelToString(int level) => level >= 0 ? level.ToString() : "__" + (-level).ToString();
         static (string init, string add, string result) GetArrayBuilder(SourceType source, ToInstanceType? toInstanceType, string sourcePath, PieceOfWork piece) {
             var sourceGenericArg = piece.Contexts.LastOrDefault()?.SourceGenericArg ?? EmitContext.RootSourceType;
             var outputType = piece.Contexts.LastOrDefault()?.GetOutputType() ?? EmitContext.RootSourceType;
@@ -309,9 +309,9 @@ foreach(var item{level} in source{level}) {{");
             switch((piece.SameSize, piece.ResultType, toInstanceType)) {
                 case (false, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
-                        $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
-                        $"result{topLevel}.Add(item{lastLevel + 1});",
-                        $@"var result_{(topLevel == 100000 ? topLevel : lastLevel)} = result{topLevel}.ToArray();" //TODO index
+                        $"using var result{LevelToString(topLevel)} = new LargeArrayBuilder<{outputType}>();",
+                        $"result{LevelToString(topLevel)}.Add(item{LevelToString(lastLevel + 1)});",
+                        $@"var result_{LevelToString(lastLevel)} = result{LevelToString(topLevel)}.ToArray();" //TODO index
                     );
                 case (true, ResultType.ToInstance, ToInstanceType.ToArray):
                     return (
@@ -385,11 +385,16 @@ var result_{lastLevel} = {resultExpression};"
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
         static void EmitLoopBody(int level, CodeBuilder builder, PieceOfWork piece, Action<CodeBuilder> finish, int totalLevels) {
-            if(!piece.Contexts.Any() || level > piece.LastLevel) { //TODO index
+            if(level > piece.LastLevel) { //TODO index
                 finish(builder);
                 return;
             }
             void EmitNext(CodeBuilder nextBuilder) => EmitLoopBody(level + 1, nextBuilder, piece, finish, totalLevels);
+            if(!piece.Contexts.Any()) {
+                builder.AppendLine($@"var item{level + 1} = item{LevelToString(level)};");
+                EmitNext(builder.Tab);
+                return;
+            }
             var intermediate = piece.Contexts[level - piece.TopLevel].Node;
             var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels - level);
             switch(intermediate) {
