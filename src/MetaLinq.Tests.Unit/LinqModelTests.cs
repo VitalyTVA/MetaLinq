@@ -223,6 +223,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void WhereFirst() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, First });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -First");
+    }
+
+    [Test]
     public void WhereToArrayAndToList() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where, ToList });

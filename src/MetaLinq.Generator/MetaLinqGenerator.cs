@@ -128,6 +128,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "ToList" => ChainElement.ToList,
             "ToHashSet" => ChainElement.ToHashSet,
             "ToDictionary" => ChainElement.ToDictionary,
+            "First" => ChainElement.First,
             _ => null
         };
     }

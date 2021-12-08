@@ -1050,6 +1050,20 @@ public class GenerationTests : BaseFixture {
             addStadardLinqUsing: true
         );
     }
+
+    [Test]
+    public void Array_Where_First() {
+        AssertGeneration(
+            "Data __() => Data.Array(10).Where(x => x.Int > 5).First(x => x.Int % 4 == 0);",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("First")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region select

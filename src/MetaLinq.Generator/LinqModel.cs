@@ -34,13 +34,14 @@ public class LinqModel {
 public abstract class LinqNode {
 }
 
-public enum TerminalNodeType { ToArray, ToList, ToHashSet, ToDictionary, Enumerable }
+public enum TerminalNodeType { ToArray, ToList, ToHashSet, ToDictionary, First, Enumerable }
 
 public sealed class TerminalNode : LinqNode {
     public static readonly TerminalNode ToArray = new(TerminalNodeType.ToArray);
     public static readonly TerminalNode ToList = new (TerminalNodeType.ToList);
     public static readonly TerminalNode ToHashSet = new (TerminalNodeType.ToHashSet);
     public static readonly TerminalNode ToDictionary = new (TerminalNodeType.ToDictionary);
+    public static readonly TerminalNode First = new (TerminalNodeType.First);
     public static readonly TerminalNode Enumerable = new(TerminalNodeType.Enumerable);
     public readonly TerminalNodeType Type;
     TerminalNode(TerminalNodeType type) {
@@ -89,6 +90,8 @@ public abstract class IntermediateNode : LinqNode {
                 return Add(static () => TerminalNode.ToHashSet);
             case ToValueChainElement { Type: ToValueChainElementType.ToDictionary }:
                 return Add(static () => TerminalNode.ToDictionary);
+            case ToValueChainElement { Type: ToValueChainElementType.First }:
+                return Add(static () => TerminalNode.First);
             default:
                 throw new InvalidOperationException();
         }

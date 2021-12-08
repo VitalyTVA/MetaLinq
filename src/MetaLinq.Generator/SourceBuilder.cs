@@ -112,6 +112,7 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
                                 TerminalNodeType.ToArray => ToValueType.ToArray, 
                                 TerminalNodeType.ToHashSet => ToValueType.ToHashSet, 
                                 TerminalNodeType.ToDictionary => ToValueType.ToDictionary, 
+                                TerminalNodeType.First=> ToValueType.First, 
                                 _ => throw new InvalidOperationException()
                             };
                             EmitToValue(source, structBuilder, context, toInstanceType);
@@ -244,7 +245,12 @@ foreach(var item{level} in source{level}) {{");
                 builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
-        enum ToValueType { ToArray, ToHashSet, ToDictionary };
+        enum ToValueType { 
+            ToArray, 
+            ToHashSet, 
+            ToDictionary,
+            First
+        }
         static void EmitToValue(SourceType source, CodeBuilder builder, EmitContext context, ToValueType toInstanceType) {
             IntermediateNode intermediate = context.Node;
             var outputType = context.GetOutputType();
@@ -255,6 +261,7 @@ foreach(var item{level} in source{level}) {{");
                 ToValueType.ToArray => $"{outputType}[] ToArray()",
                 ToValueType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
                 ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
+                ToValueType.First => $"{outputType} First(Func<{outputType}, bool> predicate)",
                 _ => throw new NotImplementedException(),
             };
             builder.AppendLine($"public {methodDefinition} {{");
@@ -307,6 +314,19 @@ foreach(var item{level} in source{level}) {{");
             var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
             switch((piece.SameSize, piece.ResultType, toInstanceType)) {
+                case (false, ResultType.ToValue, ToValueType.First):
+                    return (
+$@"var result{topLevel} = default({outputType});
+bool found{topLevel} = false;",
+$@"if(predicate(item{lastLevel.Next})) {{
+    found{topLevel} = true;
+    result{topLevel} = item{lastLevel.Next};
+}}",
+$@"if(!found{topLevel})
+    throw new InvalidOperationException();
+var result_{lastLevel} = result{topLevel}!;"
+                    );
+
                 case (false, ResultType.ToValue, ToValueType.ToArray):
                     return (
                         $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
