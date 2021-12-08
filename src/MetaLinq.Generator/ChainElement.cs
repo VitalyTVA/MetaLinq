@@ -29,10 +29,10 @@ public abstract record ChainElement {
     public static ChainElement ThenBy => ThenByChainElement.Instance;
     public static ChainElement ThenByDescending => ThenByDescendingChainElement.Instance;
     public static ChainElement SelectMany(SourceType sourceType) => new SelectManyChainElement(sourceType);
-    public static readonly ChainElement ToArray = new ToInstanceChainElement(ToInstanceChainElementType.ToArray);
-    public static readonly ChainElement ToList = new ToInstanceChainElement(ToInstanceChainElementType.ToList);
-    public static readonly ChainElement ToHashSet = new ToInstanceChainElement(ToInstanceChainElementType.ToHashSet);
-    public static readonly ChainElement ToDictionary = new ToInstanceChainElement(ToInstanceChainElementType.ToDictionary);
+    public static readonly ChainElement ToArray = new ToValueChainElement(ToValueChainElementType.ToArray);
+    public static readonly ChainElement ToList = new ToValueChainElement(ToValueChainElementType.ToList);
+    public static readonly ChainElement ToHashSet = new ToValueChainElement(ToValueChainElementType.ToHashSet);
+    public static readonly ChainElement ToDictionary = new ToValueChainElement(ToValueChainElementType.ToDictionary);
     public static ChainElement Enumerable => EnumerableChainElement.Instance;
 
     public static readonly IComparer<ChainElement> Comparer = Comparer<ChainElement>.Create((x1, x2) => {
@@ -43,8 +43,8 @@ public abstract record ChainElement {
     });
 }
 
-public enum ToInstanceChainElementType { ToArray, ToList, ToHashSet, ToDictionary }
-public sealed record ToInstanceChainElement(ToInstanceChainElementType Type) : ChainElement {
+public enum ToValueChainElementType { ToArray, ToList, ToHashSet, ToDictionary }
+public sealed record ToValueChainElement(ToValueChainElementType Type) : ChainElement {
 }
 
 public sealed record EnumerableChainElement : ChainElement {

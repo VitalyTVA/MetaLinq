@@ -81,13 +81,13 @@ public abstract class IntermediateNode : LinqNode {
                 return Add(static () => new ThenByDescendingNode());
             case SelectManyChainElement selectManyNode:
                 return Add(() => new SelectManyNode(selectManyNode.SourceType));
-            case ToInstanceChainElement { Type: ToInstanceChainElementType.ToArray }:
+            case ToValueChainElement { Type: ToValueChainElementType.ToArray }:
                 return Add(static () => TerminalNode.ToArray);
-            case ToInstanceChainElement { Type: ToInstanceChainElementType.ToList }:
+            case ToValueChainElement { Type: ToValueChainElementType.ToList }:
                 return Add(static () => TerminalNode.ToList);
-            case ToInstanceChainElement { Type: ToInstanceChainElementType.ToHashSet }:
+            case ToValueChainElement { Type: ToValueChainElementType.ToHashSet }:
                 return Add(static () => TerminalNode.ToHashSet);
-            case ToInstanceChainElement { Type: ToInstanceChainElementType.ToDictionary }:
+            case ToValueChainElement { Type: ToValueChainElementType.ToDictionary }:
                 return Add(static () => TerminalNode.ToDictionary);
             default:
                 throw new InvalidOperationException();

@@ -109,12 +109,12 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
                             break;
                         case TerminalNode terminalNode:
                             var toInstanceType = terminalNode.Type switch { 
-                                TerminalNodeType.ToArray => ToInstanceType.ToArray, 
-                                TerminalNodeType.ToHashSet => ToInstanceType.ToHashSet, 
-                                TerminalNodeType.ToDictionary => ToInstanceType.ToDictionary, 
+                                TerminalNodeType.ToArray => ToValueType.ToArray, 
+                                TerminalNodeType.ToHashSet => ToValueType.ToHashSet, 
+                                TerminalNodeType.ToDictionary => ToValueType.ToDictionary, 
                                 _ => throw new InvalidOperationException()
                             };
-                            EmitToInstance(source, structBuilder, context, toInstanceType);
+                            EmitToValue(source, structBuilder, context, toInstanceType);
                             break;
                         case IntermediateNode nextIntermediate:
                             var nextContext = context.Next(nextIntermediate);
@@ -244,17 +244,17 @@ foreach(var item{level} in source{level}) {{");
                 builder.AppendLine($"i{level}++;");
             builder.AppendLine("}");
         }
-        enum ToInstanceType { ToArray, ToHashSet, ToDictionary };
-        static void EmitToInstance(SourceType source, CodeBuilder builder, EmitContext context, ToInstanceType toInstanceType) {
+        enum ToValueType { ToArray, ToHashSet, ToDictionary };
+        static void EmitToValue(SourceType source, CodeBuilder builder, EmitContext context, ToValueType toInstanceType) {
             IntermediateNode intermediate = context.Node;
             var outputType = context.GetOutputType();
 
             var sourcePath = CodeGenerationTraits.GetSourcePath(context.Level.Next.Value);
 
             var methodDefinition = toInstanceType switch {
-                ToInstanceType.ToArray => $"{outputType}[] ToArray()",
-                ToInstanceType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
-                ToInstanceType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
+                ToValueType.ToArray => $"{outputType}[] ToArray()",
+                ToValueType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
+                ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
                 _ => throw new NotImplementedException(),
             };
             builder.AppendLine($"public {methodDefinition} {{");
@@ -275,7 +275,7 @@ foreach(var item{level} in source{level}) {{");
             builder.AppendLine("}");
         }
 
-        static void EmitPieceOrWork(SourceType source, ToInstanceType toInstanceType, CodeBuilder builder, string sourcePath, PieceOfWork piece, Level totalLevels) {
+        static void EmitPieceOrWork(SourceType source, ToValueType toInstanceType, CodeBuilder builder, string sourcePath, PieceOfWork piece, Level totalLevels) {
 
             var topLevel = piece.TopLevel;
             var lastLevel = piece.LastLevel;
@@ -298,7 +298,7 @@ foreach(var item{level} in source{level}) {{");
 
             builder.Tab.AppendMultipleLines(result);
         }
-        static (string init, string add, string result) GetArrayBuilder(SourceType source, ToInstanceType? toInstanceType, string sourcePath, PieceOfWork piece) {
+        static (string init, string add, string result) GetArrayBuilder(SourceType source, ToValueType? toInstanceType, string sourcePath, PieceOfWork piece) {
             var sourceGenericArg = piece.Contexts.LastOrDefault()?.SourceGenericArg ?? EmitContext.RootSourceType;
             var outputType = piece.Contexts.LastOrDefault()?.GetOutputType() ?? EmitContext.RootSourceType;
             var topLevel = piece.TopLevel;
@@ -307,25 +307,25 @@ foreach(var item{level} in source{level}) {{");
             var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
             switch((piece.SameSize, piece.ResultType, toInstanceType)) {
-                case (false, ResultType.ToInstance, ToInstanceType.ToArray):
+                case (false, ResultType.ToValue, ToValueType.ToArray):
                     return (
                         $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
                         $"result{topLevel}.Add(item{lastLevel.Next});",
                         $@"var result_{lastLevel} = result{topLevel}.ToArray();"
                     );
-                case (true, ResultType.ToInstance, ToInstanceType.ToArray):
+                case (true, ResultType.ToValue, ToValueType.ToArray):
                     return (
                         $"var result{topLevel} = new {outputType}[{capacityExpression}];",
                         $"result{topLevel}[i{topLevel}] = item{lastLevel.Next};",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
-                case (_, ResultType.ToInstance, ToInstanceType.ToHashSet):
+                case (_, ResultType.ToValue, ToValueType.ToHashSet):
                     return (
                         $"var result{topLevel} = new HashSet<{outputType}>({capacityExpression});",
                         $"result{topLevel}.Add(item{lastLevel.Next});",
                         $@"var result_{lastLevel} = result{topLevel};"
                     );
-                case (_, ResultType.ToInstance, ToInstanceType.ToDictionary):
+                case (_, ResultType.ToValue, ToValueType.ToDictionary):
                     return (
                         $"var result{topLevel} = new Dictionary<TKey, {outputType}>({capacityExpression});",
                         $"result{topLevel}.Add(keySelector(item{lastLevel.Next}), item{lastLevel.Next});",
@@ -358,9 +358,9 @@ foreach(var item{level} in source{level}) {{");
                         .ToArray();
                     var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
                     var resultExpression = $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)";
-                    if(toInstanceType == ToInstanceType.ToHashSet)
+                    if(toInstanceType == ToValueType.ToHashSet)
                         resultExpression = $"new HashSet<{sourceGenericArg}>({resultExpression})";
-                    if(toInstanceType == ToInstanceType.ToDictionary)
+                    if(toInstanceType == ToValueType.ToDictionary)
                         resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
                     bool useSourceInSort = piece.SameType && source.HasIndexer();
                     return (
