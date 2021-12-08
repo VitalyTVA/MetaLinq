@@ -321,6 +321,7 @@ bool found{topLevel} = false;",
 $@"if(predicate(item{lastLevel.Next})) {{
     found{topLevel} = true;
     result{topLevel} = item{lastLevel.Next};
+    break;
 }}",
 $@"if(!found{topLevel})
     throw new InvalidOperationException(""Sequence contains no matching element"");

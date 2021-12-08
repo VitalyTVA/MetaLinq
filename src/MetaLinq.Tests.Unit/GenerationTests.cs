@@ -1058,7 +1058,10 @@ public class GenerationTests : BaseFixture {
 $@"Data __() {{
     var ex = Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Where(x => x.Int > 5).First(x => x.Int == 0));
     Assert.AreEqual(""{expectedMessage}"", ex!.Message);
-    return Data.Array(10).Where(x => x.Int > 5).First(x => x.Int % 4 == 0); 
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5).First(x => x.Int % 4 == 0);
+    Assert.AreEqual(0, source[9].Int_GetCount);
+    return result;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
             new[] {
