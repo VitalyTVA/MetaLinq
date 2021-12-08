@@ -7,7 +7,7 @@ namespace MetaLinqSpikes.OrderBy;
 
 #nullable disable
 public static class Order {
-    public static IOrderedEnumerable<TSource> OrderBy__<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector) {
+    public static OrderedEnumerable<TSource> OrderBy__<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector) {
         return new OrderedEnumerable<TSource, TKey>(source, keySelector, null, descending: false, null);
     }
 	public static TSource[] ToArray__<TSource>(this IEnumerable<TSource> source) {
@@ -19,6 +19,9 @@ public static class Order {
 		}
 		return iIListProvider.ToArray();
 	}
+    public static TSource First___<TSource>(this OrderedEnumerable<TSource> source) {
+        return source.TryGetFirst(out bool _);
+    }
 }
 
 internal readonly struct Buffer<TElement> {
@@ -35,7 +38,7 @@ internal readonly struct Buffer<TElement> {
 	}
 }
 
-internal abstract class OrderedEnumerable<TElement> : IPartition<TElement>, IIListProvider<TElement>, IEnumerable<TElement>, IEnumerable, IOrderedEnumerable<TElement> {
+public abstract class OrderedEnumerable<TElement> : IPartition<TElement>, IIListProvider<TElement>, IEnumerable<TElement>, IEnumerable, IOrderedEnumerable<TElement> {
 	internal IEnumerable<TElement> _source;
 
 	public TElement[] ToArray() {
@@ -130,11 +133,11 @@ internal abstract class OrderedEnumerable<TElement> : IPartition<TElement>, IILi
 		return ((count <= maxIdx) ? count : (maxIdx + 1)) - minIdx;
 	}
 
-	public IPartition<TElement> Skip(int count) {
+    public IPartition<TElement> Skip(int count) {
 		return new OrderedPartition<TElement>(this, count, int.MaxValue);
 	}
 
-	public IPartition<TElement> Take(int count) {
+    public IPartition<TElement> Take(int count) {
 		return new OrderedPartition<TElement>(this, 0, count - 1);
 	}
 
@@ -377,7 +380,7 @@ internal sealed class CachingComparerWithChild<TElement, TKey> : CachingComparer
 		_child.SetElement(element);
 	}
 }
-internal interface IIListProvider<TElement> : IEnumerable<TElement>, IEnumerable {
+public interface IIListProvider<TElement> : IEnumerable<TElement>, IEnumerable {
 	TElement[] ToArray();
 
 	List<TElement> ToList();
@@ -386,7 +389,7 @@ internal interface IIListProvider<TElement> : IEnumerable<TElement>, IEnumerable
 }
 
 
-internal interface IPartition<TElement> : IIListProvider<TElement>, IEnumerable<TElement>, IEnumerable {
+public interface IPartition<TElement> : IIListProvider<TElement>, IEnumerable<TElement>, IEnumerable {
 	IPartition<TElement> Skip(int count);
 
 	IPartition<TElement> Take(int count);

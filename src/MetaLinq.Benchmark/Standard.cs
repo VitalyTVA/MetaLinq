@@ -17,4 +17,6 @@ static class Standard {
 
     public static Dictionary<int, TestData> Where_ToDictionary(TestData[] data) => data.Where(static x => x.Value % 4 == 0).ToDictionary(static x => x.Value);
     public static Dictionary<int, TestData> Select_ToDictionary(TestData[] data) => data.Select(static x => x).ToDictionary(static x => x.Value);
+
+    public static TestData OrderBy_First(TestData[] testData) => testData.OrderBy(static x => x.Value).First(x => x.Value > testData.Length / 2);
 }

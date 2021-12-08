@@ -27,7 +27,21 @@ public class SpikeOrderByTests {
 		var res2 = en.ToArray__();
 		CollectionAssert.AreEqual(new[] { 2, 3, 4, 6 }, res.Select(x => x.Int).ToArray());
     }
-	[Test]
+    [Test]
+    public void Where_OrderBy_First_Copied() {
+        var source = new[] { 4, 3, 10, 6, 11, 2 }.Select(x => new Data(x)).ToArray();
+        var en = source.Where(x => x.Int < 8).OrderBy__(x => x.Int);
+        var res = en.First___();
+        var res2 = en.First___();
+    }
+    [Test]
+    public void Where_OrderBy_First() {
+        var source = new[] { 10, 3, 4, 6, 11, 2 }.Select(x => new Data(x)).ToArray();
+        var en = source.OrderBy(x => x.Int);
+        var res = en.First(x => x.Int >= 4);
+        Assert.AreEqual(4, res.Int);
+    }
+    [Test]
 	public void OrderBy_Copied() {
 		var source = new[] { 4, 3, 1, 6, 2 }.Select(x => new Data(x)).ToList();
 		var en = source.OrderBy__(x => x.Int);

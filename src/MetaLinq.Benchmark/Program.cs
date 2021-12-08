@@ -11,7 +11,9 @@ namespace MetaLinqBenchmark;
 
 class Program {
     static void Main(string[] args) {
-        BenchmarkRunner.Run<ListIterationsBenchmarks>();
+        BenchmarkRunner.Run<OrderBy_FirstBenchmarks>();
+
+        //BenchmarkRunner.Run<ListIterationsBenchmarks>();
 
         //BenchmarkRunner.Run<Where_ToDictionaryBenchmarks>();
         //BenchmarkRunner.Run<Select_ToDictionaryBenchmarks>();
