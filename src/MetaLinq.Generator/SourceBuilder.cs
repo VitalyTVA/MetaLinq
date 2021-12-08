@@ -323,7 +323,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
 }}",
 $@"if(!found{topLevel})
-    throw new InvalidOperationException();
+    throw new InvalidOperationException(""Sequence contains no matching element"");
 var result_{lastLevel} = result{topLevel}!;"
                     );
 

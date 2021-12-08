@@ -18,6 +18,8 @@ CustomEnumerable should not be a special case
 
 CustomEnumerable Should Not have Count
 
+First - "Sequence contains no elements" exception when empty source
+
 #Posponed0
 
 #Posponed1

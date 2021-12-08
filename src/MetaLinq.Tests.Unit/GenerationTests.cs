@@ -1053,8 +1053,13 @@ public class GenerationTests : BaseFixture {
 
     [Test]
     public void Array_Where_First() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.First(x => x == 0))!.Message;
         AssertGeneration(
-            "Data __() => Data.Array(10).Where(x => x.Int > 5).First(x => x.Int % 4 == 0);",
+$@"Data __() {{
+    var ex = Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Where(x => x.Int > 5).First(x => x.Int == 0));
+    Assert.AreEqual(""{expectedMessage}"", ex!.Message);
+    return Data.Array(10).Where(x => x.Int > 5).First(x => x.Int % 4 == 0); 
+}}",
             (Data x) => Assert.AreEqual(8, x.Int),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
