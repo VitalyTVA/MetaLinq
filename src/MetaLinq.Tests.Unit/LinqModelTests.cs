@@ -234,6 +234,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void WhereFirstOrDefault() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, FirstOrDefault });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -FirstOrDefault");
+    }
+
+    [Test]
     public void WhereToArrayAndToList() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where, ToList });

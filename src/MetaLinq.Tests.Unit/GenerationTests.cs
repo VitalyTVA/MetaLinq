@@ -1072,6 +1072,25 @@ $@"Data __() {{
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
+    [Test]
+    public void Array_Where_FirstOrDefault() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Null(Data.Array(10).Where(x => x.Int > 5).FirstOrDefault(x => x.Int == 0));
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5).FirstOrDefault(x => x.Int % 4 == 0);
+    Assert.AreEqual(0, source[9].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("FirstOrDefault")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region select
@@ -1282,6 +1301,45 @@ $@"Data __() {{
                     }),
             }
         );
+    }
+
+    [Test]
+    public void Array_Select_First() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Select(x => x.Self).First(x => x.Int == -1));
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).First(x => x.Int > 0 && x.Int % 4 == 0);
+    Assert.AreEqual(0, source[5].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(4, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("First")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Select_FirstOrDefault() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Null(Data.Array(10).Select(x => x.Self).FirstOrDefault(x => x.Int == -1));
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).FirstOrDefault(x => x.Int > 0 && x.Int % 4 == 0);
+    Assert.AreEqual(0, source[5].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(4, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("FirstOrDefault")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     #endregion
 

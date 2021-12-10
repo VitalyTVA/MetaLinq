@@ -34,6 +34,7 @@ public abstract record ChainElement {
     public static readonly ChainElement ToHashSet = new ToValueChainElement(ToValueChainElementType.ToHashSet);
     public static readonly ChainElement ToDictionary = new ToValueChainElement(ToValueChainElementType.ToDictionary);
     public static readonly ChainElement First = new ToValueChainElement(ToValueChainElementType.First);
+    public static readonly ChainElement FirstOrDefault = new ToValueChainElement(ToValueChainElementType.FirstOrDefault);
     public static ChainElement Enumerable => EnumerableChainElement.Instance;
 
     public static readonly IComparer<ChainElement> Comparer = Comparer<ChainElement>.Create((x1, x2) => {
@@ -49,7 +50,8 @@ public enum ToValueChainElementType {
     ToList, 
     ToHashSet, 
     ToDictionary, 
-    First 
+    First,
+    FirstOrDefault
 }
 
 public sealed record ToValueChainElement(ToValueChainElementType Type) : ChainElement {
