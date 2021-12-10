@@ -64,6 +64,8 @@ public static class ToValueSourceBuilder {
             if(item.Node is TakeWhileNode)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
+        if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault)
+            builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
         builder.Tab.AppendMultipleLines(result);
     }
@@ -84,7 +86,7 @@ bool found{topLevel} = false;",
 $@"if(predicate(item{lastLevel.Next})) {{
     found{topLevel} = true;
     result{topLevel} = item{lastLevel.Next};
-    break;
+    goto firstFound{lastLevel};
 }}",
 $@"if(!found{topLevel})
     throw new InvalidOperationException(""Sequence contains no matching element"");
@@ -94,10 +96,10 @@ var result_{lastLevel} = result{topLevel}!;"
                 return (
 $@"var result{topLevel} = default({outputType});",
 $@"if(predicate(item{lastLevel.Next})) {{
-        result{topLevel} = item{lastLevel.Next};
-    break;
+    result{topLevel} = item{lastLevel.Next};
+    goto firstFound{lastLevel};
 }}",
-$@"var result_{lastLevel} = result{topLevel}!;"
+$@"var result_{lastLevel} = result{topLevel};"
                 );
 
             case (false, ResultType.ToValue, ToValueType.ToArray):
