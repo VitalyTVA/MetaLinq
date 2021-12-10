@@ -47,7 +47,7 @@ public static class SortHelper {
     };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static int CompareValues<T>(T val1, T val2) {
+    public static int CompareValues<T>(T val1, T val2) {
 #nullable disable
         if(typeof(T) == typeof(int)) {
             return (int)(object)val1 - (int)(object)val2;

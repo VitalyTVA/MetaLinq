@@ -33,21 +33,41 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderByDescending_First() {
+    public void Array_OrderBy_First() {
         AssertGeneration(
 @"Data __() {{
     var source = Data.Array(10).Shuffle();
-    return source.OrderByDescending(x => -x.Int).First(x => x.Int > 4);
+    Assert.Throws<System.InvalidOperationException>(() => source.OrderBy(x => x.Int).First(x => x.Int < 0));
+    return source.OrderBy(x => x.Int).First(x => x.Int > 4);
 }}",
         (Data x) => Assert.AreEqual(5, x.Int),
         new[] {
-                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
                     new StructMethod("First")
                 })
         }
     );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void Array_OrderByDescending_FirstOrDefault() {
+        AssertGeneration(
+@"Data? __() {{
+    var source = Data.Array(10).Shuffle();
+    Assert.Null(source.OrderByDescending(x => -x.Int).FirstOrDefault(x => x.Int < 0));
+    return source.OrderByDescending(x => -x.Int).FirstOrDefault(x => x.Int > 4);
+}}",
+        (Data x) => Assert.AreEqual(5, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("FirstOrDefault")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
     }
 
     [Test]
@@ -92,7 +112,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(4, TestTrace.ArrayCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
     }
 
     [Test]
@@ -387,7 +407,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(2, TestTrace.ArrayCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
     }
 
     [Test]
@@ -688,7 +708,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(3, TestTrace.ArrayCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
     }
 
 
@@ -971,7 +991,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(2, TestTrace.ArrayCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
     }
     #endregion
 

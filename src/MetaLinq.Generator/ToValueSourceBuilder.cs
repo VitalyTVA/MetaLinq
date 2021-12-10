@@ -78,6 +78,17 @@ public static class ToValueSourceBuilder {
 
         var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
+        (Level Level, string sortKeyGenericType, bool descending)[] GetOrder() => piece.Contexts
+            .SkipWhile(x => x.Node is not (OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode))
+            .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
+            .ToArray();
+        string GetFirstResultStatement() =>
+$@"if(!found{topLevel})
+    throw new InvalidOperationException(""Sequence contains no matching element"");
+var result_{lastLevel} = result{topLevel}!;";
+        string GetFirstOrDefaultResultStatement() =>
+$@"var result_{lastLevel} = result{topLevel};";
+
         switch((piece.SameSize, piece.ResultType, toInstanceType)) {
             case (_, ResultType.ToValue, ToValueType.First):
                 return (
@@ -88,9 +99,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
     goto firstFound{lastLevel};
 }}",
-$@"if(!found{topLevel})
-    throw new InvalidOperationException(""Sequence contains no matching element"");
-var result_{lastLevel} = result{topLevel}!;"
+GetFirstResultStatement()
                 );
             case (_, ResultType.ToValue, ToValueType.FirstOrDefault):
                 return (
@@ -99,7 +108,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
     goto firstFound{lastLevel};
 }}",
-$@"var result_{lastLevel} = result{topLevel};"
+GetFirstOrDefaultResultStatement()
                 );
 
             case (false, ResultType.ToValue, ToValueType.ToArray):
@@ -126,11 +135,8 @@ $@"var result_{lastLevel} = result{topLevel};"
                     $"result{topLevel}.Add(keySelector(item{lastLevel.Next}), item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
-            case (true, ResultType.OrderBy, _):
-                var order = piece.Contexts
-                    .SkipWhile(x => x.Node is not (OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode))
-                    .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
-                    .ToArray();
+            case (true, ResultType.OrderBy, ToValueType.ToArray or ToValueType.ToDictionary or ToValueType.ToHashSet):
+                var order = GetOrder();
                 var sortKeyVars = order.Select((x, i) => {
                     return $"var sortKeys{topLevel}_{i} = Allocator.Array<{x.sortKeyGenericType}>({capacityExpression});\r\n";
                 });
@@ -172,6 +178,24 @@ string.Join(null, sortKeyAssigns) + $"map{topLevel}[i{topLevel}] = i{topLevel};{
 $@"ArrayPool<int>.Shared.Return(map{topLevel});
 var comparer{lastLevel} = {comparerExpression};
 var result_{lastLevel} = {resultExpression};"
+                );
+
+            case (true, ResultType.OrderBy, ToValueType.First or ToValueType.FirstOrDefault):
+                var order_ = GetOrder();
+                var itemLevel = order_.First().Level;
+                var sign = order_.First().descending ? ">" : "<";
+                return (
+@$"var result{topLevel} = default({outputType});
+bool found{topLevel} = false;
+var foundKey{topLevel} = default({order_.First().sortKeyGenericType});",
+@$"if(predicate(item{itemLevel})) {{
+    if(!found{topLevel} || SortHelper.CompareValues(item{itemLevel.Next}, foundKey{topLevel}) {sign} 0) {{
+        foundKey{topLevel} = item{itemLevel.Next};
+        result{topLevel} = item{itemLevel};
+    }}
+    found{topLevel} = true;
+}}",
+                    toInstanceType == ToValueType.First ? GetFirstResultStatement() : GetFirstOrDefaultResultStatement()
                 );
 
             default:
