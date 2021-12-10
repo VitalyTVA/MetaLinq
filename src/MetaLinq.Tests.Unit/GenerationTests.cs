@@ -49,6 +49,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(2, TestTrace.ArrayCreatedCount);
     }
 
     [Test]
@@ -73,6 +74,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(4, TestTrace.ArrayCreatedCount);
     }
 
     [Test]
@@ -131,6 +133,7 @@ public class GenerationTests : BaseFixture {
             }
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(3, TestTrace.ArrayCreatedCount);
     }
 
     [Test]
@@ -276,6 +279,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
     }
 
     [Test]
@@ -567,10 +571,11 @@ public class GenerationTests : BaseFixture {
                     })
                 })
             })
-        },
-        assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T3_Result>(result_2.Length)", x.Single())
+        }
     );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.DictionaryWithCapacityCreatedCount);
+        Assert.AreEqual(0, TestTrace.DictionaryCreatedCount);
     }
 
     [Test]
@@ -617,6 +622,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(3, TestTrace.ArrayCreatedCount);
     }
 
 
@@ -826,6 +832,7 @@ public class GenerationTests : BaseFixture {
             }
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
     }
     [Test]
     public void Array_SkipWhile_OrderBy_Select_SkipWhile_OrderByDescending_ToArray() {
@@ -898,6 +905,7 @@ public class GenerationTests : BaseFixture {
         }
     );
         Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(2, TestTrace.ArrayCreatedCount);
     }
     #endregion
 
@@ -914,6 +922,7 @@ public class GenerationTests : BaseFixture {
             }
         );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
     }
     [Test]
     public void Array_Where_ToHashSet() {
@@ -938,10 +947,11 @@ public class GenerationTests : BaseFixture {
                 new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                     new StructMethod("ToDictionary")
                 })
-            },
-            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, TSource>()", x.Single())
+            }
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.DictionaryWithCapacityCreatedCount);
+        Assert.AreEqual(1, TestTrace.DictionaryCreatedCount);
     }
     [Test]
     public void Array_Where_ToList() {
@@ -1241,6 +1251,7 @@ $@"Data __() {{
             }
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
     }
     [Test]
     public void Array_Select_ToHashSet() {
@@ -1264,9 +1275,10 @@ $@"Data __() {{
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("ToDictionary")
                 })
-            },
-            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T1_Result>(this.source.Length)", x.Single())
+            }
         );
+        Assert.AreEqual(1, TestTrace.DictionaryWithCapacityCreatedCount);
+        Assert.AreEqual(0, TestTrace.DictionaryCreatedCount);
     }
     [Test]
     public void List_Select_ToHashSet() {
@@ -1289,9 +1301,10 @@ $@"Data __() {{
                 new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
                     new StructMethod("ToDictionary")
                 })
-            },
-            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T1_Result>(this.source.Count)", x.Single())
+            }
         );
+        Assert.AreEqual(1, TestTrace.DictionaryWithCapacityCreatedCount);
+        Assert.AreEqual(0, TestTrace.DictionaryCreatedCount);
     }
     [Test]
     public void Array_Select_Select_ToArray() {
@@ -1456,6 +1469,7 @@ $@"Data __() {{
             }
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
     }
     [Test]
     public void Array_Select_FirstOrDefault() {
@@ -1548,10 +1562,11 @@ $@"Data __() {{
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("ToDictionary")
                 })
-            },
-            assertGeneratedCode: x => StringAssert.Contains("new Dictionary<TKey, T1_Result>()", x.Single())
+            }
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.DictionaryWithCapacityCreatedCount);
+        Assert.AreEqual(1, TestTrace.DictionaryCreatedCount);
     }
     [Test]
     public void Array_SelectManyArrayNewArrayExpression_ToArray() {
@@ -2171,10 +2186,12 @@ public static class Executor {{
             Directory.CreateDirectory(filesPath);
         var dllPath = filesPath + ".dll";
 
-        Compilation inputCompilation = CSharpCompilation.Create("MyCompilation",
-                                                                new[] { CSharpSyntaxTree.ParseText(source, path: "Source.cs", encoding: Encoding.UTF8) },
-                                                                references,
-                                                                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
+        Compilation inputCompilation = CSharpCompilation.Create(
+            "MyCompilation",
+            new[] { CSharpSyntaxTree.ParseText(source, path: "Source.cs", encoding: Encoding.UTF8) },
+            references,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable)
+        );
         MetaLinqGenerator generator = new();
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);

@@ -110,7 +110,7 @@ $@"var result_{lastLevel} = result{topLevel};"
                 );
             case (true, ResultType.ToValue, ToValueType.ToArray):
                 return (
-                    $"var result{topLevel} = new {outputType}[{capacityExpression}];",
+                    $"var result{topLevel} = Allocator.Array<{outputType}>({capacityExpression});",
                     $"result{topLevel}[i{topLevel}] = item{lastLevel.Next};",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
@@ -122,7 +122,7 @@ $@"var result_{lastLevel} = result{topLevel};"
                 );
             case (_, ResultType.ToValue, ToValueType.ToDictionary):
                 return (
-                    $"var result{topLevel} = new Dictionary<TKey, {outputType}>({capacityExpression});",
+                    $"var result{topLevel} = Allocator.Dictionary<TKey, {outputType}>({capacityExpression});",
                     $"result{topLevel}.Add(keySelector(item{lastLevel.Next}), item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
@@ -132,7 +132,7 @@ $@"var result_{lastLevel} = result{topLevel};"
                     .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
                     .ToArray();
                 var sortKeyVars = order.Select((x, i) => {
-                    return $"var sortKeys{topLevel}_{i} = new {x.sortKeyGenericType}[{capacityExpression}];\r\n";
+                    return $"var sortKeys{topLevel}_{i} = Allocator.Array<{x.sortKeyGenericType}>({capacityExpression});\r\n";
                 });
                 var sortKeyAssigns = order.Select((x, i) => {
                     return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{order.First().Level.Offset(i + 1)};\r\n";
@@ -163,7 +163,7 @@ $@"var result_{lastLevel} = result{topLevel};"
                     resultExpression = $"System.Linq.Enumerable.FirstOrDefault({resultExpression}, predicate)";
                 bool useSourceInSort = piece.SameType && source.HasIndexer();
                 return (
-@$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"new {sourceGenericArg}[{capacityExpression}]")};
+@$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"Allocator.Array<{sourceGenericArg}>({capacityExpression})")};
 {string.Join(null, sortKeyVars)}
 var map{topLevel} = ArrayPool<int>.Shared.Rent({capacityExpression});",
 
