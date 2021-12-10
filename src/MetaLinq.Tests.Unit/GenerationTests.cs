@@ -33,6 +33,24 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderByDescending_First() {
+        AssertGeneration(
+@"Data __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.OrderByDescending(x => -x.Int).First(x => x.Int > 4);
+}}",
+        (Data x) => Assert.AreEqual(5, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("First")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
     public void Array_OrderBy_ThenBy_ToArray() {
         AssertGeneration(
 @"(Data[] source, Data[] result) __() {{
