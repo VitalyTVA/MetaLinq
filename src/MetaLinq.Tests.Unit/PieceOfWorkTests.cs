@@ -95,6 +95,13 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void Select_Select_OrderBy() {
+        AssertPieces(new[] { Select, Select, OrderBy }, new[] {
+"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, Select, OrderBy]"
+        });
+    }
+
+    [Test]
     public void SelectMany_() {
         AssertPieces(new[] { SelectMany(SourceType.List) }, new[] {
 "SameType: False, SameSize: False, ResultType: ToValue, Nodes: [SelectMany List]"

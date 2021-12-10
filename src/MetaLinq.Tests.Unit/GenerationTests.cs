@@ -325,6 +325,54 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void List_Select_Select_OrderBy_ToArray() {
+        AssertGeneration(
+@"int[] __() {{
+    var source = Data.List(10).Shuffle();
+    var result = source.Select(x => x.Self).Select(x => new { Value = x.Int }).OrderBy(x => x.Value).ToArray();
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return Enumerable.ToArray(Enumerable.Select(result, x => x.Value));
+}}",
+        Get0ToNIntArrayAssert(9),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                new StructMethod("Select", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("ToArray"),
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(2, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void List_Select_Select_OrderBy_First() {
+        AssertGeneration(
+@"int __() {{
+    var source = Data.List(10).Shuffle();
+    var result = source.Select(x => x.Self).Select(x => new { Value = x.Int }).OrderBy(x => x.Value).First(x => x.Value > 3);
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return result.Value;
+}}",
+        (int x) => Assert.AreEqual(4, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                new StructMethod("Select", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("First"),
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(2, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
     public void CustomCollection_Select_OrderBy_ToArray() {
         AssertGeneration(
 @"int[] __() {{
