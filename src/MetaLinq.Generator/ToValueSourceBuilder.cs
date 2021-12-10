@@ -64,7 +64,7 @@ public static class ToValueSourceBuilder {
             if(item.Node is TakeWhileNode)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
-        if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault)
+        if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.ResultType is not ResultType.OrderBy)
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
         builder.Tab.AppendMultipleLines(result);
@@ -157,6 +157,10 @@ $@"var result_{lastLevel} = result{topLevel};"
                     resultExpression = $"new HashSet<{sourceGenericArg}>({resultExpression})";
                 if(toInstanceType == ToValueType.ToDictionary)
                     resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
+                if(toInstanceType == ToValueType.First)
+                    resultExpression = $"System.Linq.Enumerable.First({resultExpression}, predicate)";
+                if(toInstanceType == ToValueType.FirstOrDefault)
+                    resultExpression = $"System.Linq.Enumerable.FirstOrDefault({resultExpression}, predicate)";
                 bool useSourceInSort = piece.SameType && source.HasIndexer();
                 return (
 @$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"new {sourceGenericArg}[{capacityExpression}]")};
