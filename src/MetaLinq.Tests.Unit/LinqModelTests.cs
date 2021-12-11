@@ -28,8 +28,8 @@ public class LinqModelTests : BaseFixture {
         AssertModel(model,
 @"List
     Root
-        -ToArray
-        -ToList");
+        -ToList
+        -ToArray");
     }
 
     [Test]
@@ -253,8 +253,8 @@ public class LinqModelTests : BaseFixture {
 @"Array
     Root
         Where
-            -ToArray
-            -ToList");
+            -ToList
+            -ToArray");
     }
 
     [Test]
@@ -304,8 +304,8 @@ public class LinqModelTests : BaseFixture {
     Root
         Where
             Select
-                -ToArray
-                -ToList");
+                -ToList
+                -ToArray");
     }
 
     [Test]
@@ -335,16 +335,16 @@ public class LinqModelTests : BaseFixture {
     Root
         Select
             -Enumerable
-            -ToArray
             -ToList
+            -ToArray
         Where
             Select
-                -ToArray
                 -ToList
+                -ToArray
             Where
                 -Enumerable
-                -ToArray
-                -ToList");
+                -ToList
+                -ToArray");
     }
 
     [Test]
@@ -452,8 +452,8 @@ Array
         AssertNodeComparison(1, Where, Select);
 
         AssertNodeComparison(0, ToList, ToList);
-        AssertNodeComparison(1, ToList, ToArray);
-        AssertNodeComparison(-1, ToArray, ToList);
+        AssertNodeComparison(-1, ToList, ToArray);
+        AssertNodeComparison(1, ToArray, ToList);
 
         AssertNodeComparison(0, ToHashSet, ToHashSet);
         AssertNodeComparison(1, ToHashSet, ToArray);

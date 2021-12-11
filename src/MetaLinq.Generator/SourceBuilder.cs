@@ -101,22 +101,14 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
 
             foreach(var node in nodes) {
                 switch(node) {
-                    case TerminalNode { Type: TerminalNodeType.ToList }:
+                    case ToListTerminalNode:
                         EmitToList(source, structBuilder, context);
                         break;
-                    case TerminalNode { Type: TerminalNodeType.Enumerable }:
+                    case EnumerableTerminalNode:
                         EmitGetEnumerator(source, structBuilder, context);
                         break;
                     case TerminalNode terminalNode:
-                        var toInstanceType = terminalNode.Type switch { 
-                            TerminalNodeType.ToArray => ToValueType.ToArray, 
-                            TerminalNodeType.ToHashSet => ToValueType.ToHashSet, 
-                            TerminalNodeType.ToDictionary => ToValueType.ToDictionary, 
-                            TerminalNodeType.First => ToValueType.First, 
-                            TerminalNodeType.FirstOrDefault => ToValueType.FirstOrDefault, 
-                            _ => throw new InvalidOperationException()
-                        };
-                        ToValueSourceBuilder.EmitToValue(source, structBuilder, context, toInstanceType);
+                        ToValueSourceBuilder.EmitToValue(source, structBuilder, context, terminalNode.Type);
                         break;
                     case IntermediateNode nextIntermediate:
                         var nextContext = context.Next(nextIntermediate);

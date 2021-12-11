@@ -29,12 +29,12 @@ public abstract record ChainElement {
     public static ChainElement ThenBy => ThenByChainElement.Instance;
     public static ChainElement ThenByDescending => ThenByDescendingChainElement.Instance;
     public static ChainElement SelectMany(SourceType sourceType) => new SelectManyChainElement(sourceType);
-    public static readonly ChainElement ToArray = new ToValueChainElement(ToValueChainElementType.ToArray);
-    public static readonly ChainElement ToList = new ToValueChainElement(ToValueChainElementType.ToList);
-    public static readonly ChainElement ToHashSet = new ToValueChainElement(ToValueChainElementType.ToHashSet);
-    public static readonly ChainElement ToDictionary = new ToValueChainElement(ToValueChainElementType.ToDictionary);
-    public static readonly ChainElement First = new ToValueChainElement(ToValueChainElementType.First);
-    public static readonly ChainElement FirstOrDefault = new ToValueChainElement(ToValueChainElementType.FirstOrDefault);
+    public static readonly ToValueChainElement ToArray = new ToValueChainElement(ToValueType.ToArray);
+    public static readonly ToValueChainElement ToHashSet = new ToValueChainElement(ToValueType.ToHashSet);
+    public static readonly ToValueChainElement ToDictionary = new ToValueChainElement(ToValueType.ToDictionary);
+    public static readonly ToValueChainElement First = new ToValueChainElement(ToValueType.First);
+    public static readonly ToValueChainElement FirstOrDefault = new ToValueChainElement(ToValueType.FirstOrDefault);
+    public static ChainElement ToList => ToListChainElement.Instance;
     public static ChainElement Enumerable => EnumerableChainElement.Instance;
 
     public static readonly IComparer<ChainElement> Comparer = Comparer<ChainElement>.Create((x1, x2) => {
@@ -45,21 +45,25 @@ public abstract record ChainElement {
     });
 }
 
-public enum ToValueChainElementType { 
+public enum ToValueType { 
     ToArray, 
-    ToList, 
     ToHashSet, 
     ToDictionary, 
     First,
     FirstOrDefault
 }
 
-public sealed record ToValueChainElement(ToValueChainElementType Type) : ChainElement {
+public sealed record ToValueChainElement(ToValueType Type) : ChainElement {
 }
 
 public sealed record EnumerableChainElement : ChainElement {
     public static readonly EnumerableChainElement Instance = new EnumerableChainElement();
     EnumerableChainElement() { }
+}
+
+public sealed record ToListChainElement : ChainElement {
+    public static readonly ToListChainElement Instance = new ToListChainElement();
+    ToListChainElement() { }
 }
 
 public sealed record WhereChainElement : ChainElement {

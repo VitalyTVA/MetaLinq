@@ -34,30 +34,37 @@ public class LinqModel {
 public abstract class LinqNode {
 }
 
-public enum TerminalNodeType { 
-    ToArray, 
-    ToList, 
-    ToHashSet, 
-    ToDictionary, 
-    First,
-    FirstOrDefault,
-    Enumerable 
+public abstract class TerminalNodeBase : LinqNode {
 }
 
-public sealed class TerminalNode : LinqNode {
-    public static readonly TerminalNode ToArray = new(TerminalNodeType.ToArray);
-    public static readonly TerminalNode ToList = new (TerminalNodeType.ToList);
-    public static readonly TerminalNode ToHashSet = new (TerminalNodeType.ToHashSet);
-    public static readonly TerminalNode ToDictionary = new (TerminalNodeType.ToDictionary);
-    public static readonly TerminalNode First = new (TerminalNodeType.First);
-    public static readonly TerminalNode FirstOrDefault = new(TerminalNodeType.FirstOrDefault);
-    public static readonly TerminalNode Enumerable = new(TerminalNodeType.Enumerable);
-    public readonly TerminalNodeType Type;
-    TerminalNode(TerminalNodeType type) {
-        Type = type;
+public sealed class TerminalNode : TerminalNodeBase {
+    public static readonly TerminalNodeBase ToList = ToListTerminalNode.Instance;
+    public static readonly TerminalNodeBase Enumerable = EnumerableTerminalNode.Instance;
+
+    public ToValueType Type => element.Type;
+    readonly ToValueChainElement element;
+
+    public TerminalNode(ToValueChainElement element) {
+        this.element = element;
     }
     public override string ToString() {
         return $"-{Type}";
+    }
+}
+
+public sealed class EnumerableTerminalNode : TerminalNodeBase {
+    public static readonly EnumerableTerminalNode Instance = new EnumerableTerminalNode();
+    EnumerableTerminalNode() { }
+    public override string ToString() {
+        return $"-Enumerable";
+    }
+}
+
+public sealed class ToListTerminalNode : TerminalNodeBase {
+    public static readonly ToListTerminalNode Instance = new ToListTerminalNode();
+    ToListTerminalNode() { }
+    public override string ToString() {
+        return $"-ToList";
     }
 }
 
@@ -91,18 +98,10 @@ public abstract class IntermediateNode : LinqNode {
                 return Add(static () => new ThenByDescendingNode());
             case SelectManyChainElement selectManyNode:
                 return Add(() => new SelectManyNode(selectManyNode.SourceType));
-            case ToValueChainElement { Type: ToValueChainElementType.ToArray }:
-                return Add(static () => TerminalNode.ToArray);
-            case ToValueChainElement { Type: ToValueChainElementType.ToList }:
+            case ToListChainElement:
                 return Add(static () => TerminalNode.ToList);
-            case ToValueChainElement { Type: ToValueChainElementType.ToHashSet }:
-                return Add(static () => TerminalNode.ToHashSet);
-            case ToValueChainElement { Type: ToValueChainElementType.ToDictionary }:
-                return Add(static () => TerminalNode.ToDictionary);
-            case ToValueChainElement { Type: ToValueChainElementType.First }:
-                return Add(static () => TerminalNode.First);
-            case ToValueChainElement { Type: ToValueChainElementType.FirstOrDefault }:
-                return Add(static () => TerminalNode.FirstOrDefault);
+            case ToValueChainElement toValueChainElement:
+                return Add(() => new TerminalNode(toValueChainElement));
             default:
                 throw new InvalidOperationException();
         }
@@ -113,7 +112,7 @@ public abstract class IntermediateNode : LinqNode {
     public IEnumerable<LinqNode> GetNodes() {
         IEnumerable<KeyValuePair<ChainElement, LinqNode>> pairs = Nodes;
         if(Nodes.ContainsKey(ChainElement.ToList) && !Nodes.ContainsKey(ChainElement.ToArray))
-            pairs = pairs.Concat(new[] { new KeyValuePair<ChainElement, LinqNode>(ChainElement.ToArray, TerminalNode.ToArray) });
+            pairs = pairs.Concat(new[] { new KeyValuePair<ChainElement, LinqNode>(ChainElement.ToArray, new TerminalNode(ChainElement.ToArray)) });
         var nodes = pairs
             .OrderBy(x => x.Key, ChainElement.Comparer)
             .Select(x => x.Value);

@@ -1127,8 +1127,8 @@ public class GenerationTests : BaseFixture {
             },
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("ToList"),
                         new StructMethod("ToArray"),
-                        new StructMethod("ToList")
                     })
             }
         );
@@ -1144,8 +1144,8 @@ public class GenerationTests : BaseFixture {
             },
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                        new StructMethod("ToList"),
                         new StructMethod("ToArray"),
-                        new StructMethod("ToList")
                     })
             }
         );
@@ -2360,7 +2360,9 @@ public static class Executor {{
         GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
         driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation, out var diagnostics);
 
-        bool DebugMode = true;
+        bool DebugMode = false;
+        if(Debugger.IsAttached)
+            DebugMode = true;
 
         foreach(var tree in outputCompilation.SyntaxTrees.ToArray()) {
             if(!File.Exists(tree.FilePath)) {

@@ -3,14 +3,6 @@ using System.Linq;
 
 namespace MetaLinq.Generator;
 
-public enum ToValueType {
-    ToArray,
-    ToHashSet,
-    ToDictionary,
-    First,
-    FirstOrDefault,
-}
-
 public static class ToValueSourceBuilder {
     public static void EmitToValue(SourceType source, CodeBuilder builder, EmitContext context, ToValueType toValueType) {
         IntermediateNode intermediate = context.Node;
