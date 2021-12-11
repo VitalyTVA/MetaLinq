@@ -34,8 +34,8 @@ public abstract record ChainElement {
     public static readonly ToValueChainElement ToDictionary = new ToValueChainElement(ToValueType.ToDictionary);
     public static readonly ToValueChainElement First = new ToValueChainElement(ToValueType.First);
     public static readonly ToValueChainElement FirstOrDefault = new ToValueChainElement(ToValueType.FirstOrDefault);
-    public static ChainElement ToList => ToListChainElement.Instance;
-    public static ChainElement Enumerable => EnumerableChainElement.Instance;
+    public static ToListChainElement ToList => ToListChainElement.Instance;
+    public static EnumerableChainElement Enumerable => EnumerableChainElement.Instance;
 
     public static readonly IComparer<ChainElement> Comparer = Comparer<ChainElement>.Create((x1, x2) => {
         var typeComparison = Comparer<string>.Default.Compare(x1.GetType().Name, x2.GetType().Name);
@@ -53,15 +53,17 @@ public enum ToValueType {
     FirstOrDefault
 }
 
-public sealed record ToValueChainElement(ToValueType Type) : ChainElement {
+public abstract record class TerminalChainElement : ChainElement { }
+
+public sealed record ToValueChainElement(ToValueType Type) : TerminalChainElement {
 }
 
-public sealed record EnumerableChainElement : ChainElement {
+public sealed record EnumerableChainElement : TerminalChainElement {
     public static readonly EnumerableChainElement Instance = new EnumerableChainElement();
     EnumerableChainElement() { }
 }
 
-public sealed record ToListChainElement : ChainElement {
+public sealed record ToListChainElement : TerminalChainElement {
     public static readonly ToListChainElement Instance = new ToListChainElement();
     ToListChainElement() { }
 }

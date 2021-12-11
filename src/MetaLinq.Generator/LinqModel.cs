@@ -38,33 +38,18 @@ public abstract class TerminalNodeBase : LinqNode {
 }
 
 public sealed class TerminalNode : TerminalNodeBase {
-    public static readonly TerminalNodeBase ToList = ToListTerminalNode.Instance;
-    public static readonly TerminalNodeBase Enumerable = EnumerableTerminalNode.Instance;
+    public readonly TerminalChainElement Element;
 
-    public ToValueType Type => element.Type;
-    readonly ToValueChainElement element;
-
-    public TerminalNode(ToValueChainElement element) {
-        this.element = element;
+    public TerminalNode(TerminalChainElement element) {
+        Element = element;
     }
     public override string ToString() {
-        return $"-{Type}";
-    }
-}
-
-public sealed class EnumerableTerminalNode : TerminalNodeBase {
-    public static readonly EnumerableTerminalNode Instance = new EnumerableTerminalNode();
-    EnumerableTerminalNode() { }
-    public override string ToString() {
-        return $"-Enumerable";
-    }
-}
-
-public sealed class ToListTerminalNode : TerminalNodeBase {
-    public static readonly ToListTerminalNode Instance = new ToListTerminalNode();
-    ToListTerminalNode() { }
-    public override string ToString() {
-        return $"-ToList";
+        return Element switch { 
+            ToValueChainElement toValueChainElement => "-" + toValueChainElement.Type,
+            EnumerableChainElement => "-Enumerable",
+            ToListChainElement => "-ToList",
+            _ => throw new NotImplementedException(), 
+        };
     }
 }
 
@@ -98,16 +83,14 @@ public abstract class IntermediateNode : LinqNode {
                 return Add(static () => new ThenByDescendingNode());
             case SelectManyChainElement selectManyNode:
                 return Add(() => new SelectManyNode(selectManyNode.SourceType));
-            case ToListChainElement:
-                return Add(static () => TerminalNode.ToList);
-            case ToValueChainElement toValueChainElement:
-                return Add(() => new TerminalNode(toValueChainElement));
+            case TerminalChainElement terminalElement:
+                return Add(() => new TerminalNode(terminalElement));
             default:
                 throw new InvalidOperationException();
         }
     }
     public void AddEnumerableNode() {
-        Nodes.GetOrAdd(ChainElement.Enumerable, static () => TerminalNode.Enumerable);
+        Nodes.GetOrAdd(ChainElement.Enumerable, static () => new TerminalNode(ChainElement.Enumerable));
     }
     public IEnumerable<LinqNode> GetNodes() {
         IEnumerable<KeyValuePair<ChainElement, LinqNode>> pairs = Nodes;

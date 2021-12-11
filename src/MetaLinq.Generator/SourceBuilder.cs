@@ -82,7 +82,7 @@ public static {sourceName}<TSource>.{enumerableTypeName} {enumerableKind}<TSourc
         var argumentName = intermediate.GetArgumentName();
         var argumentType = intermediate.GetArgumentType(context.SourceGenericArg, context.GetResultGenericType());
         var nodes = intermediate.GetNodes().ToList();
-        bool implementIEnumerable = nodes.Contains(TerminalNode.Enumerable);
+        bool implementIEnumerable = nodes.Any(node => node is TerminalNode { Element: EnumerableChainElement });
         var outputType = context.GetOutputType();
         string typeName = intermediate.GetEnumerableTypeName(context.Level) + context.GetOwnTypeArgsList();
         using (builder.BuildType(out CodeBuilder structBuilder,
@@ -101,14 +101,18 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
 
             foreach(var node in nodes) {
                 switch(node) {
-                    case ToListTerminalNode:
-                        EmitToList(source, structBuilder, context);
-                        break;
-                    case EnumerableTerminalNode:
-                        EmitGetEnumerator(source, structBuilder, context);
-                        break;
                     case TerminalNode terminalNode:
-                        ToValueSourceBuilder.EmitToValue(source, structBuilder, context, terminalNode.Type);
+                        switch(terminalNode.Element) {
+                            case ToListChainElement:
+                                EmitToList(source, structBuilder, context);
+                                break;
+                            case EnumerableChainElement:
+                                EmitGetEnumerator(source, structBuilder, context);
+                                break;
+                            case ToValueChainElement toValueChainElement:
+                                ToValueSourceBuilder.EmitToValue(source, structBuilder, context, toValueChainElement.Type);
+                                break;
+                        }
                         break;
                     case IntermediateNode nextIntermediate:
                         var nextContext = context.Next(nextIntermediate);
