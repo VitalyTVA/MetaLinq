@@ -254,7 +254,7 @@ public record struct Level {
     public Level Next => new Level(Value + 1);
     public Level Prev => new Level(Value - 1);
     public int Minus(Level level) => Value - level.Value;
-    public Level Offset(int value) => new Level(Value + value);
+    //public Level Offset(int value) => new Level(Value + value);
 }
 
 public static class CodeGenerationTraits {

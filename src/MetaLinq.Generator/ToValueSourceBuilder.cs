@@ -141,7 +141,7 @@ GetFirstOrDefaultResultStatement()
                     return $"var sortKeys{topLevel}_{i} = Allocator.Array<{x.sortKeyGenericType}>({capacityExpression});\r\n";
                 });
                 var sortKeyAssigns = order.Select((x, i) => {
-                    return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{order.First().Level.Offset(i + 1)};\r\n";
+                    return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{x.Level.Next};\r\n";
                 });
                 List<string> comparerTypes = new();
                 foreach(var (_, sortKeyGenericType, descending) in order.Reverse()) {
@@ -183,14 +183,33 @@ var result_{lastLevel} = {resultExpression};"
             case (true, ResultType.OrderBy, ToValueType.First or ToValueType.FirstOrDefault):
                 var order_ = GetOrder();
                 var itemLevel = order_.First().Level;
-                var sign = order_.First().descending ? ">" : "<";
+                var keyDefinitions = order_
+                    .Select(x => $"var foundKey{x.Level} = default({x.sortKeyGenericType});");
+                var keyAssignments = order_
+                    .Select((x, i) => $"        foundKey{x.Level} = item{x.Level.Next};");
+                var compares = order_
+                    .Select((x, i) => {
+                        var args = x.descending
+                            ? $"foundKey{x.Level}, item{x.Level.Next}"
+                            : $"item{x.Level.Next}, foundKey{x.Level}";
+                        var result = $"compareResult = SortHelper.CompareValues({args});";
+                        if(i > 0)
+                            result = "if(compareResult == 0) " + result;
+                        return "    " + result;
+                    });
                 return (
 @$"var result{topLevel} = default({outputType});
 bool found{topLevel} = false;
-var foundKey{topLevel} = default({order_.First().sortKeyGenericType});",
+{string.Join(Environment.NewLine, keyDefinitions)}",
 @$"if(predicate(item{itemLevel})) {{
-    if(!found{topLevel} || SortHelper.CompareValues(item{itemLevel.Next}, foundKey{topLevel}) {sign} 0) {{
-        foundKey{topLevel} = item{itemLevel.Next};
+    if(!found{topLevel}) {{
+{string.Join(Environment.NewLine, keyAssignments)}
+        result{topLevel} = item{itemLevel};
+    }}
+    int compareResult = 0;
+{string.Join(Environment.NewLine, compares)}
+    if(compareResult < 0) {{
+{string.Join(Environment.NewLine, keyAssignments)}
         result{topLevel} = item{itemLevel};
     }}
     found{topLevel} = true;

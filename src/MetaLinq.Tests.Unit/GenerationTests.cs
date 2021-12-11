@@ -99,6 +99,18 @@ public class GenerationTests : BaseFixture {
     var first = source.OrderBy(x => x.Long).ThenBy(x => x.Int).First(x => x.Int == 1 && x.Long == 2);
     Assert.AreEqual(1, first.Int);
     Assert.AreEqual(2, first.Long);
+    
+    var pair = new[] { (1, 1), (0, 0), (1, 0), (0, 1) }.OrderBy(x => x.Item1).ThenBy(x => x.Item2).First(x => x.Item1 == 1);
+    Assert.AreEqual(1, pair.Item1);
+    Assert.AreEqual(0, pair.Item2);
+
+    var pair2 = new[] { (1, 0), (0, 0), (1, 1), (0, 1) }.OrderBy(x => x.Item1).ThenBy(x => x.Item2).First(x => x.Item1 >= 0);
+    Assert.AreEqual(0, pair2.Item1);
+    Assert.AreEqual(0, pair2.Item2);
+
+    var pair3 = new[] { (1, 0), (0, 0), (1, 1), (0, 1) }.OrderBy(x => x.Item1).ThenByDescending(x => x.Item2).First(x => x.Item1 >= 0);
+    Assert.AreEqual(0, pair3.Item1);
+    Assert.AreEqual(1, pair3.Item2);
 }}",
         NoAssert,
         new[] {
@@ -106,6 +118,9 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ThenBy", new[] {
                         new StructMethod("First"),
                         new StructMethod("FirstOrDefault"),
+                    }),
+                    new StructMethod("ThenByDescending", new[] {
+                        new StructMethod("First"),
                     })
                 })
         }
