@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 
 namespace MetaLinq.Generator;
@@ -69,9 +70,13 @@ public static class ToValueSourceBuilder {
 
         var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
-        (Level Level, string sortKeyGenericType, bool descending)[] GetOrder() => piece.Contexts
-            .SkipWhile(x => x.Element is not (OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement))
-            .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Element is OrderByDescendingChainElement or ThenByDescendingChainElement))
+        (Level Level, string sortKeyGenericType, ListSortDirection direction)[] GetOrder() => piece.Contexts
+            .SkipWhile(x => x.Element is not (OrderByChainElement or ThenByChainElement))
+            .Select(x => (
+                x.Level, 
+                sortKeyGenericType: x.GetResultGenericType(),
+                direction: (x.Element as OrderByChainElement)?.Direction ?? (x.Element as ThenByChainElement)!.Direction
+            ))
             .ToArray();
         string GetFirstResultStatement() =>
 $@"if(!found{topLevel})
@@ -135,13 +140,12 @@ GetFirstOrDefaultResultStatement()
                     return $"sortKeys{topLevel}_{i}[i{topLevel}] = item{x.Level.Next};\r\n";
                 });
                 List<string> comparerTypes = new();
-                foreach(var (_, sortKeyGenericType, descending) in order.Reverse()) {
+                foreach(var (_, sortKeyGenericType, direction) in order.Reverse()) {
                     var last = comparerTypes.LastOrDefault();
-                    var suffix = descending ? "Descending" : null;
                     if(last != null)
-                        comparerTypes.Add($"KeysComparer{suffix}<{sortKeyGenericType}, {last}>");
+                        comparerTypes.Add($"KeysComparer{direction.GetDescendingSuffix()}<{sortKeyGenericType}, {last}>");
                     else
-                        comparerTypes.Add($"KeysComparer{suffix}<{sortKeyGenericType}>");
+                        comparerTypes.Add($"KeysComparer{direction.GetDescendingSuffix()}<{sortKeyGenericType}>");
                 }
                 var parts = comparerTypes
                     .ToArray()
@@ -180,7 +184,7 @@ var result_{lastLevel} = {resultExpression};"
                     .Select((x, i) => $"        foundKey{x.Level} = item{x.Level.Next};");
                 var compares = order_
                     .Select((x, i) => {
-                        var args = x.descending
+                        var args = x.direction == ListSortDirection.Descending
                             ? $"foundKey{x.Level}, item{x.Level.Next}"
                             : $"item{x.Level.Next}, foundKey{x.Level}";
                         var result = $"compareResult = SortHelper.CompareValues({args});";
@@ -279,11 +283,11 @@ if(skipWhile{level.Next}) {{
                 EmitLoop(selectMany.SourceType, builder, level.Next, $"this{sourcePath}.selector(item{level})",
                     bodyBuilder => EmitNext(bodyBuilder));
                 break;
-            case OrderByChainElement or OrderByDescendingChainElement:
+            case OrderByChainElement:
                 builder.AppendLine($"var item{level.Next} = this{sourcePath}.keySelector(item{level});");
                 EmitNext(builder);
                 break;
-            case ThenByChainElement or ThenByDescendingChainElement:
+            case ThenByChainElement:
                 builder.AppendLine($"var item{level.Next} = this{sourcePath}.keySelector(item{piece.GetOrderByLevel()});");
                 EmitNext(builder);
                 break;

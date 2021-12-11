@@ -1,4 +1,6 @@
-﻿namespace MetaLinq.Generator;
+﻿using System.ComponentModel;
+
+namespace MetaLinq.Generator;
 
 public enum SourceType { List, Array, CustomCollection, CustomEnumerable }
 
@@ -24,10 +26,10 @@ public abstract record ChainElement {
     public static ChainElement TakeWhile => TakeWhileChainElement.Instance;
     public static ChainElement SkipWhile => SkipWhileChainElement.Instance;
     public static ChainElement Select => SelectChainElement.Instance;
-    public static ChainElement OrderBy => OrderByChainElement.Instance;
-    public static ChainElement OrderByDescending => OrderByDescendingChainElement.Instance;
-    public static ChainElement ThenBy => ThenByChainElement.Instance;
-    public static ChainElement ThenByDescending => ThenByDescendingChainElement.Instance;
+    public static ChainElement OrderBy => new OrderByChainElement(ListSortDirection.Ascending);
+    public static ChainElement OrderByDescending = new OrderByChainElement(ListSortDirection.Descending);
+    public static ChainElement ThenBy => new ThenByChainElement(ListSortDirection.Ascending);
+    public static ChainElement ThenByDescending => new ThenByChainElement(ListSortDirection.Descending);
     public static ChainElement SelectMany(SourceType sourceType) => new SelectManyChainElement(sourceType);
     public static readonly ToValueChainElement ToArray = new ToValueChainElement(ToValueType.ToArray);
     public static readonly ToValueChainElement ToHashSet = new ToValueChainElement(ToValueType.ToHashSet);
@@ -96,28 +98,14 @@ public sealed record SelectChainElement : IntermediateChainElement {
     internal override string Type => "Select";
 }
 
-public sealed record OrderByChainElement : IntermediateChainElement {
-    public static readonly OrderByChainElement Instance = new OrderByChainElement();
-    OrderByChainElement() { }
-    internal override string Type => "OrderBy";
+public sealed record OrderByChainElement(ListSortDirection Direction) : IntermediateChainElement {
+    internal override string Type => "OrderBy" + Direction.GetDescendingSuffix();
 }
-
-public sealed record OrderByDescendingChainElement : IntermediateChainElement {
-    public static readonly OrderByDescendingChainElement Instance = new OrderByDescendingChainElement();
-    OrderByDescendingChainElement() { }
-    internal override string Type => "OrderByDescending";
+public sealed record ThenByChainElement(ListSortDirection Direction) : IntermediateChainElement {
+    internal override string Type => "ThenBy" + Direction.GetDescendingSuffix();
 }
-
-public sealed record ThenByChainElement : IntermediateChainElement {
-    public static readonly ThenByChainElement Instance = new ThenByChainElement();
-    ThenByChainElement() { }
-    internal override string Type => "ThenBy";
-}
-
-public sealed record ThenByDescendingChainElement : IntermediateChainElement {
-    public static readonly ThenByDescendingChainElement Instance = new ThenByDescendingChainElement();
-    ThenByDescendingChainElement() { }
-    internal override string Type => "ThenByDescending";
+public static class ListSortDirectionExtensions {
+    public static string? GetDescendingSuffix(this ListSortDirection direction) => direction == ListSortDirection.Descending ? "Descending" : null;
 }
 
 public sealed record SelectManyChainElement(SourceType SourceType) : IntermediateChainElement {

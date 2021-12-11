@@ -7,7 +7,7 @@ public record PieceOfWork(EmitContext[] Contexts, bool SameSize) {
     //public bool SameSize => Contexts.Any() && Contexts.All(x => x.Node is not (WhereNode or SkipWhileNode or TakeWhileNode or SelectManyChainElement));
     public bool SameType => Contexts.All(x => x.Element is not (SelectChainElement or SelectManyChainElement));
     public ResultType ResultType 
-        => Contexts.LastOrDefault()?.Element is OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement
+        => Contexts.LastOrDefault()?.Element is OrderByChainElement or ThenByChainElement
         ? ResultType.OrderBy 
         : ResultType.ToValue; 
     public override string ToString() {
@@ -39,7 +39,7 @@ public static class PieceOfWorkExtensions {
         };
         bool IsOrderBy() 
             => current.LastOrDefault()?.Element is
-            OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement;
+            OrderByChainElement or ThenByChainElement;
         for(int i = 0; i < contexts.Count; i++) {
             var context = contexts[i];
             var nextContext = i < contexts.Count - 1 ? contexts[i + 1] : null;
@@ -61,12 +61,12 @@ public static class PieceOfWorkExtensions {
                     sameSize = false;
                     current.Add(context);
                     break;
-                case OrderByChainElement or OrderByDescendingChainElement:
+                case OrderByChainElement:
                     if(!sameSize)
                         yield return CreateAndReset();
                     current.Add(context);
                     break;
-                case ThenByChainElement or ThenByDescendingChainElement:
+                case ThenByChainElement:
                     current.Add(context);
                     break;
                 default:

@@ -252,7 +252,7 @@ public record struct Level {
 }
 
 public static class CodeGenerationTraits {
-    public static Level GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Element is OrderByChainElement or OrderByDescendingChainElement).Level;
+    public static Level GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Element is OrderByChainElement).Level;
     public static string GetEnumerableTypeName(this IntermediateChainElement intermediate, Level level) {
             var enumerableKind = intermediate.GetEnumerableKind();
             var sourceTypePart = intermediate switch {
@@ -283,7 +283,7 @@ public static class CodeGenerationTraits {
     public static string GetArgumentType(this IntermediateChainElement intermediate, string inType, string outType) {
             return intermediate switch {
                 WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => $"Func<{inType}, bool>",
-                SelectChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => $"Func<{inType}, {outType}>",
+                SelectChainElement or OrderByChainElement or ThenByChainElement => $"Func<{inType}, {outType}>",
                 SelectManyChainElement selectMany => $"Func<{inType}, {selectMany.SourceType.GetSourceTypeName(outType)}>",
                 _ => throw new NotImplementedException(),
             };
@@ -309,10 +309,8 @@ public static class CodeGenerationTraits {
                 SkipWhileChainElement => "SkipWhile",
                 SelectChainElement => "Select",
                 SelectManyChainElement => "SelectMany",
-                OrderByChainElement => "OrderBy",
-                OrderByDescendingChainElement => "OrderByDescending",
-                ThenByChainElement => "ThenBy",
-                ThenByDescendingChainElement => "ThenByDescending",
+                OrderByChainElement orderBy => "OrderBy" + orderBy.Direction.GetDescendingSuffix(),
+                ThenByChainElement thenBy => "ThenBy" + thenBy.Direction.GetDescendingSuffix(),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -327,14 +325,14 @@ public static class CodeGenerationTraits {
     public static string? GetOwnTypeArg(this IntermediateChainElement intermediate, string argName) {
             return intermediate switch {
                 WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => null,
-                SelectChainElement or SelectManyChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => argName,
+                SelectChainElement or SelectManyChainElement or OrderByChainElement or ThenByChainElement => argName,
                 _ => throw new NotImplementedException(),
             };
         }
 
     public static string GetOutputType(this EmitContext context) {
             return context.Element switch {
-                WhereChainElement or TakeWhileChainElement or SkipWhileChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => context.SourceGenericArg,
+                WhereChainElement or TakeWhileChainElement or SkipWhileChainElement or OrderByChainElement or ThenByChainElement => context.SourceGenericArg,
                 SelectChainElement or SelectManyChainElement => context.GetResultGenericType(),
                 _ => throw new NotImplementedException(),
             };
@@ -343,7 +341,7 @@ public static class CodeGenerationTraits {
             return intermediate switch {
                 WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => "predicate",
                 SelectChainElement or SelectManyChainElement => "selector",
-                OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => "keySelector",
+                OrderByChainElement or ThenByChainElement => "keySelector",
                 _ => throw new NotImplementedException(),
             };
         }
