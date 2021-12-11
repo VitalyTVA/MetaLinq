@@ -93,15 +93,14 @@ public class GenerationTests : BaseFixture {
     [Test]
     public void Array_OrderBy_ThenBy_FirstAndFirstOrDefault() {
         AssertGeneration(
-@"Data __() {{
+@"void __() {{
     var source = Data.Array(10).Shuffle(longMaxValue: 3);
     Assert.Null(source.OrderBy(x => x.Long).ThenBy(x => x.Int).FirstOrDefault(x => x.Int == 1 && x.Long == 3));
-    return source.OrderBy(x => x.Long).ThenBy(x => x.Int).First(x => x.Int == 1 && x.Long == 2);
+    var first = source.OrderBy(x => x.Long).ThenBy(x => x.Int).First(x => x.Int == 1 && x.Long == 2);
+    Assert.AreEqual(1, first.Int);
+    Assert.AreEqual(2, first.Long);
 }}",
-        (Data x) => {
-            Assert.AreEqual(1, x.Int);
-            Assert.AreEqual(2, x.Long);
-        },
+        NoAssert,
         new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
                     new StructMethod("ThenBy", new[] {
@@ -2230,7 +2229,7 @@ $@"Data __() {{
         }
     }
 
-
+    static readonly Action<object> NoAssert = _ => { };
     static void AssertGeneration<T>(string code, Action<T> assert, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null, Action<IEnumerable<string>>? assertGeneratedCode = null) {
         AssertGeneration(new[] { (code, assert) }, methods, addMetaLinqUsing, addStadardLinqUsing, additionalClassCode, assertGeneratedCode);
     }
@@ -2333,7 +2332,7 @@ public static class Executor {{
             .ToArray();
         for(int i = 0; i < executeMethods.Length; i++) {
             var result = (T)executeMethods[i].Invoke(null, null)!;
-            cases[i].assert(result);
+            cases[i].assert?.Invoke(result);
         }
 
         AssertGeneratedClasses(methods, assembly, executorType);
