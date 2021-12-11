@@ -52,6 +52,45 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void CustomEnumerable_OrderBy_First() {
+        AssertGeneration(
+@"Data __() {{
+    var source = Data.Array(10).Shuffle();
+    return new CustomEnumerable<Data>(source).OrderBy(x => x.Int).First(x => x.Int > 4);
+}}",
+        (Data x) => Assert.AreEqual(5, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "OrderBy", new[] {
+                    new StructMethod("First")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void CustomEnumerable_Where_OrderBy_First() {
+        AssertGeneration(
+@"Data __() {{
+    var source = Data.Array(15).Shuffle();
+    return new CustomEnumerable<Data>(source).Where(x => x.Int > 8).OrderBy(x => x.Int).First(x => x.Int % 4 == 0);
+}}",
+        (Data x) => Assert.AreEqual(12, x.Int),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("First"),
+                })
+
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
     public void Array_OrderByDescending_FirstOrDefault() {
         AssertGeneration(
 @"Data? __() {{
@@ -711,6 +750,30 @@ public class GenerationTests : BaseFixture {
         (int x) => Assert.AreEqual(4, x),
         new[] {
             new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("OrderByDescending", new[] {
+                            new StructMethod("First"),
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void CustomEnumerable_Where_OrderBy_Select_OrderByDescending_First() {
+        AssertGeneration(
+@"int __() {{
+    var source = Data.Array(10).Shuffle();
+    return new CustomEnumerable<Data>(source).Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).OrderByDescending(x => 2 * x).First(x => x < 5);
+}}",
+        (int x) => Assert.AreEqual(4, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Where", new[] {
                 new StructMethod("OrderBy", new[] {
                     new StructMethod("Select", new[] {
                         new StructMethod("OrderByDescending", new[] {

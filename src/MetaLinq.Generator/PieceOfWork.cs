@@ -16,8 +16,16 @@ public record PieceOfWork(EmitContext[] Contexts, bool SameSize) {
 }
 
 public static class PieceOfWorkExtensions {
-    public static PieceOfWork[] GetPieces(this EmitContext context, SourceType sourceType) 
-        => context.GetPiecesCore(sourceType).ToArray();
+    public static IReadOnlyList<PieceOfWork> GetPieces(this EmitContext context, SourceType sourceType, ToValueType toValueType) {
+        var result = context.GetPiecesCore(sourceType).ToList();
+        if(toValueType is ToValueType.First or ToValueType.FirstOrDefault
+            && !result.First().Contexts.Any()
+            /*&& result.Count == 2*/) {
+            result.RemoveAt(0);
+            result[0] = result[0] with { SameSize = false };
+        }
+        return result.AsReadOnly();
+    }
 
     static IEnumerable<PieceOfWork> GetPiecesCore(this EmitContext lastContext, SourceType sourceType) {
         var contexts = lastContext.GetReversedContexts().ToList();

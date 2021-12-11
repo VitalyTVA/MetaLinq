@@ -1,4 +1,4 @@
-!!!Iterate List<T> via For, not Foreach
+CustomEnumerable-Where-OrderBy-First chains optimization
 
 simplify senseless chains like OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray
  
@@ -48,12 +48,15 @@ ListLayout struct in different frameworks
 
 diagnostics error if no reference to MetaLinq.dll (INamedTypeSymbol for MetaLinq.Enumerable not found in SyntaxContextReceiver)
 
-ArrayPool<TKey>.Shared.Return(sortKeys, clearArray: false); - should clear when T is not a primitive value type 
+ArrayPool<TKey>.Shared.Return(sortKeys, clearArray: false); - should clear when T is not a primitive value type
+
+Optimize chains like Where-OrderBy-Where-OrderBy - no need for array here??
 
 # Postponed3
 
 Regression query optimizer for large queries
 
+"Sequence contains no matching element" - exception texts localization
 
 # Tests
 

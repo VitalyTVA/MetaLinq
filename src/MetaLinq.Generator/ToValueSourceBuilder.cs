@@ -12,13 +12,13 @@ public enum ToValueType {
 }
 
 public static class ToValueSourceBuilder {
-    public static void EmitToValue(SourceType source, CodeBuilder builder, EmitContext context, ToValueType toInstanceType) {
+    public static void EmitToValue(SourceType source, CodeBuilder builder, EmitContext context, ToValueType toValueType) {
         IntermediateNode intermediate = context.Node;
         var outputType = context.GetOutputType();
 
         var sourcePath = CodeGenerationTraits.GetSourcePath(context.Level.Next.Value);
 
-        var methodDefinition = toInstanceType switch {
+        var methodDefinition = toValueType switch {
             ToValueType.ToArray => $"{outputType}[] ToArray()",
             ToValueType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
             ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
@@ -28,13 +28,13 @@ public static class ToValueSourceBuilder {
         };
         builder.AppendLine($"public {methodDefinition} {{");
 
-        var pieces = context.GetPieces(source);
+        var pieces = context.GetPieces(source, toValueType);
         foreach(var piece in pieces) {
             bool first = pieces.First() == piece;
             bool last = pieces.Last() == piece;
             EmitPieceOrWork(
                 first ? source : SourceType.Array,
-                last ? toInstanceType : default,
+                last ? toValueType : default,
                 builder,
                 first ? "this" + sourcePath : "result_" + piece.TopLevel.Prev,
                 piece,
@@ -180,7 +180,7 @@ var comparer{lastLevel} = {comparerExpression};
 var result_{lastLevel} = {resultExpression};"
                 );
 
-            case (true, ResultType.OrderBy, ToValueType.First or ToValueType.FirstOrDefault):
+            case (_, ResultType.OrderBy, ToValueType.First or ToValueType.FirstOrDefault):
                 var order_ = GetOrder();
                 var itemLevel = order_.First().Level;
                 var keyDefinitions = order_

@@ -12,12 +12,34 @@ public class PieceOfWorkTests {
     }
 
     [Test]
-    public void OrderBy_CustomEnumerable() {
+    public void CustomEnumerable_OrderBy(
+        [Values(ToValueType.ToHashSet, ToValueType.ToArray, ToValueType.ToDictionary)] ToValueType toValueType
+    ) {
         AssertPieces(new[] { OrderBy }, new[] {
 "SameType: True, SameSize: False, ResultType: ToValue, Nodes: []",
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
-        }, SourceType.CustomEnumerable);
+        }, SourceType.CustomEnumerable, toValueType);
     }
+
+    [Test]
+    public void CustomEnumerable_OrderBy_First(
+        [Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+    ) {
+        AssertPieces(new[] { OrderBy }, new[] {
+"SameType: True, SameSize: False, ResultType: OrderBy, Nodes: [OrderBy]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void CustomEnumerable_Where_OrderBy_First(
+        [Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+    ) {
+        AssertPieces(new[] { Where, OrderBy }, new[] {
+"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
 
     [Test]
     public void OrderBy_ThenBy() {
@@ -269,7 +291,7 @@ public class PieceOfWorkTests {
         });
     }
 
-    static void AssertPieces(ChainElement[] chain, string[] expected, SourceType sourceType = SourceType.List) {
+    static void AssertPieces(ChainElement[] chain, string[] expected, SourceType sourceType = SourceType.List, ToValueType toValueType = ToValueType.ToArray) {
         var model = new LinqModel();
         model.AddChain(sourceType, chain);
         var firstNode = (IntermediateNode)model.GetTrees().Single().Item2.GetNodes().Single();
@@ -279,7 +301,7 @@ public class PieceOfWorkTests {
                 var node = context.Node.GetNodes().OfType<IntermediateNode>().SingleOrDefault();
                 return node != null ? context.Next(node) : null;
             }).Last();
-        var result = lastContext.GetPieces(sourceType).ToArray().Select(x => x.ToString()).ToArray();
+        var result = lastContext.GetPieces(sourceType, toValueType).ToArray().Select(x => x.ToString()).ToArray();
         CollectionAssert.AreEqual(expected, result);
     }
 }
