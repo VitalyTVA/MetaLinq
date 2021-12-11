@@ -5,7 +5,6 @@ namespace MetaLinq.Generator;
 
 public static class ToValueSourceBuilder {
     public static void EmitToValue(SourceType source, CodeBuilder builder, EmitContext context, ToValueType toValueType) {
-        IntermediateNode intermediate = context.Node;
         var outputType = context.GetOutputType();
 
         var sourcePath = CodeGenerationTraits.GetSourcePath(context.Level.Next.Value);
@@ -45,7 +44,7 @@ public static class ToValueSourceBuilder {
         builder.Tab.AppendMultipleLines(arrayBuilder);
 
         foreach(var item in piece.Contexts) {
-            if(item.Node is SkipWhileNode)
+            if(item.Node.Element is SkipWhileChainElement)
                 builder.Tab.AppendLine($"var skipWhile{item.Level.Next} = true;");
         }
 
@@ -53,7 +52,7 @@ public static class ToValueSourceBuilder {
             bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
 
         foreach(var item in piece.Contexts) {
-            if(item.Node is TakeWhileNode)
+            if(item.Node.Element is TakeWhileChainElement)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
         if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.ResultType is not ResultType.OrderBy)
@@ -71,8 +70,8 @@ public static class ToValueSourceBuilder {
         var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
         (Level Level, string sortKeyGenericType, bool descending)[] GetOrder() => piece.Contexts
-            .SkipWhile(x => x.Node is not (OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode))
-            .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Node is OrderByDescendingNode or ThenByDescendingNode))
+            .SkipWhile(x => x.Node.Element is not (OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement))
+            .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Node.Element is OrderByDescendingChainElement or ThenByDescendingChainElement))
             .ToArray();
         string GetFirstResultStatement() =>
 $@"if(!found{topLevel})
@@ -245,22 +244,22 @@ foreach(var item{level} in source{level}) {{");
         }
         var intermediate = piece.Contexts[level.Minus(piece.TopLevel)].Node;
         var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Minus(level));
-        switch(intermediate) {
-            case WhereNode:
+        switch(intermediate.Element) {
+            case WhereChainElement:
                 builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
 if(!this{sourcePath}.predicate(item{level.Next}))
     continue;");
                 EmitNext(builder);
                 break;
-            case TakeWhileNode:
+            case TakeWhileChainElement:
                 builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
 if(!this{sourcePath}.predicate(item{level.Next}))
     goto takeWhile{level.Next};");
                 EmitNext(builder);
                 break;
-            case SkipWhileNode:
+            case SkipWhileChainElement:
                 builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
 if(skipWhile{level.Next}) {{
@@ -272,19 +271,19 @@ if(skipWhile{level.Next}) {{
 }}");
                 EmitNext(builder);
                 break;
-            case SelectNode:
+            case SelectChainElement:
                 builder.AppendLine($@"var item{level.Next} = this{sourcePath}.selector(item{level});");
                 EmitNext(builder);
                 break;
-            case SelectManyNode selectMany:
+            case SelectManyChainElement selectMany:
                 EmitLoop(selectMany.SourceType, builder, level.Next, $"this{sourcePath}.selector(item{level})",
                     bodyBuilder => EmitNext(bodyBuilder));
                 break;
-            case OrderByNode or OrderByDescendingNode:
+            case OrderByChainElement or OrderByDescendingChainElement:
                 builder.AppendLine($"var item{level.Next} = this{sourcePath}.keySelector(item{level});");
                 EmitNext(builder);
                 break;
-            case ThenByNode or ThenByDescendingNode:
+            case ThenByChainElement or ThenByDescendingChainElement:
                 builder.AppendLine($"var item{level.Next} = this{sourcePath}.keySelector(item{piece.GetOrderByLevel()});");
                 EmitNext(builder);
                 break;

@@ -68,45 +68,47 @@ public sealed record ToListChainElement : TerminalChainElement {
     ToListChainElement() { }
 }
 
-public sealed record WhereChainElement : ChainElement {
+public abstract record class IntermediateChainElement : ChainElement { }
+
+public sealed record WhereChainElement : IntermediateChainElement {
     public static readonly WhereChainElement Instance = new WhereChainElement();
     WhereChainElement() { }
 }
 
-public sealed record TakeWhileChainElement : ChainElement {
+public sealed record TakeWhileChainElement : IntermediateChainElement {
     public static readonly TakeWhileChainElement Instance = new TakeWhileChainElement();
     TakeWhileChainElement() { }
 }
 
-public sealed record SkipWhileChainElement : ChainElement {
+public sealed record SkipWhileChainElement : IntermediateChainElement {
     public static readonly SkipWhileChainElement Instance = new SkipWhileChainElement();
     SkipWhileChainElement() { }
 }
 
-public sealed record SelectChainElement : ChainElement {
+public sealed record SelectChainElement : IntermediateChainElement {
     public static readonly SelectChainElement Instance = new SelectChainElement();
     SelectChainElement() { }
 }
 
-public sealed record OrderByChainElement : ChainElement {
+public sealed record OrderByChainElement : IntermediateChainElement {
     public static readonly OrderByChainElement Instance = new OrderByChainElement();
     OrderByChainElement() { }
 }
 
-public sealed record OrderByDescendingChainElement : ChainElement {
+public sealed record OrderByDescendingChainElement : IntermediateChainElement {
     public static readonly OrderByDescendingChainElement Instance = new OrderByDescendingChainElement();
     OrderByDescendingChainElement() { }
 }
 
-public sealed record ThenByChainElement : ChainElement {
+public sealed record ThenByChainElement : IntermediateChainElement {
     public static readonly ThenByChainElement Instance = new ThenByChainElement();
     ThenByChainElement() { }
 }
 
-public sealed record ThenByDescendingChainElement : ChainElement {
+public sealed record ThenByDescendingChainElement : IntermediateChainElement {
     public static readonly ThenByDescendingChainElement Instance = new ThenByDescendingChainElement();
     ThenByDescendingChainElement() { }
 }
 
-public sealed record SelectManyChainElement(SourceType SourceType) : ChainElement {
+public sealed record SelectManyChainElement(SourceType SourceType) : IntermediateChainElement {
 }

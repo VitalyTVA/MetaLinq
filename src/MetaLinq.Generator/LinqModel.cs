@@ -4,7 +4,7 @@ public class LinqModel {
     readonly Dictionary<SourceType, RootNode> trees = new();
 
     public void AddChain(SourceType source, IEnumerable<ChainElement> chain) {
-        IntermediateNode? node = trees.GetOrAdd(source, () => new RootNode());
+        TreeNode? node = trees.GetOrAdd(source, () => new RootNode());
         foreach(var item in chain) {
             if(node == null)
                 throw new InvalidOperationException();
@@ -53,7 +53,7 @@ public sealed class TerminalNode : TerminalNodeBase {
     }
 }
 
-public abstract class IntermediateNode : LinqNode {
+public abstract class TreeNode : LinqNode {
     readonly Dictionary<ChainElement, LinqNode> Nodes = new(/*Extensions.CreatequalityComparer<ChainElement>(x => x.GetHashCode(), (x1, x2) => {
         var typeComparison = EqualityComparer<Type>.Default.Equals(x1.GetType(), x2.GetType());
         if(!typeComparison) 
@@ -65,24 +65,8 @@ public abstract class IntermediateNode : LinqNode {
         IntermediateNode? Add<T>(Func<T> create) where T : LinqNode 
             => Nodes.GetOrAdd(element, create) as IntermediateNode;
         switch(element) {
-            case WhereChainElement:
-                return Add(static () => new WhereNode());
-            case TakeWhileChainElement:
-                return Add(static () => new TakeWhileNode());
-            case SkipWhileChainElement:
-                return Add(static () => new SkipWhileNode());
-            case SelectChainElement:
-                return Add(static () => new SelectNode());
-            case OrderByChainElement:
-                return Add(static () => new OrderByNode());
-            case OrderByDescendingChainElement:
-                return Add(static () => new OrderByDescendingNode());
-            case ThenByChainElement:
-                return Add(static () => new ThenByNode());
-            case ThenByDescendingChainElement:
-                return Add(static () => new ThenByDescendingNode());
-            case SelectManyChainElement selectManyNode:
-                return Add(() => new SelectManyNode(selectManyNode.SourceType));
+            case IntermediateChainElement intermediateChainElement:
+                return Add(() => new IntermediateNode(intermediateChainElement));
             case TerminalChainElement terminalElement:
                 return Add(() => new TerminalNode(terminalElement));
             default:
@@ -113,51 +97,30 @@ public abstract class IntermediateNode : LinqNode {
     protected internal abstract string Type { get; }
 }
 
-public sealed class RootNode : IntermediateNode {
+public sealed class RootNode : TreeNode {
     public RootNode() { }
     protected internal override string Type => "Root";
 }
 
-public sealed class WhereNode : IntermediateNode {
-    public WhereNode() { }
-    protected internal override string Type => "Where";
-}
-
-public sealed class TakeWhileNode : IntermediateNode {
-    public TakeWhileNode() { }
-    protected internal override string Type => "TakeWhile";
-}
-
-public sealed class SkipWhileNode : IntermediateNode {
-    public SkipWhileNode() { }
-    protected internal override string Type => "SkipWhile";
-}
-
-public sealed class SelectNode : IntermediateNode {
-    public SelectNode() { }
-    protected internal override string Type => "Select";
-}
-public sealed class OrderByNode : IntermediateNode {
-    public OrderByNode() { }
-    protected internal override string Type => "OrderBy";
-}
-public sealed class OrderByDescendingNode : IntermediateNode {
-    public OrderByDescendingNode() { }
-    protected internal override string Type => "OrderByDescending";
-}
-public sealed class ThenByNode : IntermediateNode {
-    public ThenByNode() { }
-    protected internal override string Type => "ThenBy";
-}
-public sealed class ThenByDescendingNode : IntermediateNode {
-    public ThenByDescendingNode() { }
-    protected internal override string Type => "ThenByDescending";
-}
-
-public sealed class SelectManyNode : IntermediateNode {
-    public readonly SourceType SourceType;
-    public SelectManyNode(SourceType sourceType) {
-        SourceType = sourceType;
+public sealed class IntermediateNode : TreeNode {
+    public readonly IntermediateChainElement Element;
+    public IntermediateNode(IntermediateChainElement element) {
+        Element = element;
     }
-    protected internal override string Type => "SelectMany " + SourceType;
+    protected internal override string Type {
+        get {
+            return Element switch {
+                WhereChainElement => "Where",
+                TakeWhileChainElement => "TakeWhile",
+                SkipWhileChainElement => "SkipWhile",
+                SelectChainElement => "Select",
+                OrderByChainElement => "OrderBy",
+                OrderByDescendingChainElement => "OrderByDescending",
+                ThenByChainElement => "ThenBy",
+                ThenByDescendingChainElement => "ThenByDescending",
+                SelectManyChainElement selectManyNode => "SelectMany " + selectManyNode.SourceType,
+                _ => throw new InvalidOperationException()
+            };
+        }
+    }
 }

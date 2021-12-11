@@ -127,7 +127,7 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
         }
     }
     static void EmitGetEnumerator(SourceType source, CodeBuilder builder, EmitContext context) {
-            IntermediateNode intermediate = context.Node;
+            var intermediate = context.Node;
             var countName = source.GetCountName();
             var outputType = context.GetOutputType();
             var enumerableKind = intermediate.GetEnumerableKind();
@@ -136,8 +136,8 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
             var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(context.Level)}{ownTypeArgsList}";
             builder.AppendLine("#nullable disable");
             var selectManyLevels = contexts
-                .Where(x => x.Node is SelectManyNode)
-                .Select(x => (index: x.Level.Next, node: (SelectManyNode)x.Node, outputType: x.GetOutputType()))
+                .Where(x => x.Node.Element is SelectManyChainElement)
+                .Select(x => (index: x.Level.Next, node: (SelectManyChainElement)x.Node.Element, outputType: x.GetOutputType()))
                 .ToArray();
             using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
                 
@@ -199,17 +199,17 @@ IEnumerator IEnumerable.GetEnumerator() {{
             var level = context.Level;
             var intermediate = context.Node;
             var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Prev.Minus(level));
-            switch(intermediate) {
-                case WhereNode:
+            switch(intermediate.Element) {
+                case WhereChainElement:
                     builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
 if(!source{sourcePath}.predicate(item{level.Next}))
     goto next{context.GetLabelIndex(skip: 0)};");
                     break;
-                case SelectNode:
+                case SelectChainElement:
                     builder.AppendLine($@"var item{level.Next} = source{sourcePath}.selector(item{level});");
                     break;
-                case SelectManyNode selectMany:
+                case SelectManyChainElement selectMany:
                     builder.Return!.AppendMultipleLines($@"
     source{level.Next} = source{sourcePath}.selector(item{level});
     i{level.Next} = -1;
@@ -254,11 +254,11 @@ public record struct Level {
 }
 
 public static class CodeGenerationTraits {
-    public static Level GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Node is OrderByNode or OrderByDescendingNode).Level;
+    public static Level GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Node.Element is OrderByChainElement or OrderByDescendingChainElement).Level;
     public static string GetEnumerableTypeName(this IntermediateNode intermediate, Level level) {
             var enumerableKind = intermediate.GetEnumerableKind();
-            var sourceTypePart = intermediate switch {
-                SelectManyNode selectMany => "_" + selectMany.SourceType.GetEnumerableSourceNameShort(),
+            var sourceTypePart = intermediate.Element switch {
+                SelectManyChainElement selectMany => "_" + selectMany.SourceType.GetEnumerableSourceNameShort(),
                 _ => null
             };
             return enumerableKind + "En" + sourceTypePart + level;
@@ -283,10 +283,10 @@ public static class CodeGenerationTraits {
             };
         }
     public static string GetArgumentType(this IntermediateNode intermediate, string inType, string outType) {
-            return intermediate switch {
-                WhereNode or TakeWhileNode or SkipWhileNode => $"Func<{inType}, bool>",
-                SelectNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => $"Func<{inType}, {outType}>",
-                SelectManyNode selectMany => $"Func<{inType}, {selectMany.SourceType.GetSourceTypeName(outType)}>",
+            return intermediate.Element switch {
+                WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => $"Func<{inType}, bool>",
+                SelectChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => $"Func<{inType}, {outType}>",
+                SelectManyChainElement selectMany => $"Func<{inType}, {selectMany.SourceType.GetSourceTypeName(outType)}>",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -305,16 +305,16 @@ public static class CodeGenerationTraits {
             };
         }
     public static string GetEnumerableKind(this IntermediateNode intermediate) {
-            return intermediate switch {
-                WhereNode => "Where",
-                TakeWhileNode => "TakeWhile",
-                SkipWhileNode => "SkipWhile",
-                SelectNode => "Select",
-                SelectManyNode => "SelectMany",
-                OrderByNode => "OrderBy",
-                OrderByDescendingNode => "OrderByDescending",
-                ThenByNode => "ThenBy",
-                ThenByDescendingNode => "ThenByDescending",
+            return intermediate.Element switch {
+                WhereChainElement => "Where",
+                TakeWhileChainElement => "TakeWhile",
+                SkipWhileChainElement => "SkipWhile",
+                SelectChainElement => "Select",
+                SelectManyChainElement => "SelectMany",
+                OrderByChainElement => "OrderBy",
+                OrderByDescendingChainElement => "OrderByDescending",
+                ThenByChainElement => "ThenBy",
+                ThenByDescendingChainElement => "ThenByDescending",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -327,25 +327,25 @@ public static class CodeGenerationTraits {
         }
 
     public static string? GetOwnTypeArg(this IntermediateNode intermediate, string argName) {
-            return intermediate switch {
-                WhereNode or TakeWhileNode or SkipWhileNode => null,
-                SelectNode or SelectManyNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => argName,
+            return intermediate.Element switch {
+                WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => null,
+                SelectChainElement or SelectManyChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => argName,
                 _ => throw new NotImplementedException(),
             };
         }
 
     public static string GetOutputType(this EmitContext context) {
-            return context.Node switch {
-                WhereNode or TakeWhileNode or SkipWhileNode or OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => context.SourceGenericArg,
-                SelectNode or SelectManyNode => context.GetResultGenericType(),
+            return context.Node.Element switch {
+                WhereChainElement or TakeWhileChainElement or SkipWhileChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => context.SourceGenericArg,
+                SelectChainElement or SelectManyChainElement => context.GetResultGenericType(),
                 _ => throw new NotImplementedException(),
             };
         }
     public static string GetArgumentName(this IntermediateNode intermediate) {
-            return intermediate switch {
-                WhereNode or TakeWhileNode or SkipWhileNode => "predicate",
-                SelectNode or SelectManyNode => "selector",
-                OrderByNode or OrderByDescendingNode or ThenByNode or ThenByDescendingNode => "keySelector",
+            return intermediate.Element switch {
+                WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => "predicate",
+                SelectChainElement or SelectManyChainElement => "selector",
+                OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => "keySelector",
                 _ => throw new NotImplementedException(),
             };
         }
@@ -358,6 +358,6 @@ public static class CodeGenerationTraits {
             };
         }
     public static Level GetLabelIndex(this EmitContext context, int skip) {
-            return context.GetContexts().Where(x => x.Node is SelectManyNode).Skip(skip).FirstOrDefault()?.Level.Next ?? Level.Zero;
+            return context.GetContexts().Where(x => x.Node.Element is SelectManyChainElement).Skip(skip).FirstOrDefault()?.Level.Next ?? Level.Zero;
         }
 }
