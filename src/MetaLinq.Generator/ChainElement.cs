@@ -68,47 +68,58 @@ public sealed record ToListChainElement : TerminalChainElement {
     ToListChainElement() { }
 }
 
-public abstract record class IntermediateChainElement : ChainElement { }
+public abstract record class IntermediateChainElement : ChainElement { 
+    internal abstract string Type { get; }
+}
 
 public sealed record WhereChainElement : IntermediateChainElement {
     public static readonly WhereChainElement Instance = new WhereChainElement();
     WhereChainElement() { }
+    internal override string Type => "Where";
 }
 
 public sealed record TakeWhileChainElement : IntermediateChainElement {
     public static readonly TakeWhileChainElement Instance = new TakeWhileChainElement();
     TakeWhileChainElement() { }
+    internal override string Type => "TakeWhile";
 }
 
 public sealed record SkipWhileChainElement : IntermediateChainElement {
     public static readonly SkipWhileChainElement Instance = new SkipWhileChainElement();
     SkipWhileChainElement() { }
+    internal override string Type => "SkipWhile";
 }
 
 public sealed record SelectChainElement : IntermediateChainElement {
     public static readonly SelectChainElement Instance = new SelectChainElement();
     SelectChainElement() { }
+    internal override string Type => "Select";
 }
 
 public sealed record OrderByChainElement : IntermediateChainElement {
     public static readonly OrderByChainElement Instance = new OrderByChainElement();
     OrderByChainElement() { }
+    internal override string Type => "OrderBy";
 }
 
 public sealed record OrderByDescendingChainElement : IntermediateChainElement {
     public static readonly OrderByDescendingChainElement Instance = new OrderByDescendingChainElement();
     OrderByDescendingChainElement() { }
+    internal override string Type => "OrderByDescending";
 }
 
 public sealed record ThenByChainElement : IntermediateChainElement {
     public static readonly ThenByChainElement Instance = new ThenByChainElement();
     ThenByChainElement() { }
+    internal override string Type => "ThenBy";
 }
 
 public sealed record ThenByDescendingChainElement : IntermediateChainElement {
     public static readonly ThenByDescendingChainElement Instance = new ThenByDescendingChainElement();
     ThenByDescendingChainElement() { }
+    internal override string Type => "ThenByDescending";
 }
 
 public sealed record SelectManyChainElement(SourceType SourceType) : IntermediateChainElement {
+    internal override string Type => "SelectMany " + SourceType;
 }

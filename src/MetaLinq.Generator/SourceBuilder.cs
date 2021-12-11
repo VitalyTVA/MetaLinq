@@ -17,71 +17,70 @@ public static class SourceBuilder {
         }
 
     private static void BuildSource(SourceType source, RootNode tree, CodeBuilder builder) {
-            builder.AppendMultipleLines(@"
+        builder.AppendMultipleLines(@"
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Buffers;
 using MetaLinq.Internal;");
-            using(builder.BuildNamespace(out CodeBuilder nsBuilder, "MetaLinq")) {
-                foreach(var node in tree.GetNodes()) {
-                    switch(node) {
-                        case IntermediateNode intermediate:
-                            EmitIntermediate(source, nsBuilder, intermediate);
-                            break;
-                        default:
-                            throw new InvalidOperationException();
-                    }
+        using(builder.BuildNamespace(out CodeBuilder nsBuilder, "MetaLinq")) {
+            foreach(var node in tree.GetNodes()) {
+                switch(node) {
+                    case IntermediateNode intermediate:
+                        EmitIntermediate(source, nsBuilder, intermediate);
+                        break;
+                    default:
+                        throw new InvalidOperationException();
                 }
             }
         }
+    }
     static void EmitIntermediate(SourceType source, CodeBuilder builder, IntermediateNode intermediate) {
-            EmitExtensionMethod(source, builder, intermediate);
-            using (builder.BuildType(out CodeBuilder sourceTypeBuilder, 
-                TypeModifiers.StaticClass, 
-                source.GetEnumerableSourceName(), 
-                partial: true, 
-                generics: EmitContext.RootSourceType)
-            ) {
-                var context = EmitContext.Root(source, intermediate);
-                EmitStruct(source, sourceTypeBuilder, context);
-            }
+        EmitExtensionMethod(source, builder, intermediate.Element);
+        using (builder.BuildType(out CodeBuilder sourceTypeBuilder, 
+            TypeModifiers.StaticClass, 
+            source.GetEnumerableSourceName(), 
+            partial: true, 
+            generics: EmitContext.RootSourceType)
+        ) {
+            var context = EmitContext.Root(source, intermediate);
+            EmitStruct(source, sourceTypeBuilder, context);
         }
-    static void EmitExtensionMethod(SourceType source, CodeBuilder builder, IntermediateNode intermediate)
+    }
+    static void EmitExtensionMethod(SourceType source, CodeBuilder builder, IntermediateChainElement intermediate) {
+        var sourceName = source.GetEnumerableSourceName();
+        var argumentName = intermediate.GetArgumentName();
+        var enumerableKind = intermediate.GetEnumerableKind();
+        var methodArgumentType = intermediate.GetArgumentType(EmitContext.RootSourceType, "TResult");
+        var methodEnumerableSourceType = source.GetSourceTypeName(EmitContext.RootSourceType);
+        var ownTypeArgsList = intermediate.GetOwnTypeArgsList("TResult");
+        var ownTypeArg = intermediate.GetOwnTypeArg("TResult");
+        var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(Level.Zero)}{ownTypeArgsList}";
+        
+        using (builder.BuildType(out CodeBuilder classBuilder, TypeModifiers.StaticClass, "MetaEnumerable", partial: true))
         {
-            var sourceName = source.GetEnumerableSourceName();
-            var argumentName = intermediate.GetArgumentName();
-            var enumerableKind = intermediate.GetEnumerableKind();
-            var methodArgumentType = intermediate.GetArgumentType(EmitContext.RootSourceType, "TResult");
-            var methodEnumerableSourceType = source.GetSourceTypeName(EmitContext.RootSourceType);
-            var ownTypeArgsList = intermediate.GetOwnTypeArgsList("TResult");
-            var ownTypeArg = intermediate.GetOwnTypeArg("TResult");
-            var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(Level.Zero)}{ownTypeArgsList}";
-            
-            using (builder.BuildType(out CodeBuilder classBuilder, TypeModifiers.StaticClass, "MetaEnumerable", partial: true))
-            {
-                classBuilder.AppendMultipleLines($@"
+            classBuilder.AppendMultipleLines($@"
 public static {sourceName}<TSource>.{enumerableTypeName} {enumerableKind}<TSource{(ownTypeArg != null ? ", " + ownTypeArg : null)}>(this {methodEnumerableSourceType} source, {methodArgumentType} {argumentName})
     => new {sourceName}<TSource>.{enumerableTypeName}(source, {argumentName});");
-            }
         }
+    }
     static void EmitStructMethod(CodeBuilder builder, EmitContext context) {
-            var intermediate = context.Node;
-            var argumentName = context.Node.GetArgumentName();
-            var methodArgumentType = intermediate.GetArgumentType(context.SourceGenericArg, "TResult");
+        var intermediate = context.Element;
+        var argumentName = intermediate.GetArgumentName();
+        var methodArgumentType = intermediate.GetArgumentType(context.SourceGenericArg, "TResult");
 
-            var ownTypeArgsList = intermediate.GetOwnTypeArgsList("TResult");
-            var enumerableKind = intermediate.GetEnumerableKind();
-            var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(context.Level)}{ownTypeArgsList}";
+        var ownTypeArgsList = intermediate.GetOwnTypeArgsList("TResult");
+        var enumerableKind = intermediate.GetEnumerableKind();
+        var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(context.Level)}{ownTypeArgsList}";
 
-            builder.AppendLine($"public {enumerableTypeName} {enumerableKind}{ownTypeArgsList}({methodArgumentType} {argumentName}) => new {enumerableTypeName}(this, {argumentName});");
-        }
+        builder.AppendLine($"public {enumerableTypeName} {enumerableKind}{ownTypeArgsList}({methodArgumentType} {argumentName}) => new {enumerableTypeName}(this, {argumentName});");
+    }
 
     static void EmitStruct(SourceType source, CodeBuilder builder, EmitContext context) {
-        IntermediateNode intermediate = context.Node;
+        var intermediate = context.Element;
         var argumentName = intermediate.GetArgumentName();
         var argumentType = intermediate.GetArgumentType(context.SourceGenericArg, context.GetResultGenericType());
-        var nodes = intermediate.GetNodes().ToList();
+        var nodes = context.Node.GetNodes().ToList();
         bool implementIEnumerable = nodes.Any(node => node is TerminalNode { Element: EnumerableChainElement });
         var outputType = context.GetOutputType();
         string typeName = intermediate.GetEnumerableTypeName(context.Level) + context.GetOwnTypeArgsList();
@@ -127,7 +126,7 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
         }
     }
     static void EmitGetEnumerator(SourceType source, CodeBuilder builder, EmitContext context) {
-            var intermediate = context.Node;
+            var intermediate = context.Element;
             var countName = source.GetCountName();
             var outputType = context.GetOutputType();
             var enumerableKind = intermediate.GetEnumerableKind();
@@ -136,8 +135,8 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
             var enumerableTypeName = $"{intermediate.GetEnumerableTypeName(context.Level)}{ownTypeArgsList}";
             builder.AppendLine("#nullable disable");
             var selectManyLevels = contexts
-                .Where(x => x.Node.Element is SelectManyChainElement)
-                .Select(x => (index: x.Level.Next, node: (SelectManyChainElement)x.Node.Element, outputType: x.GetOutputType()))
+                .Where(x => x.Element is SelectManyChainElement)
+                .Select(x => (index: x.Level.Next, node: (SelectManyChainElement)x.Element, outputType: x.GetOutputType()))
                 .ToArray();
             using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
                 
@@ -197,9 +196,8 @@ IEnumerator IEnumerable.GetEnumerator() {{
 
     static void EmitEnumeratorLevel(CodeBuilder builder, EmitContext context, Level totalLevels) {
             var level = context.Level;
-            var intermediate = context.Node;
             var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Prev.Minus(level));
-            switch(intermediate.Element) {
+            switch(context.Element) {
                 case WhereChainElement:
                     builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
@@ -230,14 +228,17 @@ next{level.Next}:
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
 }
-public record EmitContext(Level Level, IntermediateNode Node, string SourceType, string SourceGenericArg, EmitContext? Parent) {
+public record EmitContext(Level Level, IntermediateNode _Node, string SourceType, string SourceGenericArg, EmitContext? Parent) {
+    public IntermediateNode Node => _Node;
+    public IntermediateChainElement Element => _Node.Element;
+
     public const string RootSourceType = "TSource";
 
     public static EmitContext Root(SourceType source, IntermediateNode Node) 
             => new EmitContext(Level.Zero, Node, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
 
     public EmitContext Next(IntermediateNode node)
-            => new EmitContext(Level.Next, node, Node.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
+            => new EmitContext(Level.Next, node, Element.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
 }
 public record struct Level {
     public static Level MinusOne => new Level(-1);
@@ -254,10 +255,10 @@ public record struct Level {
 }
 
 public static class CodeGenerationTraits {
-    public static Level GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Node.Element is OrderByChainElement or OrderByDescendingChainElement).Level;
-    public static string GetEnumerableTypeName(this IntermediateNode intermediate, Level level) {
+    public static Level GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Element is OrderByChainElement or OrderByDescendingChainElement).Level;
+    public static string GetEnumerableTypeName(this IntermediateChainElement intermediate, Level level) {
             var enumerableKind = intermediate.GetEnumerableKind();
-            var sourceTypePart = intermediate.Element switch {
+            var sourceTypePart = intermediate switch {
                 SelectManyChainElement selectMany => "_" + selectMany.SourceType.GetEnumerableSourceNameShort(),
                 _ => null
             };
@@ -282,8 +283,8 @@ public static class CodeGenerationTraits {
                 _ => throw new NotImplementedException(),
             };
         }
-    public static string GetArgumentType(this IntermediateNode intermediate, string inType, string outType) {
-            return intermediate.Element switch {
+    public static string GetArgumentType(this IntermediateChainElement intermediate, string inType, string outType) {
+            return intermediate switch {
                 WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => $"Func<{inType}, bool>",
                 SelectChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => $"Func<{inType}, {outType}>",
                 SelectManyChainElement selectMany => $"Func<{inType}, {selectMany.SourceType.GetSourceTypeName(outType)}>",
@@ -304,8 +305,8 @@ public static class CodeGenerationTraits {
                 _ => throw new NotImplementedException(),
             };
         }
-    public static string GetEnumerableKind(this IntermediateNode intermediate) {
-            return intermediate.Element switch {
+    public static string GetEnumerableKind(this IntermediateChainElement intermediate) {
+            return intermediate switch {
                 WhereChainElement => "Where",
                 TakeWhileChainElement => "TakeWhile",
                 SkipWhileChainElement => "SkipWhile",
@@ -319,15 +320,15 @@ public static class CodeGenerationTraits {
             };
         }
     public static string? GetOwnTypeArgsList(this EmitContext context) {
-            return context.Node.GetOwnTypeArgsList(context.GetResultGenericType());
+            return context.Element.GetOwnTypeArgsList(context.GetResultGenericType());
         }
-    public static string? GetOwnTypeArgsList(this IntermediateNode intermediate, string argName) {
+    public static string? GetOwnTypeArgsList(this IntermediateChainElement intermediate, string argName) {
             var ownTypeArg = intermediate.GetOwnTypeArg(argName);
             return ownTypeArg == null ? null : $"<{ownTypeArg}>";
         }
 
-    public static string? GetOwnTypeArg(this IntermediateNode intermediate, string argName) {
-            return intermediate.Element switch {
+    public static string? GetOwnTypeArg(this IntermediateChainElement intermediate, string argName) {
+            return intermediate switch {
                 WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => null,
                 SelectChainElement or SelectManyChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => argName,
                 _ => throw new NotImplementedException(),
@@ -335,14 +336,14 @@ public static class CodeGenerationTraits {
         }
 
     public static string GetOutputType(this EmitContext context) {
-            return context.Node.Element switch {
+            return context.Element switch {
                 WhereChainElement or TakeWhileChainElement or SkipWhileChainElement or OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => context.SourceGenericArg,
                 SelectChainElement or SelectManyChainElement => context.GetResultGenericType(),
                 _ => throw new NotImplementedException(),
             };
         }
-    public static string GetArgumentName(this IntermediateNode intermediate) {
-            return intermediate.Element switch {
+    public static string GetArgumentName(this IntermediateChainElement intermediate) {
+            return intermediate switch {
                 WhereChainElement or TakeWhileChainElement or SkipWhileChainElement => "predicate",
                 SelectChainElement or SelectManyChainElement => "selector",
                 OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement => "keySelector",
@@ -358,6 +359,6 @@ public static class CodeGenerationTraits {
             };
         }
     public static Level GetLabelIndex(this EmitContext context, int skip) {
-            return context.GetContexts().Where(x => x.Node.Element is SelectManyChainElement).Skip(skip).FirstOrDefault()?.Level.Next ?? Level.Zero;
+            return context.GetContexts().Where(x => x.Element is SelectManyChainElement).Skip(skip).FirstOrDefault()?.Level.Next ?? Level.Zero;
         }
 }

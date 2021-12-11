@@ -44,7 +44,7 @@ public static class ToValueSourceBuilder {
         builder.Tab.AppendMultipleLines(arrayBuilder);
 
         foreach(var item in piece.Contexts) {
-            if(item.Node.Element is SkipWhileChainElement)
+            if(item.Element is SkipWhileChainElement)
                 builder.Tab.AppendLine($"var skipWhile{item.Level.Next} = true;");
         }
 
@@ -52,7 +52,7 @@ public static class ToValueSourceBuilder {
             bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
 
         foreach(var item in piece.Contexts) {
-            if(item.Node.Element is TakeWhileChainElement)
+            if(item.Element is TakeWhileChainElement)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
         if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.ResultType is not ResultType.OrderBy)
@@ -70,8 +70,8 @@ public static class ToValueSourceBuilder {
         var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
         (Level Level, string sortKeyGenericType, bool descending)[] GetOrder() => piece.Contexts
-            .SkipWhile(x => x.Node.Element is not (OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement))
-            .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Node.Element is OrderByDescendingChainElement or ThenByDescendingChainElement))
+            .SkipWhile(x => x.Element is not (OrderByChainElement or OrderByDescendingChainElement or ThenByChainElement or ThenByDescendingChainElement))
+            .Select(x => (x.Level, sortKeyGenericType: x.GetResultGenericType(), descending: x.Element is OrderByDescendingChainElement or ThenByDescendingChainElement))
             .ToArray();
         string GetFirstResultStatement() =>
 $@"if(!found{topLevel})
@@ -242,9 +242,9 @@ foreach(var item{level} in source{level}) {{");
             EmitNext(builder.Tab);
             return;
         }
-        var intermediate = piece.Contexts[level.Minus(piece.TopLevel)].Node;
+        var intermediate = piece.Contexts[level.Minus(piece.TopLevel)].Element;
         var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Minus(level));
-        switch(intermediate.Element) {
+        switch(intermediate) {
             case WhereChainElement:
                 builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};

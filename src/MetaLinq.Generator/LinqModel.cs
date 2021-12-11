@@ -54,12 +54,7 @@ public sealed class TerminalNode : TerminalNodeBase {
 }
 
 public abstract class TreeNode : LinqNode {
-    readonly Dictionary<ChainElement, LinqNode> Nodes = new(/*Extensions.CreatequalityComparer<ChainElement>(x => x.GetHashCode(), (x1, x2) => {
-        var typeComparison = EqualityComparer<Type>.Default.Equals(x1.GetType(), x2.GetType());
-        if(!typeComparison) 
-            return typeComparison;
-        return EqualityComparer<string>.Default.Equals(x1.ToString(), x2.ToString());
-    })*/);
+    readonly Dictionary<ChainElement, LinqNode> Nodes = new();
 
     public IntermediateNode? AddElement(ChainElement element) {
         IntermediateNode? Add<T>(Func<T> create) where T : LinqNode 
@@ -94,12 +89,12 @@ public abstract class TreeNode : LinqNode {
         }
         return sb.ToString();
     }
-    protected internal abstract string Type { get; }
+    protected abstract string Type { get; }
 }
 
 public sealed class RootNode : TreeNode {
     public RootNode() { }
-    protected internal override string Type => "Root";
+    protected override string Type => "Root";
 }
 
 public sealed class IntermediateNode : TreeNode {
@@ -107,20 +102,5 @@ public sealed class IntermediateNode : TreeNode {
     public IntermediateNode(IntermediateChainElement element) {
         Element = element;
     }
-    protected internal override string Type {
-        get {
-            return Element switch {
-                WhereChainElement => "Where",
-                TakeWhileChainElement => "TakeWhile",
-                SkipWhileChainElement => "SkipWhile",
-                SelectChainElement => "Select",
-                OrderByChainElement => "OrderBy",
-                OrderByDescendingChainElement => "OrderByDescending",
-                ThenByChainElement => "ThenBy",
-                ThenByDescendingChainElement => "ThenByDescending",
-                SelectManyChainElement selectManyNode => "SelectMany " + selectManyNode.SourceType,
-                _ => throw new InvalidOperationException()
-            };
-        }
-    }
+    protected override string Type  => Element.Type;
 }
