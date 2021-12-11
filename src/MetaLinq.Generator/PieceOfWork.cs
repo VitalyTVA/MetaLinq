@@ -5,9 +5,9 @@ public record PieceOfWork(EmitContext[] Contexts, bool SameSize) {
     public Level LastLevel => Contexts.LastOrDefault()?.Level ?? Level.MinusOne;
     public Level TopLevel => Contexts.FirstOrDefault()?.Level ?? Level.MinusOne;
     //public bool SameSize => Contexts.Any() && Contexts.All(x => x.Node is not (WhereNode or SkipWhileNode or TakeWhileNode or SelectManyChainElement));
-    public bool SameType => Contexts.All(x => x.Element is not (SelectChainElement or SelectManyChainElement));
+    public bool SameType => Contexts.All(x => x.Element is not (SelectNode or SelectManyNode));
     public ResultType ResultType 
-        => Contexts.LastOrDefault()?.Element is OrderByChainElement or ThenByChainElement
+        => Contexts.LastOrDefault()?.Element is OrderByNode or ThenByNode
         ? ResultType.OrderBy 
         : ResultType.ToValue; 
     public override string ToString() {
@@ -39,34 +39,34 @@ public static class PieceOfWorkExtensions {
         };
         bool IsOrderBy() 
             => current.LastOrDefault()?.Element is
-            OrderByChainElement or ThenByChainElement;
+            OrderByNode or ThenByNode;
         for(int i = 0; i < contexts.Count; i++) {
             var context = contexts[i];
             var nextContext = i < contexts.Count - 1 ? contexts[i + 1] : null;
             switch(context.Element) {
-                case SelectChainElement:
+                case SelectNode:
                     if(IsOrderBy())
                         yield return CreateAndReset();
                     current.Add(context);
                     break;
-                case SelectManyChainElement:
-                    if(IsOrderBy())
-                        yield return CreateAndReset();
-                    sameSize = false;
-                    current.Add(context);
-                    break;
-                case WhereChainElement or SkipWhileChainElement or TakeWhileChainElement:
+                case SelectManyNode:
                     if(IsOrderBy())
                         yield return CreateAndReset();
                     sameSize = false;
                     current.Add(context);
                     break;
-                case OrderByChainElement:
+                case WhereNode or SkipWhileNode or TakeWhileNode:
+                    if(IsOrderBy())
+                        yield return CreateAndReset();
+                    sameSize = false;
+                    current.Add(context);
+                    break;
+                case OrderByNode:
                     if(!sameSize)
                         yield return CreateAndReset();
                     current.Add(context);
                     break;
-                case ThenByChainElement:
+                case ThenByNode:
                     current.Add(context);
                     break;
                 default:

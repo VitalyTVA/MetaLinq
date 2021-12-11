@@ -1,4 +1,4 @@
-﻿using static MetaLinq.Generator.ChainElement;
+﻿using static MetaLinq.Generator.LinqNode;
 
 namespace MetaLinqTests.Unit;
 
@@ -291,9 +291,9 @@ public class PieceOfWorkTests {
         });
     }
 
-    static void AssertPieces(ChainElement[] chain, string[] expected, SourceType sourceType = SourceType.List, ToValueType toValueType = ToValueType.ToArray) {
-        var context = chain.Cast<IntermediateChainElement>().Skip(1).Aggregate(
-            EmitContext.Root(sourceType, (IntermediateChainElement)chain.First()), 
+    static void AssertPieces(LinqNode[] chain, string[] expected, SourceType sourceType = SourceType.List, ToValueType toValueType = ToValueType.ToArray) {
+        var context = chain.Cast<IntermediateNode>().Skip(1).Aggregate(
+            EmitContext.Root(sourceType, (IntermediateNode)chain.First()), 
             (acc, c) => acc.Next(c)
         );
         var result = context.GetPieces(sourceType, toValueType).ToArray().Select(x => x.ToString()).ToArray();

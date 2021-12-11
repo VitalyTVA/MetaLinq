@@ -78,7 +78,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         if(context.Node is InvocationExpressionSyntax invocation
             && !visitedExpressions.Contains(invocation)
             && IsMetaEnumerableAccessible(context)) {
-            Stack<ChainElement> chain = new();
+            Stack<LinqNode> chain = new();
             SourceType? source = null;
             ExpressionSyntax? currentExpression = invocation;
             while(currentExpression != null) {
@@ -95,7 +95,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                         if(currentMethodSymbol.Name == "SelectMany") {
                             var lambda = ((LambdaExpressionSyntax)currentInvocation.ArgumentList.Arguments[0].Expression).ExpressionBody!;
                             var soruceType = GetSourceType(context, lambda);
-                            chain.Push(ChainElement.SelectMany(soruceType!.Value));
+                            chain.Push(LinqNode.SelectMany(soruceType!.Value));
                             chained = true;
                         }
                     }
@@ -114,22 +114,22 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             }
         }
     }
-    static ChainElement? TryGetSimpleChainElement(string funcName) {
+    static LinqNode? TryGetSimpleChainElement(string funcName) {
         return funcName switch {
-            "Where" => ChainElement.Where,
-            "TakeWhile" => ChainElement.TakeWhile,
-            "SkipWhile" => ChainElement.SkipWhile,
-            "Select" => ChainElement.Select,
-            "OrderBy" => ChainElement.OrderBy,
-            "OrderByDescending" => ChainElement.OrderByDescending,
-            "ThenBy" => ChainElement.ThenBy,
-            "ThenByDescending" => ChainElement.ThenByDescending,
-            "ToArray" => ChainElement.ToArray,
-            "ToList" => ChainElement.ToList,
-            "ToHashSet" => ChainElement.ToHashSet,
-            "ToDictionary" => ChainElement.ToDictionary,
-            "First" => ChainElement.First,
-            "FirstOrDefault" => ChainElement.FirstOrDefault,
+            "Where" => LinqNode.Where,
+            "TakeWhile" => LinqNode.TakeWhile,
+            "SkipWhile" => LinqNode.SkipWhile,
+            "Select" => LinqNode.Select,
+            "OrderBy" => LinqNode.OrderBy,
+            "OrderByDescending" => LinqNode.OrderByDescending,
+            "ThenBy" => LinqNode.ThenBy,
+            "ThenByDescending" => LinqNode.ThenByDescending,
+            "ToArray" => LinqNode.ToArray,
+            "ToList" => LinqNode.ToList,
+            "ToHashSet" => LinqNode.ToHashSet,
+            "ToDictionary" => LinqNode.ToDictionary,
+            "First" => LinqNode.First,
+            "FirstOrDefault" => LinqNode.FirstOrDefault,
             _ => null
         };
     }

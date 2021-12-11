@@ -1,4 +1,4 @@
-﻿using static MetaLinq.Generator.ChainElement;
+﻿using static MetaLinq.Generator.LinqNode;
 
 namespace MetaLinqTests.Unit;
 
@@ -200,14 +200,14 @@ public class LinqModelTests : BaseFixture {
         AssertModel(model,
 @"List
     Root
+        SelectMany Array
+            -Enumerable
+            Where
+                -Enumerable
         Select
             SelectMany Array
                 -Enumerable
             SelectMany List
-                -Enumerable
-        SelectMany Array
-            -Enumerable
-            Where
                 -Enumerable");
     }
 
@@ -444,8 +444,8 @@ Array
 
     [Test]
     public void NodeKeyTests() { 
-        void AssertNodeComparison(int expected, ChainElement key1, ChainElement key2) { 
-            Assert.AreEqual(expected, ChainElement.Comparer.Compare(key1, key2));
+        void AssertNodeComparison(int expected, LinqNode key1, LinqNode key2) { 
+            Assert.AreEqual(expected, LinqNode.Comparer.Compare(key1, key2));
         }
         AssertNodeComparison(0, Select, Select);
         AssertNodeComparison(-1, Select, Where);
@@ -473,8 +473,8 @@ Array
         AssertNodeComparison(1, ToList, SelectMany(SourceType.Array));
         AssertNodeComparison(-1, SelectMany(SourceType.Array), ToList);
 
-        AssertNodeComparison(1, SelectMany(SourceType.Array), Select);
-        AssertNodeComparison(-1, Select, SelectMany(SourceType.Array));
+        AssertNodeComparison(-1, SelectMany(SourceType.Array), Select);
+        AssertNodeComparison(1, Select, SelectMany(SourceType.Array));
 
         AssertNodeComparison(0, OrderBy, OrderBy);
         AssertNodeComparison(1, Select, OrderBy);

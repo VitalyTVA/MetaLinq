@@ -1,10 +1,10 @@
 ﻿namespace MetaLinq.Generator;
 
 public class LinqModel {
-    readonly Dictionary<SourceType, RootNode> trees = new();
+    readonly Dictionary<SourceType, LinqTree> trees = new();
 
-    public void AddChain(SourceType source, IEnumerable<ChainElement> chain) {
-        TreeNode? node = trees.GetOrAdd(source, () => new RootNode());
+    public void AddChain(SourceType source, IEnumerable<LinqNode> chain) {
+        LinqTreeBase? node = trees.GetOrAdd(source, () => new LinqTree());
         foreach(var item in chain) {
             if(node == null)
                 throw new InvalidOperationException();
@@ -13,7 +13,7 @@ public class LinqModel {
         if(node != null)
             node.AddEnumerableNode();
     }
-    public IEnumerable<(SourceType, RootNode)> GetTrees() {
+    public IEnumerable<(SourceType, LinqTree)> GetTrees() {
         return trees.OrderBy(x => x.Key).Select(x => (x.Key, x.Value));
     }
     public sealed override string ToString() {
@@ -31,52 +31,49 @@ public class LinqModel {
     }
 }
 
-public abstract class LinqNode {
+public abstract class LinqTreeNode {
 }
 
-public abstract class TerminalNodeBase : LinqNode {
-}
+public sealed class LinqTreeTerminalNode : LinqTreeNode {
+    public readonly TerminalNode Element;
 
-public sealed class TerminalNode : TerminalNodeBase {
-    public readonly TerminalChainElement Element;
-
-    public TerminalNode(TerminalChainElement element) {
+    public LinqTreeTerminalNode(TerminalNode element) {
         Element = element;
     }
     public override string ToString() {
         return Element switch { 
             ToValueChainElement toValueChainElement => "-" + toValueChainElement.Type,
-            EnumerableChainElement => "-Enumerable",
-            ToListChainElement => "-ToList",
+            EnumerableNode => "-Enumerable",
+            ToListNode => "-ToList",
             _ => throw new NotImplementedException(), 
         };
     }
 }
 
-public abstract class TreeNode : LinqNode {
-    readonly Dictionary<ChainElement, LinqNode> Nodes = new();
+public abstract class LinqTreeBase : LinqTreeNode {
+    readonly Dictionary<LinqNode, LinqTreeNode> Nodes = new();
 
-    public IntermediateNode? AddElement(ChainElement element) {
-        IntermediateNode? Add<T>(Func<T> create) where T : LinqNode 
-            => Nodes.GetOrAdd(element, create) as IntermediateNode;
+    public LinqTreeIntermediateNode? AddElement(LinqNode element) {
+        LinqTreeIntermediateNode? Add<T>(Func<T> create) where T : LinqTreeNode 
+            => Nodes.GetOrAdd(element, create) as LinqTreeIntermediateNode;
         switch(element) {
-            case IntermediateChainElement intermediateChainElement:
-                return Add(() => new IntermediateNode(intermediateChainElement));
-            case TerminalChainElement terminalElement:
-                return Add(() => new TerminalNode(terminalElement));
+            case IntermediateNode intermediateChainElement:
+                return Add(() => new LinqTreeIntermediateNode(intermediateChainElement));
+            case TerminalNode terminalElement:
+                return Add(() => new LinqTreeTerminalNode(terminalElement));
             default:
                 throw new InvalidOperationException();
         }
     }
     public void AddEnumerableNode() {
-        Nodes.GetOrAdd(ChainElement.Enumerable, static () => new TerminalNode(ChainElement.Enumerable));
+        Nodes.GetOrAdd(LinqNode.Enumerable, static () => new LinqTreeTerminalNode(LinqNode.Enumerable));
     }
-    public IEnumerable<LinqNode> GetNodes() {
-        IEnumerable<KeyValuePair<ChainElement, LinqNode>> pairs = Nodes;
-        if(Nodes.ContainsKey(ChainElement.ToList) && !Nodes.ContainsKey(ChainElement.ToArray))
-            pairs = pairs.Concat(new[] { new KeyValuePair<ChainElement, LinqNode>(ChainElement.ToArray, new TerminalNode(ChainElement.ToArray)) });
+    public IEnumerable<LinqTreeNode> GetNodes() {
+        IEnumerable<KeyValuePair<LinqNode, LinqTreeNode>> pairs = Nodes;
+        if(Nodes.ContainsKey(LinqNode.ToList) && !Nodes.ContainsKey(LinqNode.ToArray))
+            pairs = pairs.Concat(new[] { new KeyValuePair<LinqNode, LinqTreeNode>(LinqNode.ToArray, new LinqTreeTerminalNode(LinqNode.ToArray)) });
         var nodes = pairs
-            .OrderBy(x => x.Key, ChainElement.Comparer)
+            .OrderBy(x => x.Key, LinqNode.Comparer)
             .Select(x => x.Value);
         return nodes;
     }
@@ -92,14 +89,14 @@ public abstract class TreeNode : LinqNode {
     protected abstract string Type { get; }
 }
 
-public sealed class RootNode : TreeNode {
-    public RootNode() { }
+public sealed class LinqTree : LinqTreeBase {
+    public LinqTree() { }
     protected override string Type => "Root";
 }
 
-public sealed class IntermediateNode : TreeNode {
-    public readonly IntermediateChainElement Element;
-    public IntermediateNode(IntermediateChainElement element) {
+public sealed class LinqTreeIntermediateNode : LinqTreeBase {
+    public readonly IntermediateNode Element;
+    public LinqTreeIntermediateNode(IntermediateNode element) {
         Element = element;
     }
     protected override string Type  => Element.Type;

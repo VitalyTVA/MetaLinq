@@ -45,7 +45,7 @@ public static class ToValueSourceBuilder {
         builder.Tab.AppendMultipleLines(arrayBuilder);
 
         foreach(var item in piece.Contexts) {
-            if(item.Element is SkipWhileChainElement)
+            if(item.Element is SkipWhileNode)
                 builder.Tab.AppendLine($"var skipWhile{item.Level.Next} = true;");
         }
 
@@ -53,7 +53,7 @@ public static class ToValueSourceBuilder {
             bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
 
         foreach(var item in piece.Contexts) {
-            if(item.Element is TakeWhileChainElement)
+            if(item.Element is TakeWhileNode)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
         if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.ResultType is not ResultType.OrderBy)
@@ -71,11 +71,11 @@ public static class ToValueSourceBuilder {
         var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
         (Level Level, string sortKeyGenericType, ListSortDirection direction)[] GetOrder() => piece.Contexts
-            .SkipWhile(x => x.Element is not (OrderByChainElement or ThenByChainElement))
+            .SkipWhile(x => x.Element is not (OrderByNode or ThenByNode))
             .Select(x => (
                 x.Level, 
                 sortKeyGenericType: x.GetResultGenericType(),
-                direction: (x.Element as OrderByChainElement)?.Direction ?? (x.Element as ThenByChainElement)!.Direction
+                direction: (x.Element as OrderByNode)?.Direction ?? (x.Element as ThenByNode)!.Direction
             ))
             .ToArray();
         string GetFirstResultStatement() =>
@@ -249,21 +249,21 @@ foreach(var item{level} in source{level}) {{");
         var intermediate = piece.Contexts[level.Minus(piece.TopLevel)].Element;
         var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Minus(level));
         switch(intermediate) {
-            case WhereChainElement:
+            case WhereNode:
                 builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
 if(!this{sourcePath}.predicate(item{level.Next}))
     continue;");
                 EmitNext(builder);
                 break;
-            case TakeWhileChainElement:
+            case TakeWhileNode:
                 builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
 if(!this{sourcePath}.predicate(item{level.Next}))
     goto takeWhile{level.Next};");
                 EmitNext(builder);
                 break;
-            case SkipWhileChainElement:
+            case SkipWhileNode:
                 builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
 if(skipWhile{level.Next}) {{
@@ -275,19 +275,19 @@ if(skipWhile{level.Next}) {{
 }}");
                 EmitNext(builder);
                 break;
-            case SelectChainElement:
+            case SelectNode:
                 builder.AppendLine($@"var item{level.Next} = this{sourcePath}.selector(item{level});");
                 EmitNext(builder);
                 break;
-            case SelectManyChainElement selectMany:
+            case SelectManyNode selectMany:
                 EmitLoop(selectMany.SourceType, builder, level.Next, $"this{sourcePath}.selector(item{level})",
                     bodyBuilder => EmitNext(bodyBuilder));
                 break;
-            case OrderByChainElement:
+            case OrderByNode:
                 builder.AppendLine($"var item{level.Next} = this{sourcePath}.keySelector(item{level});");
                 EmitNext(builder);
                 break;
-            case ThenByChainElement:
+            case ThenByNode:
                 builder.AppendLine($"var item{level.Next} = this{sourcePath}.keySelector(item{piece.GetOrderByLevel()});");
                 EmitNext(builder);
                 break;
