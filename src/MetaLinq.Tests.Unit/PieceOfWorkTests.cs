@@ -292,16 +292,11 @@ public class PieceOfWorkTests {
     }
 
     static void AssertPieces(ChainElement[] chain, string[] expected, SourceType sourceType = SourceType.List, ToValueType toValueType = ToValueType.ToArray) {
-        var model = new LinqModel();
-        model.AddChain(sourceType, chain);
-        var firstNode = (IntermediateNode)model.GetTrees().Single().Item2.GetNodes().Single();
-        var lastContext = Extensions.Unfold(
-            EmitContext.Root(sourceType, firstNode),
-            context => {
-                var node = context.Node.GetNodes().OfType<IntermediateNode>().SingleOrDefault();
-                return node != null ? context.Next(node) : null;
-            }).Last();
-        var result = lastContext.GetPieces(sourceType, toValueType).ToArray().Select(x => x.ToString()).ToArray();
+        var context = chain.Cast<IntermediateChainElement>().Skip(1).Aggregate(
+            EmitContext.Root(sourceType, (IntermediateChainElement)chain.First()), 
+            (acc, c) => acc.Next(c)
+        );
+        var result = context.GetPieces(sourceType, toValueType).ToArray().Select(x => x.ToString()).ToArray();
         CollectionAssert.AreEqual(expected, result);
     }
 }

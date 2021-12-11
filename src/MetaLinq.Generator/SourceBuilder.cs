@@ -43,8 +43,8 @@ using MetaLinq.Internal;");
             partial: true, 
             generics: EmitContext.RootSourceType)
         ) {
-            var context = EmitContext.Root(source, intermediate);
-            EmitStruct(source, sourceTypeBuilder, context);
+            var context = EmitContext.Root(source, intermediate.Element);
+            EmitStruct(source, sourceTypeBuilder, context, intermediate.GetNodes().ToList());
         }
     }
     static void EmitExtensionMethod(SourceType source, CodeBuilder builder, IntermediateChainElement intermediate) {
@@ -76,11 +76,10 @@ public static {sourceName}<TSource>.{enumerableTypeName} {enumerableKind}<TSourc
         builder.AppendLine($"public {enumerableTypeName} {enumerableKind}{ownTypeArgsList}({methodArgumentType} {argumentName}) => new {enumerableTypeName}(this, {argumentName});");
     }
 
-    static void EmitStruct(SourceType source, CodeBuilder builder, EmitContext context) {
+    static void EmitStruct(SourceType source, CodeBuilder builder, EmitContext context, List<LinqNode> nodes) {
         var intermediate = context.Element;
         var argumentName = intermediate.GetArgumentName();
         var argumentType = intermediate.GetArgumentType(context.SourceGenericArg, context.GetResultGenericType());
-        var nodes = context.Node.GetNodes().ToList();
         bool implementIEnumerable = nodes.Any(node => node is TerminalNode { Element: EnumerableChainElement });
         var outputType = context.GetOutputType();
         string typeName = intermediate.GetEnumerableTypeName(context.Level) + context.GetOwnTypeArgsList();
@@ -114,9 +113,9 @@ public {intermediate.GetEnumerableTypeName(context.Level)}({context.SourceType} 
                         }
                         break;
                     case IntermediateNode nextIntermediate:
-                        var nextContext = context.Next(nextIntermediate);
+                        var nextContext = context.Next(nextIntermediate.Element);
                         EmitStructMethod(structBuilder, nextContext);
-                        EmitStruct(source, structBuilder, nextContext);
+                        EmitStruct(source, structBuilder, nextContext, nextIntermediate.GetNodes().ToList());
                         break;
                     default:
                         throw new NotImplementedException();
@@ -228,17 +227,15 @@ next{level.Next}:
             builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
         }
 }
-public record EmitContext(Level Level, IntermediateNode _Node, string SourceType, string SourceGenericArg, EmitContext? Parent) {
-    public IntermediateNode Node => _Node;
-    public IntermediateChainElement Element => _Node.Element;
+public record EmitContext(Level Level, IntermediateChainElement Element, string SourceType, string SourceGenericArg, EmitContext? Parent) {
 
     public const string RootSourceType = "TSource";
 
-    public static EmitContext Root(SourceType source, IntermediateNode Node) 
-            => new EmitContext(Level.Zero, Node, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
+    public static EmitContext Root(SourceType source, IntermediateChainElement element) 
+        => new EmitContext(Level.Zero, element, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
 
-    public EmitContext Next(IntermediateNode node)
-            => new EmitContext(Level.Next, node, Element.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
+    public EmitContext Next(IntermediateChainElement element)
+        => new EmitContext(Level.Next, element, Element.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
 }
 public record struct Level {
     public static Level MinusOne => new Level(-1);
