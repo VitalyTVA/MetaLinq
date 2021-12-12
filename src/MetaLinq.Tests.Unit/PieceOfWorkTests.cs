@@ -40,6 +40,15 @@ public class PieceOfWorkTests {
         }, SourceType.CustomEnumerable, toValueType);
     }
 
+    [Test]
+    public void CustomEnumerable_OfType_OrderBy_First(
+    [Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { OfType, OrderBy }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
 
     [Test]
     public void OrderBy_ThenBy() {
@@ -172,6 +181,15 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void Where_Select_OrderBy_OfType_Where() {
+        AssertPieces(new[] { Where, Select, OrderBy, OfType, Where }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Select]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType, Where]",
+        });
+    }
+
+    [Test]
     public void TakeWhile_Select_OrderBy_SelectMany_Where() {
         AssertPieces(new[] { TakeWhile, Select, OrderBy, SelectMany(SourceType.List), Where }, new[] {
 "SameType: False, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile, Select]",
@@ -248,6 +266,13 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void OfType_() {
+        AssertPieces(new[] { OfType }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType]"
+        });
+    }
+
+    [Test]
     public void SkipWhile_() {
         AssertPieces(new[] { SkipWhile }, new[] {
 "SameType: True, SameSize: False, ResultType: ToValue, Nodes: [SkipWhile]"
@@ -268,6 +293,16 @@ public class PieceOfWorkTests {
         });
         AssertPieces(new[] { Where, Select }, new[] {
 "SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Select]"
+        });
+    }
+
+    [Test]
+    public void Select_OfType() {
+        AssertPieces(new[] { Select, OfType }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Select, OfType]"
+        });
+        AssertPieces(new[] { OfType, Select }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType, Select]"
         });
     }
 

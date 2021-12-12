@@ -117,6 +117,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
     static LinqNode? TryGetSimpleChainElement(string funcName) {
         return funcName switch {
             "Where" => LinqNode.Where,
+            "OfType" => LinqNode.OfType,
             "TakeWhile" => LinqNode.TakeWhile,
             "SkipWhile" => LinqNode.SkipWhile,
             "Select" => LinqNode.Select,

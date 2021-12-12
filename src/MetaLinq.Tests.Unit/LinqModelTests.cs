@@ -79,6 +79,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void OfType_() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { OfType });
+        AssertModel(model,
+@"List
+    Root
+        OfType
+            -Enumerable");
+    }
+
+    [Test]
     public void SkipWhile_() {
         var model = new LinqModel();
         model.AddChain(SourceType.List, new[] { SkipWhile });

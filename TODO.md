@@ -22,6 +22,8 @@ First - "Sequence contains no elements" exception when empty source
 
 #Posponed0
 
+rewrite EmitLoopBody with cycle instead of recursion
+
 #Posponed1
 
 emit SelectMany body loop via for or foreach for List<T>??  for(int i1 = 0; i1 < len1; i1++) { (now there is duplicate code with root loop emit code)

@@ -49,7 +49,7 @@ public static class ToValueSourceBuilder {
                 builder.Tab.AppendLine($"var skipWhile{item.Level.Next} = true;");
         }
 
-        EmitLoop(source, builder.Tab, topLevel, sourcePath,
+        EmitLoop(source, piece.Contexts.FirstOrDefault()?.Element.GetNonGenericSourceRequired() ?? false, builder.Tab, topLevel, sourcePath,
             bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
 
         foreach(var item in piece.Contexts) {
@@ -217,11 +217,11 @@ bool found{topLevel} = false;
         };
     }
 
-    static void EmitLoop(SourceType source, CodeBuilder builder, Level level, string sourceExpression, Action<CodeBuilder> emitBody) {
+    static void EmitLoop(SourceType source, bool nonGenericSourceRequired, CodeBuilder builder, Level level, string sourceExpression, Action<CodeBuilder> emitBody) {
         builder.AppendLine($"var source{level} = {sourceExpression};");
         if(source.HasIndexer()) {
             builder.AppendMultipleLines($@"
-var len{level} = source{level}.{source.GetCountName()};
+var len{level} = source{level}.{source.GetCountName(nonGenericSourceRequired)};
 for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
     var item{level} = source{level}[i{level}];");
         }
@@ -246,7 +246,8 @@ foreach(var item{level} in source{level}) {{");
             EmitNext(builder.Tab);
             return;
         }
-        var intermediate = piece.Contexts[level.Minus(piece.TopLevel)].Element;
+        var context = piece.Contexts[level.Minus(piece.TopLevel)];
+        var intermediate = context.Element;
         var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Minus(level));
         switch(intermediate) {
             case WhereNode:
@@ -254,6 +255,13 @@ foreach(var item{level} in source{level}) {{");
 var item{level.Next} = item{level};
 if(!this{sourcePath}.predicate(item{level.Next}))
     continue;");
+                EmitNext(builder);
+                break;
+            case OfTypeNode:
+                builder.AppendMultipleLines($@"
+if(item{level} is not {context.GetResultGenericType()})
+    continue;
+var item{level.Next} = ({context.GetResultGenericType()})(object)item{level};");
                 EmitNext(builder);
                 break;
             case TakeWhileNode:
@@ -280,7 +288,7 @@ if(skipWhile{level.Next}) {{
                 EmitNext(builder);
                 break;
             case SelectManyNode selectMany:
-                EmitLoop(selectMany.SourceType, builder, level.Next, $"this{sourcePath}.selector(item{level})",
+                EmitLoop(selectMany.SourceType, false, builder, level.Next, $"this{sourcePath}.selector(item{level})",
                     bodyBuilder => EmitNext(bodyBuilder));
                 break;
             case OrderByNode:

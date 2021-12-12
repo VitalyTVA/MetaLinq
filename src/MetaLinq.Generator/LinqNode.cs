@@ -23,6 +23,7 @@ public static class SourceTypeExtensions {
 
 public abstract record LinqNode {
     public static LinqNode Where => WhereNode.Instance;
+    public static LinqNode OfType => OfTypeNode.Instance;
     public static LinqNode TakeWhile => TakeWhileNode.Instance;
     public static LinqNode SkipWhile => SkipWhileNode.Instance;
     public static LinqNode Select => SelectNode.Instance;
@@ -78,6 +79,12 @@ public sealed record WhereNode : IntermediateNode {
     public static readonly WhereNode Instance = new WhereNode();
     WhereNode() { }
     internal override string Type => "Where";
+}
+
+public sealed record OfTypeNode : IntermediateNode {
+    public static readonly OfTypeNode Instance = new OfTypeNode();
+    OfTypeNode() { }
+    internal override string Type => "OfType";
 }
 
 public sealed record TakeWhileNode : IntermediateNode {

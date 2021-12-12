@@ -1673,6 +1673,60 @@ $@"Data __() {{
     }
     #endregion
 
+    #region of type
+    const string ABCRecords =
+@"record A(int Value);
+record B(int Value) : A(Value);
+record C(int Value) : A(Value);";
+    [Test]
+    public void Array_OfType_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var source = new A[] { new A(0), new B(1), new C(2), new B(3) };
+    B[] bs = source.OfType<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[1], bs[0]);
+    Assert.AreSame(source[3], bs[1]);
+
+    source = new A[] { new A(0), new C(2) };
+    bs = source.OfType<B>().ToArray();
+    Assert.AreEqual(0, bs.Length);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.IList, "OfType", new[] {
+                    new StructMethod("ToArray")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("OfType<TResult>(this IList source)", x.Single())
+        );
+        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Where_OfType_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var source = new A[] { new A(0), new B(1), new C(2), new B(3), new B(-1) };
+    B[] bs = source.Where(x => x.Value >= 0).OfType<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[1], bs[0]);
+    Assert.AreSame(source[3], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("OfType", new[] {
+                        new StructMethod("ToArray")
+                    })
+                })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    #endregion
+
     #region select many
     [Test]
     public void Array_SelectManyArray_ToArray() {
@@ -2287,7 +2341,7 @@ $@"Data __() {{
             return $"Name: {Name}, IEnumerable: {ImplementsIEnumerable}, Methods: [ {methods} ]";
         }
     }
-    enum SourceType { Array, List, CustomCollection, CustomEnumerable }
+    enum SourceType { Array, List, CustomCollection, CustomEnumerable, IList }
     sealed class MetaLinqMethodInfo : StructMethod {
         public readonly SourceType SourceType;
 
@@ -2334,7 +2388,7 @@ $@"
 using MetaLinq.Tests;
 using NUnit.Framework;
 using System.Collections.Generic;
-public static class Executor {{
+public class Executor {{
 {additionalClassCode}
 {executeMethodsCode}
 }}
@@ -2372,8 +2426,8 @@ public static class Executor {{
                     outputCompilation = outputCompilation.ReplaceSyntaxTree(tree, tree.WithFilePath(newPath));
                     File.WriteAllText(newPath, tree.GetText().ToString(), Encoding.UTF8);
                 } else {
-                    if(File.Exists(newPath))
-                        File.Delete(newPath);
+                    //if(File.Exists(newPath))
+                    //    File.Delete(newPath);
                 }
 
             }
@@ -2446,11 +2500,13 @@ public static class Executor {{
                 var sourceType = x.GetParameters()[0].ParameterType.Name switch {
                     "TSource[]" => SourceType.Array,
                     "List`1" => SourceType.List,
+                    "IList" => SourceType.IList,
                     "CustomCollection`1" => SourceType.CustomCollection,
                     "CustomEnumerable`1" => SourceType.CustomEnumerable,
                     _ => throw new InvalidOperationException()
                 };
-                Assert.AreEqual(CodeGenerationTraits.RootStaticTypePrefix + sourceType.ToString() + "`1", x.ReturnType.DeclaringType!.Name);
+                var expectedName = sourceType is SourceType.IList ? "Array" : sourceType.ToString() + "`1";
+                Assert.AreEqual(CodeGenerationTraits.RootStaticTypePrefix + expectedName, x.ReturnType.DeclaringType!.Name);
                 Assert.NotNull(x.ReturnType.GetCustomAttribute(typeof(IsReadOnlyAttribute)));
                 return new MetaLinqMethodInfo(
                     sourceType,

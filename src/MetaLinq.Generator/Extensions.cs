@@ -61,6 +61,8 @@ public static class Extensions {
         return Comparer<T>.Default.Compare(value1!.Value, value2!.Value);
     }
 
+    public static T[] YieldToArray<T>(this T? item) => item != null ? new[] { item } : Array.Empty<T>();
+
     //public static IEqualityComparer<T> CreatequalityComparer<T>(Func<T, int> getHashCode, Func<T, T, bool> equals) {
     //    if(getHashCode == null) {
     //        throw new ArgumentNullException(nameof(getHashCode));
