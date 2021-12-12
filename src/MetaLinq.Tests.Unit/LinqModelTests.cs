@@ -90,6 +90,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void OfType_ICollection([Values(SourceType.CustomCollection, SourceType.ICollection)] SourceType sourceType) {
+        var model = new LinqModel();
+        model.AddChain(sourceType, new[] { OfType });
+        AssertModel(model,
+@"ICollection
+    Root
+        OfType
+            -Enumerable");
+    }
+
+    [Test]
     public void OfType_AllIListTypes() {
         var model = new LinqModel();
         model.AddChain(SourceType.List, new[] { OfType });

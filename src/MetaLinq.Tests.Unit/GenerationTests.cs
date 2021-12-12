@@ -1678,6 +1678,7 @@ $@"Data __() {{
 @"record A(int Value);
 record B(int Value) : A(Value);
 record C(int Value) : A(Value);";
+
     [Test]
     public void ArrayAndList_OfType_ToArray() {
         AssertGeneration(
@@ -1706,6 +1707,70 @@ record C(int Value) : A(Value);";
             assertGeneratedCode: x => StringAssert.Contains("OfType<TResult>(this IList source)", x.Single()));
         Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
     }
+
+    [Test]
+    public void IList_OfType_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    IList source = new A[] { new A(0), new B(1), new C(2), new B(3) };
+    B[] bs = source.OfType<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[1], bs[0]);
+    Assert.AreSame(source[3], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.IList, "OfType", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void CustomCollection_OfType_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var array = new A[] { new A(0), new B(1), new C(2), new B(3) };
+    B[] bs = new CustomCollection<A>(array).OfType<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(array[1], bs[0]);
+    Assert.AreSame(array[3], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.ICollection, "OfType", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void ICollection_OfType_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var array = new A[] { new A(0), new B(1), new C(2), new B(3) };
+    B[] bs = ((ICollection)array).OfType<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(array[1], bs[0]);
+    Assert.AreSame(array[3], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.ICollection, "OfType", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
     [Test]
     public void Array_Where_OfType_ToArray() {
         AssertGeneration(
@@ -2344,7 +2409,7 @@ $@"Data __() {{
             return $"Name: {Name}, IEnumerable: {ImplementsIEnumerable}, Methods: [ {methods} ]";
         }
     }
-    enum SourceType { Array, List, CustomCollection, CustomEnumerable, IList }
+    enum SourceType { Array, List, CustomCollection, CustomEnumerable, IList, ICollection }
     sealed class MetaLinqMethodInfo : StructMethod {
         public readonly SourceType SourceType;
 
@@ -2390,6 +2455,7 @@ $@"
 {(addStadardLinqUsing ? "using System.Linq;" : null)}
 using MetaLinq.Tests;
 using NUnit.Framework;
+using System.Collections;
 using System.Collections.Generic;
 public class Executor {{
 {additionalClassCode}
@@ -2504,11 +2570,12 @@ public class Executor {{
                     "TSource[]" => SourceType.Array,
                     "List`1" => SourceType.List,
                     "IList" => SourceType.IList,
+                    "ICollection" => SourceType.ICollection,
                     "CustomCollection`1" => SourceType.CustomCollection,
                     "CustomEnumerable`1" => SourceType.CustomEnumerable,
                     _ => throw new InvalidOperationException()
                 };
-                var expectedGenerics = sourceType is SourceType.IList ? null : "`1";
+                var expectedGenerics = sourceType is SourceType.IList or SourceType.ICollection ? null : "`1";
                 Assert.AreEqual(CodeGenerationTraits.RootStaticTypePrefix + sourceType.ToString() + expectedGenerics, x.ReturnType.DeclaringType!.Name);
                 Assert.NotNull(x.ReturnType.GetCustomAttribute(typeof(IsReadOnlyAttribute)));
                 return new MetaLinqMethodInfo(

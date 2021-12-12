@@ -44,6 +44,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         INamedTypeSymbol metaEnumerableType,
         INamedTypeSymbol enumerableType,
         INamedTypeSymbol listType,
+        INamedTypeSymbol iListType,
+        INamedTypeSymbol iCollectionType,
         INamedTypeSymbol? customCollectionType,
         INamedTypeSymbol? customEnumerableType
     );
@@ -71,6 +73,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             metaEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.MetaEnumerable")!,
             enumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Linq.Enumerable")!,
             listType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.Generic.List`1")!,
+            iListType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.IList")!,
+            iCollectionType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.ICollection")!,
             customCollectionType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomCollection`1"),
             customEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomEnumerable`1")
         );
@@ -147,6 +151,10 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             return SourceType.CustomEnumerable;
         if(SymbolEqualityComparer.Default.Equals(types!.customCollectionType, returnType.OriginalDefinition))
             return SourceType.CustomCollection;
+        if(SymbolEqualityComparer.Default.Equals(types!.iListType, returnType.OriginalDefinition))
+            return SourceType.IList;
+        if(SymbolEqualityComparer.Default.Equals(types!.iCollectionType, returnType.OriginalDefinition))
+            return SourceType.ICollection;
         throw new InvalidOperationException();
     }
     bool IsMetaEnumerableAccessible(GeneratorSyntaxContext context) {

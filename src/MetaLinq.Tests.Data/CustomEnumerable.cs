@@ -21,16 +21,16 @@ public class CustomEnumerable<T> : IEnumerable<T> {
         }
         public void Dispose() { }
 
-        object IEnumerator.Current => throw new NotImplementedException();
+        object IEnumerator.Current => Current!;
         void IEnumerator.Reset() => throw new NotImplementedException();
     }
     public Enumerator GetEnumerator() => new Enumerator(data);
 
     IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
-public class CustomCollection<T> : CustomEnumerable<T>, ICollection<T> {
+public class CustomCollection<T> : CustomEnumerable<T>, ICollection<T>, ICollection {
     public CustomCollection(IList<T> data) : base(data) {
     }
 
@@ -42,4 +42,8 @@ public class CustomCollection<T> : CustomEnumerable<T>, ICollection<T> {
     bool ICollection<T>.Contains(T item) => throw new NotImplementedException();
     void ICollection<T>.CopyTo(T[] array, int arrayIndex) => throw new NotImplementedException();
     bool ICollection<T>.Remove(T item) => throw new NotImplementedException();
+
+    bool ICollection.IsSynchronized => throw new NotImplementedException();
+    object ICollection.SyncRoot => throw new NotImplementedException();
+    void ICollection.CopyTo(Array array, int index) => throw new NotImplementedException();
 }

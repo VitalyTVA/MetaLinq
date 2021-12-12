@@ -5,8 +5,12 @@ public class LinqModel {
 
     public void AddChain(SourceType source, IEnumerable<LinqNode> chain) {
         var nonGenericSourceRequired = (chain.First() as IntermediateNode) is OfTypeNode;
-        if(nonGenericSourceRequired && source is SourceType.Array or SourceType.List)
-            source = SourceType.IList;
+        if(nonGenericSourceRequired) {
+            if(source is SourceType.Array or SourceType.List)
+                source = SourceType.IList;
+            if(source is SourceType.CustomCollection)
+                source = SourceType.ICollection;
+        }
 
         LinqTreeBase? node = trees.GetOrAdd(source, () => new LinqTree());
         foreach(var item in chain) {

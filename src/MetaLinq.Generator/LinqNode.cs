@@ -2,12 +2,12 @@
 
 namespace MetaLinq.Generator;
 
-public enum SourceType { List, Array, CustomCollection, CustomEnumerable, IList }
+public enum SourceType { List, Array, CustomCollection, CustomEnumerable, IList, ICollection }
 
 public static class SourceTypeExtensions {
     public static bool HasCount(this SourceType sourceType) {
         return sourceType switch {
-            SourceType.List or SourceType.Array or SourceType.CustomCollection or SourceType.IList => true,
+            SourceType.List or SourceType.Array or SourceType.CustomCollection or SourceType.IList or SourceType.ICollection => true,
             SourceType.CustomEnumerable => false,
             _ => throw new NotImplementedException(),
         };
@@ -15,7 +15,7 @@ public static class SourceTypeExtensions {
     public static bool HasIndexer(this SourceType sourceType) {
         return sourceType switch {
             SourceType.List or SourceType.Array or SourceType.IList => true,
-            SourceType.CustomCollection or SourceType.CustomEnumerable => false,
+            SourceType.CustomCollection or SourceType.CustomEnumerable or SourceType.ICollection => false,
             _ => throw new NotImplementedException(),
         };
     }

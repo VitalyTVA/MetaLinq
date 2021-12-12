@@ -285,7 +285,7 @@ public static class CodeGenerationTraits {
     public static bool HasGenericArg(this SourceType source) {
         return source switch {
             SourceType.List or SourceType.Array or SourceType.CustomEnumerable or SourceType.CustomCollection => true,
-            SourceType.IList => false,
+            SourceType.IList or SourceType.ICollection => false,
             _ => throw new NotImplementedException(),
         };
     }
@@ -297,6 +297,7 @@ public static class CodeGenerationTraits {
             SourceType.CustomCollection => $"MetaLinq.Tests.CustomCollection<{sourceGenericArg}>",
             SourceType.CustomEnumerable => $"MetaLinq.Tests.CustomEnumerable<{sourceGenericArg}>",
             SourceType.IList => "IList",
+            SourceType.ICollection => "ICollection",
             _ => throw new NotImplementedException(),
         };
     }
@@ -328,6 +329,7 @@ public static class CodeGenerationTraits {
             SourceType.CustomCollection => "CustomCollection",
             SourceType.CustomEnumerable => "CustomEnumerable",
             SourceType.IList => "IList",
+            SourceType.ICollection => "ICollection",
             _ => throw new NotImplementedException(),
         };
     }
