@@ -89,6 +89,9 @@ var item{level.Next} = ({context.GetResultGenericType()})(object)item{level};");
             case SelectNode:
                 builder.AppendLine($@"var item{level.Next} = source{sourcePath}.selector(item{level});");
                 break;
+            case CastNode:
+                builder.AppendLine($@"var item{level.Next} = ({context.GetResultGenericType()})(object)item{level};");
+                break;
             case SelectManyNode selectMany:
                 builder.Return!.AppendMultipleLines($@"
     source{level.Next} = source{sourcePath}.selector(item{level});

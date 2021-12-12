@@ -287,6 +287,10 @@ if(skipWhile{level.Next}) {{
                 builder.AppendLine($@"var item{level.Next} = this{sourcePath}.selector(item{level});");
                 EmitNext(builder);
                 break;
+            case CastNode:
+                builder.AppendLine($@"var item{level.Next} = ({context.GetResultGenericType()})(object)item{level}!;");
+                EmitNext(builder);
+                break;
             case SelectManyNode selectMany:
                 EmitLoop(selectMany.SourceType, builder, level.Next, $"this{sourcePath}.selector(item{level})",
                     bodyBuilder => EmitNext(bodyBuilder));

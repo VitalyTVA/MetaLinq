@@ -122,6 +122,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         return funcName switch {
             "Where" => LinqNode.Where,
             "OfType" => LinqNode.OfType,
+            "Cast" => LinqNode.Cast,
             "TakeWhile" => LinqNode.TakeWhile,
             "SkipWhile" => LinqNode.SkipWhile,
             "Select" => LinqNode.Select,

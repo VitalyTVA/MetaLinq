@@ -211,7 +211,7 @@ public static class CodeGenerationTraits {
             OrderByNode or ThenByNode => new ArgumentInfo($"Func<{inType}, {outType}>", "keySelector"),
             SelectNode => new ArgumentInfo($"Func<{inType}, {outType}>", "selector"),
             SelectManyNode selectMany => new ArgumentInfo($"Func<{inType}, {selectMany.SourceType.GetSourceTypeName(outType)}>", "selector"),
-            OfTypeNode => null,
+            OfTypeNode or CastNode => null,
             _ => throw new NotImplementedException(),
         };
     }
@@ -280,7 +280,7 @@ public static class CodeGenerationTraits {
         }
     public static string GetCountName(this SourceType source) {
             return source switch {
-                SourceType.List or SourceType.CustomCollection or SourceType.IList => "Count",
+                SourceType.List or SourceType.CustomCollection or SourceType.IList or SourceType.ICollection => "Count",
                 SourceType.Array => "Length",
                 _ => throw new NotImplementedException(),
             };

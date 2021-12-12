@@ -1673,6 +1673,172 @@ $@"Data __() {{
     }
     #endregion
 
+    #region cast
+    [Test]
+    public void ArrayAndList_Cast_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var source = new A[] { new B(1), new B(3) };
+    B[] bs = source.Cast<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[0], bs[0]);
+    Assert.AreSame(source[1], bs[1]);
+
+    Assert.Throws<System.InvalidCastException>(() => new A[] { new A(0) }.Cast<B>().ToArray());
+
+    bs = new List<A>(source).Cast<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[0], bs[0]);
+    Assert.AreSame(source[1], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.IList, "Cast", new[] {
+                    new StructMethod("ToArray")
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("Cast<TResult>(this IList source)", x.Single()));
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(3, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void IList_Cast_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    IList source = new A[] { new B(1), new B(3) };
+    B[] bs = source.Cast<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[0], bs[0]);
+    Assert.AreSame(source[1], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.IList, "Cast", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void CustomCollection_Cast_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var array = new A[] { new B(1), new B(3) };
+    B[] bs = new CustomCollection<A>(array).Cast<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(array[0], bs[0]);
+    Assert.AreSame(array[1], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.ICollection, "Cast", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void ICollection_Cast_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var array = new A[] { new B(1), new B(3) };
+    B[] bs = ((ICollection)array).Cast<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(array[0], bs[0]);
+    Assert.AreSame(array[1], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.ICollection, "Cast", new[] {
+                    new StructMethod("ToArray")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void Array_Where_Cast_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var source = new A[] { new B(1), new B(3), new B(-1) };
+    B[] bs = source.Where(x => x.Value >= 0).Cast<B>().ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[0], bs[0]);
+    Assert.AreSame(source[1], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("Cast", new[] {
+                        new StructMethod("ToArray")
+                    })
+                })
+            }
+        );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Cast_TakeWhile_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var source = new A[] { new B(1), new B(3), new B(4), new B(3) };
+    B[] bs = source.Cast<B>().TakeWhile(x => x.Value < 4).ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[0], bs[0]);
+    Assert.AreSame(source[1], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.IList, "Cast", new[] {
+                    new StructMethod("TakeWhile", new[] {
+                        new StructMethod("ToArray")
+                    })
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("Cast<TResult>(this IList source)", x.Single()));
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_Cast_StandardToArray() {
+        AssertGeneration(
+@"void __() {{
+    var source = new A[] { new B(1), new B(3) };
+    B[] bs = Enumerable.ToArray(source.Cast<B>());
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[0], bs[0]);
+    Assert.AreSame(source[1], bs[1]);
+
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.IList, "Cast", new[] {
+                    new StructMethod("GetEnumerator")
+                }, implementsIEnumerable: true)
+            },
+            assertGeneratedCode: x => StringAssert.Contains("Cast<TResult>(this IList source)", x.Single()));
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    #endregion
+
     #region of type
     const string ABCRecords =
 @"record A(int Value);
