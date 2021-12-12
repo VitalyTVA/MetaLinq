@@ -1793,6 +1793,51 @@ record C(int Value) : A(Value);";
         );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
+
+    [Test]
+    public void Array_OfType_TakeWhile_ToArray() {
+        AssertGeneration(
+@"void __() {{
+    var source = new A[] { new A(0), new B(1), new C(2), new B(3), new B(4), new B(3) };
+    B[] bs = source.OfType<B>().TakeWhile(x => x.Value < 4).ToArray();
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[1], bs[0]);
+    Assert.AreSame(source[3], bs[1]);
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.IList, "OfType", new[] {
+                    new StructMethod("TakeWhile", new[] {
+                        new StructMethod("ToArray")
+                    })
+                })
+            },
+            assertGeneratedCode: x => StringAssert.Contains("OfType<TResult>(this IList source)", x.Single()));
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+
+    [Test]
+    public void Array_OfType_StandardToArray() {
+        AssertGeneration(
+@"void __() {{
+    var source = new A[] { new A(0), new B(1), new C(2), new B(3) };
+    B[] bs = Enumerable.ToArray(source.OfType<B>());
+    Assert.AreEqual(2, bs.Length);
+    Assert.AreSame(source[1], bs[0]);
+    Assert.AreSame(source[3], bs[1]);
+
+}}
+" + ABCRecords,
+            NoAssert,
+            new[] {
+                new MetaLinqMethodInfo(SourceType.IList, "OfType", new[] {
+                    new StructMethod("GetEnumerator")
+                }, implementsIEnumerable: true)
+            },
+            assertGeneratedCode: x => StringAssert.Contains("OfType<TResult>(this IList source)", x.Single()));
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region select many

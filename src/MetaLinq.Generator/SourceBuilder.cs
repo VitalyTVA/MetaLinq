@@ -203,20 +203,26 @@ IEnumerator IEnumerable.GetEnumerator() {{
         }
 
     static void EmitEnumeratorLevel(CodeBuilder builder, EmitContext context, Level totalLevels) {
-            var level = context.Level;
-            var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Prev.Minus(level));
-            switch(context.Element) {
-                case WhereNode:
-                    builder.AppendMultipleLines($@"
+        var level = context.Level;
+        var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Prev.Minus(level));
+        switch(context.Element) {
+            case WhereNode:
+                builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
 if(!source{sourcePath}.predicate(item{level.Next}))
     goto next{context.GetLabelIndex(skip: 0)};");
-                    break;
-                case SelectNode:
-                    builder.AppendLine($@"var item{level.Next} = source{sourcePath}.selector(item{level});");
-                    break;
-                case SelectManyNode selectMany:
-                    builder.Return!.AppendMultipleLines($@"
+                break;
+            case OfTypeNode:
+                builder.AppendMultipleLines($@"
+if(item{level} is not {context.GetResultGenericType()})
+    goto next{context.GetLabelIndex(skip: 0)};
+var item{level.Next} = ({context.GetResultGenericType()})(object)item{level};");
+                break;
+            case SelectNode:
+                builder.AppendLine($@"var item{level.Next} = source{sourcePath}.selector(item{level});");
+                break;
+            case SelectManyNode selectMany:
+                builder.Return!.AppendMultipleLines($@"
     source{level.Next} = source{sourcePath}.selector(item{level});
     i{level.Next} = -1;
 next{level.Next}:
@@ -224,17 +230,17 @@ next{level.Next}:
     if(i{level.Next} == source{level.Next}.{selectMany.SourceType.GetCountName()})
         goto next{context.GetLabelIndex(skip: 1)};
     var item{level.Next} = source{level.Next}[i{level.Next}];");
-                    break;
-                default:
-                    throw new NotImplementedException();
+                break;
+            default:
+                throw new NotImplementedException();
 
-            }
         }
+    }
 
     static void EmitToList(SourceType source, CodeBuilder builder, EmitContext context) {
-            var outputType = context.GetOutputType();
-            builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
-        }
+        var outputType = context.GetOutputType();
+        builder.AppendLine($@"public List<{outputType}> ToList() => Utils.AsList(ToArray());");
+    }
 }
 public record EmitContext(Level Level, IntermediateNode Element, string SourceType, string SourceGenericArg, EmitContext? Parent) {
 
