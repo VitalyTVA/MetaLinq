@@ -49,7 +49,7 @@ public static class ToValueSourceBuilder {
                 builder.Tab.AppendLine($"var skipWhile{item.Level.Next} = true;");
         }
 
-        EmitLoop(source, piece.Contexts.FirstOrDefault()?.Element.GetNonGenericSourceRequired() ?? false, builder.Tab, topLevel, sourcePath,
+        EmitLoop(source, builder.Tab, topLevel, sourcePath,
             bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
 
         foreach(var item in piece.Contexts) {
@@ -217,11 +217,11 @@ bool found{topLevel} = false;
         };
     }
 
-    static void EmitLoop(SourceType source, bool nonGenericSourceRequired, CodeBuilder builder, Level level, string sourceExpression, Action<CodeBuilder> emitBody) {
+    static void EmitLoop(SourceType source, CodeBuilder builder, Level level, string sourceExpression, Action<CodeBuilder> emitBody) {
         builder.AppendLine($"var source{level} = {sourceExpression};");
         if(source.HasIndexer()) {
             builder.AppendMultipleLines($@"
-var len{level} = source{level}.{source.GetCountName(nonGenericSourceRequired)};
+var len{level} = source{level}.{source.GetCountName()};
 for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
     var item{level} = source{level}[i{level}];");
         }
@@ -288,7 +288,7 @@ if(skipWhile{level.Next}) {{
                 EmitNext(builder);
                 break;
             case SelectManyNode selectMany:
-                EmitLoop(selectMany.SourceType, false, builder, level.Next, $"this{sourcePath}.selector(item{level})",
+                EmitLoop(selectMany.SourceType, builder, level.Next, $"this{sourcePath}.selector(item{level})",
                     bodyBuilder => EmitNext(bodyBuilder));
                 break;
             case OrderByNode:

@@ -79,14 +79,39 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
-    public void OfType_() {
+    public void OfType_IList([Values(SourceType.List, SourceType.Array, SourceType.IList)] SourceType sourceType) {
         var model = new LinqModel();
-        model.AddChain(SourceType.List, new[] { OfType });
+        model.AddChain(sourceType, new[] { OfType });
         AssertModel(model,
-@"List
+@"IList
     Root
         OfType
             -Enumerable");
+    }
+
+    [Test]
+    public void OfType_AllIListTypes() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { OfType });
+        model.AddChain(SourceType.IList, new[] { OfType });
+        model.AddChain(SourceType.Array, new[] { OfType });
+        AssertModel(model,
+@"IList
+    Root
+        OfType
+            -Enumerable");
+    }
+
+    [Test]
+    public void Where_OfType_Array() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, OfType });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            OfType
+                -Enumerable");
     }
 
     [Test]

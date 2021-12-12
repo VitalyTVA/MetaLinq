@@ -4,6 +4,10 @@ public class LinqModel {
     readonly Dictionary<SourceType, LinqTree> trees = new();
 
     public void AddChain(SourceType source, IEnumerable<LinqNode> chain) {
+        var nonGenericSourceRequired = (chain.First() as IntermediateNode) is OfTypeNode;
+        if(nonGenericSourceRequired && source is SourceType.Array or SourceType.List)
+            source = SourceType.IList;
+
         LinqTreeBase? node = trees.GetOrAdd(source, () => new LinqTree());
         foreach(var item in chain) {
             if(node == null)

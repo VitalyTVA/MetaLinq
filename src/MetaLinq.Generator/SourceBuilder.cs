@@ -37,12 +37,11 @@ using MetaLinq.Internal;");
     }
     static void EmitIntermediate(SourceType source, CodeBuilder builder, LinqTreeIntermediateNode intermediate) {
         EmitExtensionMethod(source, builder, intermediate.Element);
-        bool nonGenericSourceRequired = intermediate.Element.GetNonGenericSourceRequired();
         using (builder.BuildType(out CodeBuilder sourceTypeBuilder, 
             TypeModifiers.StaticClass, 
             source.GetEnumerableSourceName(), 
             partial: true, 
-            generics: nonGenericSourceRequired ? null : EmitContext.RootSourceType)
+            generics: source.HasGenericArg() ? EmitContext.RootSourceType : null)
         ) {
             var context = EmitContext.Root(source, intermediate.Element);
             EmitStruct(source, sourceTypeBuilder, context, intermediate.GetNodes().ToList());
@@ -56,10 +55,9 @@ using MetaLinq.Internal;");
 
         var argumentInfo = intermediate.GetArgumentInfo(EmitContext.RootSourceType, "TResult");
 
-        bool nonGenericSourceRequired = intermediate.GetNonGenericSourceRequired();
-        var (sourceGenericArg, methodEnumerableSourceType) = nonGenericSourceRequired
-            ? (null, source.GetSourceTypeName_NonGeneric())
-            : (EmitContext.RootSourceType, source.GetSourceTypeName(EmitContext.RootSourceType));
+        var sourceGenericArg = source.HasGenericArg() ? EmitContext.RootSourceType : null;
+        var methodEnumerableSourceType = source.GetSourceTypeName(EmitContext.RootSourceType);
+
         var sourceGenericArgs = sourceGenericArg.YieldToArray().GetTypeArgsList();
         var methodGenericArgs = new[] {
             sourceGenericArg,
@@ -243,7 +241,7 @@ public record EmitContext(Level Level, IntermediateNode Element, string SourceTy
     public const string RootSourceType = "TSource";
 
     public static EmitContext Root(SourceType source, IntermediateNode element) 
-        => new EmitContext(Level.Zero, element, element.GetNonGenericSourceRequired() ? source.GetSourceTypeName_NonGeneric() : source.GetSourceTypeName(RootSourceType), RootSourceType, null);
+        => new EmitContext(Level.Zero, element, source.GetSourceTypeName(RootSourceType), RootSourceType, null);
 
     public EmitContext Next(IntermediateNode element)
         => new EmitContext(Level.Next, element, Element.GetEnumerableTypeName(Level) + this.GetOwnTypeArgsList(), this.GetOutputType(), this);
@@ -265,7 +263,6 @@ public record struct Level {
 public record struct ArgumentInfo(string Type, string Name);
 
 public static class CodeGenerationTraits {
-    public static bool GetNonGenericSourceRequired(this IntermediateNode intermediate) => intermediate is OfTypeNode;
     public static Level GetOrderByLevel(this PieceOfWork piece) => piece.Contexts.First(x => x.Element is OrderByNode).Level;
     public static string GetEnumerableTypeName(this IntermediateNode intermediate, Level level) {
         var enumerableKind = intermediate.GetEnumerableKind();
@@ -285,19 +282,21 @@ public static class CodeGenerationTraits {
     public const string EnumeratorTypeName = "Enumerator";
     public static string GetSourcePath(int count) => count == 0 ? string.Empty : "." + string.Join(".", Enumerable.Repeat("source", count));
 
+    public static bool HasGenericArg(this SourceType source) {
+        return source switch {
+            SourceType.List or SourceType.Array or SourceType.CustomEnumerable or SourceType.CustomCollection => true,
+            SourceType.IList => false,
+            _ => throw new NotImplementedException(),
+        };
+    }
+
     public static string GetSourceTypeName(this SourceType source, string sourceGenericArg) {
         return source switch {
             SourceType.List => $"List<{sourceGenericArg}>",
             SourceType.Array => $"{sourceGenericArg}[]",
             SourceType.CustomCollection => $"MetaLinq.Tests.CustomCollection<{sourceGenericArg}>",
             SourceType.CustomEnumerable => $"MetaLinq.Tests.CustomEnumerable<{sourceGenericArg}>",
-            _ => throw new NotImplementedException(),
-        };
-    }
-    public static string GetSourceTypeName_NonGeneric(this SourceType source) {
-        return source switch {
-            SourceType.Array  => $"IList",
-            SourceType.List or SourceType.CustomEnumerable or SourceType.CustomCollection => $"TODO",
+            SourceType.IList => "IList",
             _ => throw new NotImplementedException(),
         };
     }
@@ -328,6 +327,7 @@ public static class CodeGenerationTraits {
             SourceType.Array => "Array",
             SourceType.CustomCollection => "CustomCollection",
             SourceType.CustomEnumerable => "CustomEnumerable",
+            SourceType.IList => "IList",
             _ => throw new NotImplementedException(),
         };
     }
@@ -372,11 +372,10 @@ public static class CodeGenerationTraits {
                 _ => throw new NotImplementedException(),
             };
         }
-    public static string GetCountName(this SourceType source, bool nonGenericSourceRequired = false) {
-            return (source, nonGenericSourceRequired) switch {
-                (SourceType.List, false) or (SourceType.Array, true) => "Count",
-                (SourceType.Array, false) => "Length",
-                (SourceType.CustomCollection, false) => "Count",
+    public static string GetCountName(this SourceType source) {
+            return source switch {
+                SourceType.List or SourceType.CustomCollection or SourceType.IList => "Count",
+                SourceType.Array => "Length",
                 _ => throw new NotImplementedException(),
             };
         }
