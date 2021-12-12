@@ -5,7 +5,7 @@ public record PieceOfWork(EmitContext[] Contexts, bool SameSize) {
     public Level LastLevel => Contexts.LastOrDefault()?.Level ?? Level.MinusOne;
     public Level TopLevel => Contexts.FirstOrDefault()?.Level ?? Level.MinusOne;
     //public bool SameSize => Contexts.Any() && Contexts.All(x => x.Node is not (WhereNode or SkipWhileNode or TakeWhileNode or SelectManyChainElement));
-    public bool SameType => Contexts.All(x => x.Element is not (SelectNode or SelectManyNode or OfTypeNode));
+    public bool SameType => Contexts.All(x => x.Element is not (SelectNode or SelectManyNode or OfTypeNode or CastNode));
     public ResultType ResultType 
         => Contexts.LastOrDefault()?.Element is OrderByNode or ThenByNode
         ? ResultType.OrderBy 
@@ -44,7 +44,7 @@ public static class PieceOfWorkExtensions {
             var context = contexts[i];
             var nextContext = i < contexts.Count - 1 ? contexts[i + 1] : null;
             switch(context.Element) {
-                case SelectNode:
+                case SelectNode or CastNode:
                     if(IsOrderBy())
                         yield return CreateAndReset();
                     current.Add(context);

@@ -240,6 +240,7 @@ public static class CodeGenerationTraits {
         return intermediate switch {
             WhereNode => "Where",
             OfTypeNode => "OfType",
+            CastNode => "Cast",
             TakeWhileNode => "TakeWhile",
             SkipWhileNode => "SkipWhile",
             SelectNode => "Select",
@@ -260,7 +261,7 @@ public static class CodeGenerationTraits {
     public static string? GetOwnTypeArg(this IntermediateNode intermediate, string argName) {
         return intermediate switch {
             WhereNode or TakeWhileNode or SkipWhileNode => null,
-            SelectNode or SelectManyNode or OfTypeNode or OrderByNode or ThenByNode => argName,
+            SelectNode or SelectManyNode or OfTypeNode or CastNode or OrderByNode or ThenByNode => argName,
             _ => throw new NotImplementedException(),
         };
     }
@@ -273,7 +274,7 @@ public static class CodeGenerationTraits {
     public static string GetOutputType(this EmitContext context) {
             return context.Element switch {
                 WhereNode or TakeWhileNode or SkipWhileNode or OrderByNode or ThenByNode => context.SourceGenericArg,
-                SelectNode or SelectManyNode or OfTypeNode => context.GetResultGenericType(),
+                SelectNode or SelectManyNode or OfTypeNode or CastNode => context.GetResultGenericType(),
                 _ => throw new NotImplementedException(),
             };
         }

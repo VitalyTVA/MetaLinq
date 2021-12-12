@@ -90,6 +90,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void Cast_IList([Values(SourceType.List, SourceType.Array, SourceType.IList)] SourceType sourceType) {
+        var model = new LinqModel();
+        model.AddChain(sourceType, new[] { Cast });
+        AssertModel(model,
+@"IList
+    Root
+        Cast
+            -Enumerable");
+    }
+
+    [Test]
     public void OfType_ICollection([Values(SourceType.CustomCollection, SourceType.ICollection)] SourceType sourceType) {
         var model = new LinqModel();
         model.AddChain(sourceType, new[] { OfType });
@@ -97,6 +108,17 @@ public class LinqModelTests : BaseFixture {
 @"ICollection
     Root
         OfType
+            -Enumerable");
+    }
+
+    [Test]
+    public void Cast_ICollection([Values(SourceType.CustomCollection, SourceType.ICollection)] SourceType sourceType) {
+        var model = new LinqModel();
+        model.AddChain(sourceType, new[] { Cast });
+        AssertModel(model,
+@"ICollection
+    Root
+        Cast
             -Enumerable");
     }
 
@@ -112,6 +134,18 @@ public class LinqModelTests : BaseFixture {
         OfType
             -Enumerable");
     }
+    [Test]
+    public void Cast_AllIListTypes() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.List, new[] { Cast });
+        model.AddChain(SourceType.IList, new[] { Cast });
+        model.AddChain(SourceType.Array, new[] { Cast });
+        AssertModel(model,
+@"IList
+    Root
+        Cast
+            -Enumerable");
+    }
 
     [Test]
     public void Where_OfType_Array() {
@@ -122,6 +156,18 @@ public class LinqModelTests : BaseFixture {
     Root
         Where
             OfType
+                -Enumerable");
+    }
+
+    [Test]
+    public void Where_Cast_Array() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, Cast });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            Cast
                 -Enumerable");
     }
 

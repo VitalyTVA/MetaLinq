@@ -4,7 +4,7 @@ public class LinqModel {
     readonly Dictionary<SourceType, LinqTree> trees = new();
 
     public void AddChain(SourceType source, IEnumerable<LinqNode> chain) {
-        var nonGenericSourceRequired = (chain.First() as IntermediateNode) is OfTypeNode;
+        var nonGenericSourceRequired = (chain.First() as IntermediateNode) is OfTypeNode or CastNode;
         if(nonGenericSourceRequired) {
             if(source is SourceType.Array or SourceType.List)
                 source = SourceType.IList;

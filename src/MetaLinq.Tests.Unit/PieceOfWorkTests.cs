@@ -51,6 +51,32 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void CustomEnumerable_Cast_OrderBy_First(
+[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Cast, OrderBy }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Cast]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void Cast_OrderBy_First(
+[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Cast, OrderBy }, new[] {
+"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Cast, OrderBy]"
+        }, SourceType.List, toValueType);
+    }
+
+    [Test]
+    public void Cast_OrderBy() {
+        AssertPieces(new[] { Cast, OrderBy }, new[] {
+"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Cast, OrderBy]"
+        }, SourceType.List);
+    }
+
+    [Test]
     public void OrderBy_ThenBy() {
         AssertPieces(new[] { OrderBy, ThenBy}, new[] {
 "SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenBy]"
@@ -190,6 +216,15 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void Where_Select_OrderBy_Cast_Where() {
+        AssertPieces(new[] { Where, Select, OrderBy, Cast, Where }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Select]",
+"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Cast, Where]",
+        });
+    }
+
+    [Test]
     public void TakeWhile_Select_OrderBy_SelectMany_Where() {
         AssertPieces(new[] { TakeWhile, Select, OrderBy, SelectMany(SourceType.List), Where }, new[] {
 "SameType: False, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile, Select]",
@@ -273,6 +308,13 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void Cast_() {
+        AssertPieces(new[] { Cast }, new[] {
+"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Cast]"
+        });
+    }
+
+    [Test]
     public void SkipWhile_() {
         AssertPieces(new[] { SkipWhile }, new[] {
 "SameType: True, SameSize: False, ResultType: ToValue, Nodes: [SkipWhile]"
@@ -303,6 +345,16 @@ public class PieceOfWorkTests {
         });
         AssertPieces(new[] { OfType, Select }, new[] {
 "SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType, Select]"
+        });
+    }
+
+    [Test]
+    public void Where_Cast() {
+        AssertPieces(new[] { Cast, Where }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Cast, Where]"
+        });
+        AssertPieces(new[] { Where, Cast }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Cast]"
         });
     }
 

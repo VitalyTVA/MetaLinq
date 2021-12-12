@@ -23,15 +23,16 @@ public static class SourceTypeExtensions {
 
 public abstract record LinqNode {
     public static LinqNode Where => WhereNode.Instance;
-    public static LinqNode OfType => OfTypeNode.Instance;
     public static LinqNode TakeWhile => TakeWhileNode.Instance;
     public static LinqNode SkipWhile => SkipWhileNode.Instance;
     public static LinqNode Select => SelectNode.Instance;
+    public static LinqNode Cast => CastNode.Instance;
     public static LinqNode OrderBy => new OrderByNode(ListSortDirection.Ascending);
     public static LinqNode OrderByDescending = new OrderByNode(ListSortDirection.Descending);
     public static LinqNode ThenBy => new ThenByNode(ListSortDirection.Ascending);
     public static LinqNode ThenByDescending => new ThenByNode(ListSortDirection.Descending);
     public static LinqNode SelectMany(SourceType sourceType) => new SelectManyNode(sourceType);
+    public static LinqNode OfType => OfTypeNode.Instance;
     public static readonly ToValueChainElement ToArray = new ToValueChainElement(ToValueType.ToArray);
     public static readonly ToValueChainElement ToHashSet = new ToValueChainElement(ToValueType.ToHashSet);
     public static readonly ToValueChainElement ToDictionary = new ToValueChainElement(ToValueType.ToDictionary);
@@ -85,6 +86,12 @@ public sealed record OfTypeNode : IntermediateNode {
     public static readonly OfTypeNode Instance = new OfTypeNode();
     OfTypeNode() { }
     internal override string Type => "OfType";
+}
+
+public sealed record CastNode : IntermediateNode {
+    public static readonly CastNode Instance = new CastNode();
+    CastNode() { }
+    internal override string Type => "Cast";
 }
 
 public sealed record TakeWhileNode : IntermediateNode {
