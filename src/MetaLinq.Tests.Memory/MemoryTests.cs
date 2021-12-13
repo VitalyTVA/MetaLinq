@@ -44,13 +44,14 @@ public class Tests {
     }
     static TestData[] testDataArray;
     static TestData[] testDataArray_Shuffled;
+    static Foo[] fooArray = new[] { new Bar(), new Bar() };
     static List<TestData> testDataList;
     static int[] intArray = Enumerable.ToArray(Enumerable.Range(0, 5));
     static List<int> intList = Enumerable.ToList(Enumerable.Range(0, 5));
     static CustomCollection<int> intCustomCollection = new CustomCollection<int>(Enumerable.ToArray(Enumerable.Range(0, 5)));
 
     class Foo { }
-    class Bar { }
+    class Bar : Foo { }
     struct DisposableStruct : IDisposable {
         public void Dispose() {
         }
@@ -76,6 +77,39 @@ public class Tests {
     }
     #endregion
 
+    [Test]
+    public static void Array_OfType_ToArray() {
+        MemoryTestHelper.AssertDifference(() => fooArray.OfType<Bar>().ToArray(),
+            new[] {
+                ($"{typeof(Bar).FullName}[]", 1),
+            }
+        );
+    }
+    [Test]
+    public static void Array_Where_OfType_ToArray() {
+        MemoryTestHelper.AssertDifference(() => fooArray.Where(x => true).OfType<Bar>().ToArray(),
+            new[] {
+                ($"{typeof(Bar).FullName}[]", 1),
+            }
+        );
+    }
+    [Test]
+    public static void Array_Where_Cast_ToArray() {
+        MemoryTestHelper.AssertDifference(() => fooArray.Where(x => true).Cast<Bar>().ToArray(),
+            new[] {
+                ($"{typeof(Bar).FullName}[]", 1),
+            }
+        );
+    }
+    [Test]
+    public static void Array_TakeWhile_SkipWhile_ToArray() {
+        MemoryTestHelper.AssertDifference(() => fooArray.TakeWhile(x => true).SkipWhile(x => false).Cast<Bar>().ToArray(),
+            new[] {
+                ($"{typeof(Bar).FullName}[]", 1),
+            }
+        );
+    }
+
     #region select where
     [Test]
     public static void Array_Select_Where_ToList() {
@@ -84,6 +118,10 @@ public class Tests {
     [Test]
     public static void Array_Where_Select_ToList() {
         MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).ToList(), ExpectedListOfIntsAllocations());
+    }
+    [Test]
+    public static void Array_Where_Select_First() {
+        MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).First(x => x > 1), null);
     }
     #endregion
 
@@ -109,10 +147,10 @@ public class Tests {
     #endregion
 
     #region order by
-    //[Test]
-    //public static void Array_OrderBy_ToArrayStandard() {
-    //    MemoryTestHelper.AssertDifference(() => Enumerable.ToArray(Enumerable.OrderBy(testDataArray_Shuffled, static x => x.Value)), ExpectedArrayOfIntsAllocations());
-    //}
+    [Test]
+    public static void CustomCollection_OrderBy_First() {
+        MemoryTestHelper.AssertDifference(() => intCustomCollection.OrderBy(static x => 2 * x).First(x => x > 1), null);
+    }
     [Test]
     public static void Array_OrderBy_ToArray() {
         MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.OrderBy(static x => x.Value).ToArray(), ExpectedOrderByAllocations());

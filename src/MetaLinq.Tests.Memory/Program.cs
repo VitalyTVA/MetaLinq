@@ -10,6 +10,7 @@ class Program {
             .GetMethods(BindingFlags.Public | BindingFlags.Static)
             .Where(x => x.GetCustomAttribute(typeof(TestAttribute)) != null)
             .ToList();
+        int failCount = 0;
         foreach(var method in tests) {
             Console.WriteLine(method.Name);
             try {
@@ -17,9 +18,10 @@ class Program {
             } catch(Exception e) {
                 Console.WriteLine("Error");
                 Console.WriteLine(e.InnerException!.Message);
+                failCount++;
             }
         }
-        Console.WriteLine("Finished");
+        Console.WriteLine(failCount == 0 ? "Finished" : "!!! FAILED !!! " + failCount);
         //Console.ReadLine();
     }
 }
