@@ -937,6 +937,20 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
+    public void Array_Select_TakeWhile_ToArrayStandard() {
+        AssertGeneration(
+            "int[] __() => Enumerable.ToArray(Data.Array(20).Select(x => x.Int % 10).TakeWhile(x => x < 5));",
+            Get0ToNIntArrayAssert(4),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("TakeWhile", new[] {
+                            new StructMethod("GetEnumerator")
+                        }, implementsIEnumerable: true)
+                    })
+            }
+        );
+    }
+    [Test]
     public void Array_Select_SkipWhile_ToArray() {
         AssertGeneration(
             "int[] __() => Data.Array(20).Select(x => x.Int % 10).SkipWhile(x => x < 5).ToArray();",
@@ -950,6 +964,20 @@ public class GenerationTests : BaseFixture {
             }
         );
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Select_SkipWhile_ToArrayStandard() {
+        AssertGeneration(
+            "int[] __() => Enumerable.ToArray(Data.Array(20).Select(x => x.Int % 10).SkipWhile(x => x < 5));",
+            GetIntArrayAssert(Enumerable.Range(5, 15).Select(x => x % 10).ToArray()),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("SkipWhile", new[] {
+                            new StructMethod("GetEnumerator")
+                        }, implementsIEnumerable: true)
+                    })
+            }
+        );
     }
     [Test]
     public void Array_SelectMany_TakeWhile_ToArray() {

@@ -14,6 +14,9 @@ public static class EnumeratorSourceBuilder {
             .Where(x => x.Element is SelectManyNode)
             .Select(x => (index: x.Level.Next, node: (SelectManyNode)x.Element, outputType: x.GetOutputType()))
             .ToArray();
+        var skipWhiles = contexts
+            .Where(x => x.Element is SkipWhileNode)
+            .Select(item => ($"bool skipWhile{item.Level.Next};\r\n", $"skipWhile{item.Level.Next} = true;\r\n"));
         using(builder.BuildType(out CodeBuilder enumeratorBuilder, TypeModifiers.Struct, "Enumerator", isPublic: true, baseType: $"IEnumerator<{outputType}>")) {
 
             enumeratorBuilder.AppendMultipleLines($@"
@@ -21,12 +24,14 @@ readonly {enumerableTypeName} source;
 int i{Level.Zero};
 {string.Concat(selectManyLevels.Select(x => $"int i{x.index};\r\n"))}
 {string.Concat(selectManyLevels.Select(x => $"{x.node.SourceType.GetSourceTypeName(x.outputType)} source{x.index};\r\n"))}
+{string.Concat(skipWhiles.Select(x => x.Item1))}
 {outputType} current;
 int state;
 public {CodeGenerationTraits.EnumeratorTypeName}({enumerableTypeName} source) {{
     this.source = source;
     i{Level.Zero} = -1;
 {string.Concat(selectManyLevels.Select(x => $"    i{x.index} = -1;\r\n    source{x.index} = default;"))}
+{string.Concat(skipWhiles.Select(x => x.Item2))}
     current = default;
     state = -1;
 }}
@@ -41,8 +46,7 @@ next{Level.Zero}:
     i{Level.Zero}++;
     var source{Level.Zero} = this.source{CodeGenerationTraits.GetSourcePath(contexts.Length)};
     if(i{Level.Zero} == source{Level.Zero}.{countName}) {{
-        state = 1;
-        return false;
+        {ExitEnumerator}
     }}
     var item{Level.Zero} = source{Level.Zero}[i{Level.Zero}];");
             var finalLevel = contexts.Last().Level.Next;
@@ -69,11 +73,29 @@ IEnumerator IEnumerable.GetEnumerator() {{
 }}
 ");
     }
-
+    const string ExitEnumerator = "state = 1; return false;";
     static void EmitEnumeratorLevel(CodeBuilder builder, EmitContext context, Level totalLevels) {
         var level = context.Level;
         var sourcePath = CodeGenerationTraits.GetSourcePath(totalLevels.Prev.Minus(level));
         switch(context.Element) {
+            case SkipWhileNode:
+                builder.AppendMultipleLines($@"
+var item{level.Next} = item{level};
+if(skipWhile{level.Next}) {{
+    if(source{sourcePath}.predicate(item{level.Next})) {{
+        goto next{context.GetLabelIndex(skip: 0)};
+    }} else {{
+        skipWhile{level.Next} = false;
+    }}
+}}");
+                break;
+            case TakeWhileNode:
+                builder.AppendMultipleLines($@"
+var item{level.Next} = item{level};
+if(!source{sourcePath}.predicate(item{level.Next})) {{
+    {ExitEnumerator}
+}}");
+                break;
             case WhereNode:
                 builder.AppendMultipleLines($@"
 var item{level.Next} = item{level};
