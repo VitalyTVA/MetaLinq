@@ -38,6 +38,8 @@ public abstract record LinqNode {
     public static readonly ToValueChainElement ToDictionary = new ToValueChainElement(ToValueType.ToDictionary);
     public static readonly ToValueChainElement First = new ToValueChainElement(ToValueType.First);
     public static readonly ToValueChainElement FirstOrDefault = new ToValueChainElement(ToValueType.FirstOrDefault);
+    public static readonly ToValueChainElement Last = new ToValueChainElement(ToValueType.Last);
+    public static readonly ToValueChainElement LastOrDefault = new ToValueChainElement(ToValueType.LastOrDefault);
     public static ToListNode ToList => ToListNode.Instance;
     public static EnumerableNode Enumerable => EnumerableNode.Instance;
 
@@ -54,7 +56,9 @@ public enum ToValueType {
     ToHashSet, 
     ToDictionary, 
     First,
-    FirstOrDefault
+    FirstOrDefault,
+    Last,
+    LastOrDefault,
 }
 
 public abstract record class TerminalNode : LinqNode { }

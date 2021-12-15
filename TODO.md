@@ -1,24 +1,25 @@
+Last/LastOrDefault work wrong and iterate through whole list
+//Assert.AreEqual(0, source[7].Int_GetCount);
+    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+
+
+replace all checks like
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+with
+		AssertAllocated(largeArrayBuilder: 1)
+
 CustomEnumerable-Where-OrderBy-First chains optimization
 
-simplify senseless chains like OrderBy(x => x.Long).ThenBy(x => x.Int).ToArray
- 
-BuilderType.UnknownSizeOrderBy => - KILL
-
-several orderby levels (keySelector path)
-
-reduce large array usage (work pieces [Trivial -> UnknownSize/UnknownType/UnknownSizaAndType -> Array/OrderByArray] - repeat)
+simplify senseless chains like OrderBy(x => x.Long).OrderBy(x => x.Int).ToArray
 
 ArrayPool rent/return tests
 
 Add max capacity to large array builder (like in LargeArrayBuilder from net6)
 
-see how large array builder it works without dispose int net6 (dispose on ToArray???)
+research how large array builder works without dispose int net6 (dispose on ToArray???)
 
 CustomEnumerable should not be a special case
-
-CustomEnumerable Should Not have Count
-
-First - "Sequence contains no elements" exception when empty source
 
 #Posponed0
 

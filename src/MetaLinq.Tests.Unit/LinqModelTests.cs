@@ -327,6 +327,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void WhereLast() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, Last });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -Last");
+    }
+
+    [Test]
     public void WhereFirstOrDefault() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where, FirstOrDefault });
@@ -335,6 +346,17 @@ public class LinqModelTests : BaseFixture {
     Root
         Where
             -FirstOrDefault");
+    }
+
+    [Test]
+    public void WhereLastOrDefault() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, LastOrDefault });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -LastOrDefault");
     }
 
     [Test]

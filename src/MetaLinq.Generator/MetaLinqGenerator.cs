@@ -136,6 +136,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "ToDictionary" => LinqNode.ToDictionary,
             "First" => LinqNode.First,
             "FirstOrDefault" => LinqNode.FirstOrDefault,
+            "Last" => LinqNode.Last,
+            "LastOrDefault" => LinqNode.LastOrDefault,
             _ => null
         };
     }

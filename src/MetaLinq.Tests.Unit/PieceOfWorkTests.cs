@@ -23,7 +23,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_OrderBy_First(
-        [Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
     ) {
         AssertPieces(new[] { OrderBy }, new[] {
 "SameType: True, SameSize: False, ResultType: OrderBy, Nodes: [OrderBy]"
@@ -32,7 +32,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Where_OrderBy_First(
-        [Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
     ) {
         AssertPieces(new[] { Where, OrderBy }, new[] {
 "SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
@@ -42,7 +42,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_OfType_OrderBy_First(
-    [Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+    [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { OfType, OrderBy }, new[] {
 "SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType]",
@@ -52,7 +52,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Cast_OrderBy_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
 "SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Cast]",
@@ -62,7 +62,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Cast_OrderBy_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
 "SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Cast, OrderBy]"

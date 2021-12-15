@@ -14,8 +14,8 @@ public static class ToValueSourceBuilder {
             ToValueType.ToArray => $"{outputType}[] ToArray()",
             ToValueType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
             ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
-            ToValueType.First => $"{outputType} First(Func<{outputType}, bool> predicate)",
-            ToValueType.FirstOrDefault => $"{outputType}? FirstOrDefault(Func<{outputType}, bool> predicate)",
+            ToValueType.First or ToValueType.Last => $"{outputType} {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.FirstOrDefault or ToValueType.LastOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
             _ => throw new NotImplementedException(),
         };
         builder.AppendLine($"public {methodDefinition} {{");
@@ -78,11 +78,11 @@ public static class ToValueSourceBuilder {
                 direction: (x.Element as OrderByNode)?.Direction ?? (x.Element as ThenByNode)!.Direction
             ))
             .ToArray();
-        string GetFirstResultStatement() =>
+        string GetFirstLastResultStatement() =>
 $@"if(!found{topLevel})
     throw new InvalidOperationException(""Sequence contains no matching element"");
 var result_{lastLevel} = result{topLevel}!;";
-        string GetFirstOrDefaultResultStatement() =>
+        string GetFirstLastOrDefaultResultStatement() =>
 $@"var result_{lastLevel} = result{topLevel};";
 
         switch((piece.SameSize, piece.ResultType, toInstanceType)) {
@@ -95,7 +95,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
     goto firstFound{lastLevel};
 }}",
-GetFirstResultStatement()
+GetFirstLastResultStatement()
                 );
             case (_, ResultType.ToValue, ToValueType.FirstOrDefault):
                 return (
@@ -104,7 +104,25 @@ $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
     goto firstFound{lastLevel};
 }}",
-GetFirstOrDefaultResultStatement()
+GetFirstLastOrDefaultResultStatement()
+                );
+            case (_, ResultType.ToValue, ToValueType.Last):
+                return (
+$@"var result{topLevel} = default({outputType});
+bool found{topLevel} = false;",
+$@"if(predicate(item{lastLevel.Next})) {{
+    found{topLevel} = true;
+    result{topLevel} = item{lastLevel.Next};
+}}",
+GetFirstLastResultStatement()
+                );
+            case (_, ResultType.ToValue, ToValueType.LastOrDefault):
+                return (
+$@"var result{topLevel} = default({outputType});",
+$@"if(predicate(item{lastLevel.Next})) {{
+    result{topLevel} = item{lastLevel.Next};
+}}",
+GetFirstLastOrDefaultResultStatement()
                 );
 
             case (false, ResultType.ToValue, ToValueType.ToArray):
@@ -209,7 +227,7 @@ bool found{topLevel} = false;
     }}
     found{topLevel} = true;
 }}",
-                    toInstanceType == ToValueType.First ? GetFirstResultStatement() : GetFirstOrDefaultResultStatement()
+                    toInstanceType == ToValueType.First ? GetFirstLastResultStatement() : GetFirstLastOrDefaultResultStatement()
                 );
 
             default:

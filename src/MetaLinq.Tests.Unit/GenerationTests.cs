@@ -1427,6 +1427,65 @@ $@"Data __() {{
         );
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
+    [Test]
+    public void Array_Where_Last() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.Last(x => x == 0))!.Message;
+        AssertGeneration(
+$@"Data __() {{
+    var ex = Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Where(x => x.Int > 5).Last(x => x.Int == 0));
+    Assert.AreEqual(""{expectedMessage}"", ex!.Message);
+    var source = Data.Array(15);
+    var result = source.Where(x => x.Int < 12).Last(x => x.Int % 4 == 0);
+    //Assert.AreEqual(0, source[7].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("Last")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Where_LastOrDefault() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Null(Data.Array(10).Where(x => x.Int > 5).LastOrDefault(x => x.Int == 0));
+    var source = Data.Array(15);
+    var result = source.Where(x => x.Int < 12).LastOrDefault(x => x.Int % 4 == 0);
+    //Assert.AreEqual(0, source[7].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("LastOrDefault")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void CustomEnumerable_Where_Last() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.Last(x => x == 0))!.Message;
+        AssertGeneration(
+$@"Data __() {{
+    var source = Data.Array(15);
+    var result = new CustomEnumerable<Data>(source).Where(x => x.Int < 12).Last(x => x.Int % 4 == 0);
+    //Assert.AreEqual(0, source[7].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Where", new[] {
+                    new StructMethod("Last")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region select
@@ -1694,6 +1753,63 @@ $@"Data __() {{
             new[] {
                 new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Select", new[] {
                     new StructMethod("First")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_Select_Last() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Select(x => x.Self).Last(x => x.Int == -1));
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Last(x => x.Int % 4 == 0);
+    //Assert.AreEqual(0, source[7].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Last")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+    [Test]
+    public void Array_Select_LastOrDefault() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Null(Data.Array(10).Select(x => x.Self).LastOrDefault(x => x.Int == -1));
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).LastOrDefault(x => x.Int % 4 == 0);
+    //Assert.AreEqual(0, source[7].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("LastOrDefault")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void CustomEnumerable_Select_Last() {
+        AssertGeneration(
+$@"Data __() {{
+    var source = Data.Array(10);
+    var result = new CustomEnumerable<Data>(source).Select(x => x.Self).Last(x => x.Int > 0 && x.Int % 4 == 0);
+    //Assert.AreEqual(0, source[7].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Select", new[] {
+                    new StructMethod("Last")
                 })
             }
         );
@@ -2412,6 +2528,64 @@ $@"Data __() {{
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
+    [Test]
+    public void Array_SelectManyList_Last() {
+        AssertGeneration(
+$@"Data __() {{
+    var source = Data.Array(5);
+    var result = source.SelectMany(x => x.DataList).Last(x => x.Int % 4 == 0);
+    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("Last")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_SelectManyList_LastOrDefault() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Null(Data.Array(5).SelectMany(x => x.DataList).LastOrDefault(x => x.Int < 0));
+    var source = Data.Array(5);
+    var result = source.SelectMany(x => x.DataList).LastOrDefault(x => x.Int % 4 == 0);
+    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("LastOrDefault")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void CustomEnumerable_SelectManyCustomEnumerable_Last() {
+        AssertGeneration(
+$@"Data __() {{
+    var source = Data.Array(5);
+    var result = new CustomEnumerable<Data>(source).SelectMany(x => new CustomEnumerable<Data>(x.DataList)).LastOrDefault(x => x.Int > 0 && x.Int % 4 == 0);
+    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "SelectMany", new[] {
+                    new StructMethod("LastOrDefault")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
     #endregion
 
     #region select and where
@@ -2567,6 +2741,37 @@ $@"Data __() {{
                 new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                     new StructMethod("Select", new[] {
                         new StructMethod("FirstOrDefault")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Select_Where_Last() {
+        AssertGeneration(
+            "int __() => Data.List(15).Select(x => x.Int).Where(x => x < 12).Last(x => x % 4 == 0);",
+            (int x) => Assert.AreEqual(8, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("Where", new[] {
+                        new StructMethod("Last")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Where_Select_LastOrDefault() {
+        AssertGeneration(
+@"int? __() { 
+    Assert.AreEqual(0, Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).LastOrDefault(x => x == -1));
+    return Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).LastOrDefault(x => x % 4 == 3); 
+}",
+            (int? x) => Assert.AreEqual(7, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("LastOrDefault")
                     })
                 })
             }
