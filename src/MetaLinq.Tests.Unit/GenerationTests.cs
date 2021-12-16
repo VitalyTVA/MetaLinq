@@ -52,6 +52,25 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_Last() {
+        AssertGeneration(
+@"Data __() {{
+    var source = Data.Array(10).Shuffle();
+    Assert.Throws<System.InvalidOperationException>(() => source.OrderBy(x => x.Int).Last(x => x.Int < 0));
+    return source.OrderBy(x => x.Int).Last(x => x.Int > 4);
+}}",
+        (Data x) => Assert.AreEqual(9, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("Last")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
     public void CustomEnumerable_OrderBy_First() {
         AssertGeneration(
 @"Data __() {{
@@ -62,6 +81,24 @@ public class GenerationTests : BaseFixture {
         new[] {
                 new MetaLinqMethodInfo(SourceType.CustomEnumerable, "OrderBy", new[] {
                     new StructMethod("First")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void CustomEnumerable_OrderBy_Last() {
+        AssertGeneration(
+@"Data __() {{
+    var source = Data.Array(10).Shuffle();
+    return new CustomEnumerable<Data>(source).OrderBy(x => x.Int).Last(x => x.Int > 4);
+}}",
+        (Data x) => Assert.AreEqual(9, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "OrderBy", new[] {
+                    new StructMethod("Last")
                 })
         }
     );
@@ -91,6 +128,27 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void CustomEnumerable_Where_OrderBy_Last() {
+        AssertGeneration(
+@"Data __() {{
+    var source = Data.Array(20).Shuffle();
+    return new CustomEnumerable<Data>(source).Where(x => x.Int > 8).OrderBy(x => x.Int).Last(x => x.Int % 4 == 0);
+}}",
+        (Data x) => Assert.AreEqual(16, x.Int),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Last"),
+                })
+
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
     public void Array_OrderByDescending_FirstOrDefault() {
         AssertGeneration(
 @"Data? __() {{
@@ -102,6 +160,25 @@ public class GenerationTests : BaseFixture {
         new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
                     new StructMethod("FirstOrDefault")
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void Array_OrderByDescending_LastOrDefault() {
+        AssertGeneration(
+@"Data? __() {{
+    var source = Data.Array(10).Shuffle();
+    Assert.Null(source.OrderByDescending(x => -x.Int).LastOrDefault(x => x.Int < 0));
+    return source.OrderByDescending(x => -x.Int).LastOrDefault(x => x.Int > 4);
+}}",
+        (Data x) => Assert.AreEqual(9, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("LastOrDefault")
                 })
         }
     );
@@ -161,6 +238,45 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ThenByDescending", new[] {
                         new StructMethod("First"),
                     })
+                })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void Array_OrderBy_ThenBy_LastAndLastOrDefault() {
+        AssertGeneration(
+@"void __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    Assert.Null(source.OrderByDescending(x => x.Long).ThenByDescending(x => x.Int).LastOrDefault(x => x.Int == 1 && x.Long == 3));
+    var first = source.OrderByDescending(x => x.Long).ThenByDescending(x => x.Int).Last(x => x.Int == 1 && x.Long == 2);
+    Assert.AreEqual(1, first.Int);
+    Assert.AreEqual(2, first.Long);
+    
+    var pair = new[] { (1, 1), (0, 0), (1, 0), (0, 1) }.OrderByDescending(x => x.Item1).ThenByDescending(x => x.Item2).Last(x => x.Item1 == 1);
+    Assert.AreEqual(1, pair.Item1);
+    Assert.AreEqual(0, pair.Item2);
+
+    var pair2 = new[] { (1, 0), (0, 0), (1, 1), (0, 1) }.OrderByDescending(x => x.Item1).ThenByDescending(x => x.Item2).Last(x => x.Item1 >= 0);
+    Assert.AreEqual(0, pair2.Item1);
+    Assert.AreEqual(0, pair2.Item2);
+
+    var pair3 = new[] { (1, 0), (0, 0), (1, 1), (0, 1) }.OrderByDescending(x => x.Item1).ThenBy(x => x.Item2).Last(x => x.Item1 >= 0);
+    Assert.AreEqual(0, pair3.Item1);
+    Assert.AreEqual(1, pair3.Item2);
+}}",
+        NoAssert,
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("ThenBy", new[] {
+                        new StructMethod("Last"),
+                    }),
+                    new StructMethod("ThenByDescending", new[] {
+                        new StructMethod("Last"),
+                        new StructMethod("LastOrDefault"),
+                    }),
                 })
         }
     );
@@ -454,6 +570,30 @@ public class GenerationTests : BaseFixture {
                 new StructMethod("Select", new[] {
                     new StructMethod("OrderBy", new[] {
                         new StructMethod("First"),
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
+    public void List_Select_Select_OrderByDescending_Last() {
+        AssertGeneration(
+@"int __() {{
+    var source = Data.List(10).Shuffle();
+    var result = source.Select(x => x.Self).Select(x => new { Value = x.Int }).OrderByDescending(x => x.Value).Last(x => x.Value > 3);
+    source.AssertAll(x => Assert.AreEqual(1, x.Int_GetCount));
+    return result.Value;
+}}",
+        (int x) => Assert.AreEqual(4, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                new StructMethod("Select", new[] {
+                    new StructMethod("OrderByDescending", new[] {
+                        new StructMethod("Last"),
                     })
                 })
             })
@@ -765,6 +905,30 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_Where_OrderBy_Select_OrderBy_Last() {
+        AssertGeneration(
+@"int __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).OrderBy(x => 2 * x).Last(x => x < 5);
+}}",
+        (int x) => Assert.AreEqual(4, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("OrderBy", new[] {
+                            new StructMethod("Last"),
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+    }
+
+    [Test]
     public void CustomEnumerable_Where_OrderBy_Select_OrderByDescending_First() {
         AssertGeneration(
 @"int __() {{
@@ -788,6 +952,29 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
     }
 
+    [Test]
+    public void CustomEnumerable_Where_OrderBy_Select_OrderBy_Last() {
+        AssertGeneration(
+@"int __() {{
+    var source = Data.Array(10).Shuffle();
+    return new CustomEnumerable<Data>(source).Where(x => x.Int < 7).OrderBy(x => x.Int).Select(x => x.Int).OrderBy(x => 2 * x).Last(x => x < 5);
+}}",
+        (int x) => Assert.AreEqual(4, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Where", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("OrderBy", new[] {
+                            new StructMethod("Last"),
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+    }
 
     [Test]
     public void Array_Where_OrderBy_Select_Where_OrderByDescending_ToArray() {
@@ -896,6 +1083,22 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
     [Test]
+    public void Array_TakeWhile_LastOrDefault() {
+        AssertGeneration(
+@"Data? __() { 
+    Assert.Null(Data.Array(20).TakeWhile(x => x.Int < 10).LastOrDefault(x => x.Int % 15 == 12));
+    return Data.Array(20).TakeWhile(x => x.Int < 10).LastOrDefault(x => x.Int % 4 == 1);
+}",
+            (Data x) => Assert.AreEqual(9, x.Int),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "TakeWhile", new[] {
+                        new StructMethod("LastOrDefault")
+                    })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
     public void Array_SkipWhile_ToArray() {
         AssertGeneration(
             "Data[] __() => Data.Array(10).SkipWhile(x => x.Int < 5).ToArray();",
@@ -916,6 +1119,19 @@ public class GenerationTests : BaseFixture {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "SkipWhile", new[] {
                         new StructMethod("First")
+                    })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_SkipWhile_Last() {
+        AssertGeneration(
+            "Data __() => Data.Array(20).SkipWhile(x => x.Int < 5).Last(x => x.Int % 4 == 0);",
+            (Data x) => Assert.AreEqual(16, x.Int),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "SkipWhile", new[] {
+                        new StructMethod("Last")
                     })
             }
         );
@@ -1026,6 +1242,22 @@ public class GenerationTests : BaseFixture {
         Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
     }
     [Test]
+    public void Array_SelectMany_SkipWhile_Last() {
+        AssertGeneration(
+            "int __() => Data.Array(10).SelectMany(x => new[] { 2 * x.Int, 2 * x.Int + 1 }).SkipWhile(x => x < 5).Last(x => x % 4 == 0);",
+            (int x) => Assert.AreEqual(16, x),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                        new StructMethod("SkipWhile", new[] {
+                            new StructMethod("Last")
+                        })
+                    })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+    }
+    [Test]
     public void Array_SkipWhile_OrderBy_Select_SkipWhile_OrderByDescending_ToArray() {
         AssertGeneration(
 @"int[] __() {{
@@ -1088,6 +1320,31 @@ public class GenerationTests : BaseFixture {
                         new StructMethod("TakeWhile", new[] {
                             new StructMethod("OrderByDescending", new[] {
                                 new StructMethod("First"),
+                            })
+                        })
+                    })
+                })
+            })
+        }
+    );
+        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+    }
+    [Test]
+    public void Array_TakeWhile_OrderBy_Select_TakeWhile_OrderByDescending_Last() {
+        AssertGeneration(
+@"int __() {{
+    var source = Enumerable.ToArray(Enumerable.Reverse(Data.Array(10)));
+    return source.TakeWhile(x => x.Int >= 3).OrderBy(x => x.Int).Select(x => x.Int).TakeWhile(x => x < 7).OrderByDescending(x => 2 * x).Last(x => x < 6);
+}}",
+        (int x) => Assert.AreEqual(3, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "TakeWhile", new[] {
+                new StructMethod("OrderBy", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("TakeWhile", new[] {
+                            new StructMethod("OrderByDescending", new[] {
+                                new StructMethod("Last"),
                             })
                         })
                     })

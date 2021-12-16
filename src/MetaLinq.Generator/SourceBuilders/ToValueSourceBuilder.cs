@@ -193,7 +193,7 @@ var comparer{lastLevel} = {comparerExpression};
 var result_{lastLevel} = {resultExpression};"
                 );
 
-            case (_, ResultType.OrderBy, ToValueType.First or ToValueType.FirstOrDefault):
+            case (_, ResultType.OrderBy, ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault):
                 var order_ = GetOrder();
                 var itemLevel = order_.First().Level;
                 var keyDefinitions = order_
@@ -210,6 +210,7 @@ var result_{lastLevel} = {resultExpression};"
                             result = "if(compareResult == 0) " + result;
                         return "    " + result;
                     });
+                char sign = toInstanceType is ToValueType.First or ToValueType.FirstOrDefault ? '<' : '>';
                 return (
 @$"var result{topLevel} = default({outputType});
 bool found{topLevel} = false;
@@ -221,13 +222,13 @@ bool found{topLevel} = false;
     }}
     int compareResult = 0;
 {string.Join(Environment.NewLine, compares)}
-    if(compareResult < 0) {{
+    if(compareResult {sign} 0) {{
 {string.Join(Environment.NewLine, keyAssignments)}
         result{topLevel} = item{itemLevel};
     }}
     found{topLevel} = true;
 }}",
-                    toInstanceType == ToValueType.First ? GetFirstLastResultStatement() : GetFirstLastOrDefaultResultStatement()
+                    toInstanceType is ToValueType.First or ToValueType.Last ? GetFirstLastResultStatement() : GetFirstLastOrDefaultResultStatement()
                 );
 
             default:
