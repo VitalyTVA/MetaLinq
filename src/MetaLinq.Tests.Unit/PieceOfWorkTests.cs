@@ -61,6 +61,42 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void CustomEnumerable_Where_First(
+    [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Where }, new[] {
+"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void CustomEnumerable_Select_First(
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Select }, new[] {
+"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Select]",
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void Where_First(
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Where }, new[] {
+"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
+        }, toValueType: toValueType);
+    }
+
+    [Test]
+    public void Select_First(
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Select }, new[] {
+"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Select]",
+        }, toValueType: toValueType);
+    }
+
+    [Test]
     public void Cast_OrderBy_First(
 [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {

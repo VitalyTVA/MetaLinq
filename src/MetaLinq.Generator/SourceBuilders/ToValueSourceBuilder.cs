@@ -62,7 +62,7 @@ public static class ToValueSourceBuilder {
         builder.Tab.AppendMultipleLines(result);
     }
 
-    static (string init, string add, string result) GetArrayBuilder(SourceType source, ToValueType? toInstanceType, string sourcePath, PieceOfWork piece) {
+    static (string init, string add, string result) GetArrayBuilder(SourceType source, ToValueType? toValueType, string sourcePath, PieceOfWork piece) {
         var sourceGenericArg = piece.Contexts.LastOrDefault()?.SourceGenericArg ?? EmitContext.RootSourceType;
         var outputType = piece.Contexts.LastOrDefault()?.GetOutputType() ?? EmitContext.RootSourceType;
         var topLevel = piece.TopLevel;
@@ -85,7 +85,7 @@ var result_{lastLevel} = result{topLevel}!;";
         string GetFirstLastOrDefaultResultStatement() =>
 $@"var result_{lastLevel} = result{topLevel};";
 
-        switch((piece.SameSize, piece.ResultType, toInstanceType)) {
+        switch((piece.SameSize, piece.ResultType, toValueType)) {
             case (_, ResultType.ToValue, ToValueType.First):
                 return (
 $@"var result{topLevel} = default({outputType});
@@ -172,13 +172,13 @@ GetFirstLastOrDefaultResultStatement()
                     .ToArray();
                 var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
                 var resultExpression = $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)";
-                if(toInstanceType == ToValueType.ToHashSet)
+                if(toValueType == ToValueType.ToHashSet)
                     resultExpression = $"new HashSet<{sourceGenericArg}>({resultExpression})";
-                if(toInstanceType == ToValueType.ToDictionary)
+                if(toValueType == ToValueType.ToDictionary)
                     resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
-                if(toInstanceType == ToValueType.First)
+                if(toValueType == ToValueType.First)
                     resultExpression = $"System.Linq.Enumerable.First({resultExpression}, predicate)";
-                if(toInstanceType == ToValueType.FirstOrDefault)
+                if(toValueType == ToValueType.FirstOrDefault)
                     resultExpression = $"System.Linq.Enumerable.FirstOrDefault({resultExpression}, predicate)";
                 bool useSourceInSort = piece.SameType && source.HasIndexer();
                 return (
@@ -210,7 +210,7 @@ var result_{lastLevel} = {resultExpression};"
                             result = "if(compareResult == 0) " + result;
                         return "    " + result;
                     });
-                char sign = toInstanceType is ToValueType.First or ToValueType.FirstOrDefault ? '<' : '>';
+                char sign = toValueType is ToValueType.First or ToValueType.FirstOrDefault ? '<' : '>';
                 return (
 @$"var result{topLevel} = default({outputType});
 bool found{topLevel} = false;
@@ -228,7 +228,9 @@ bool found{topLevel} = false;
     }}
     found{topLevel} = true;
 }}",
-                    toInstanceType is ToValueType.First or ToValueType.Last ? GetFirstLastResultStatement() : GetFirstLastOrDefaultResultStatement()
+                    toValueType is ToValueType.First or ToValueType.Last 
+                        ? GetFirstLastResultStatement() 
+                        : GetFirstLastOrDefaultResultStatement()
                 );
 
             default:
