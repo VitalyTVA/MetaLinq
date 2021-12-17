@@ -1,17 +1,7 @@
-Last/LastOrDefault work wrong and iterate through whole list
-//Assert.AreEqual(0, source[7].Int_GetCount);
-    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
-    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
-
-
 replace all checks like
         Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
 with
 		AssertAllocated(largeArrayBuilder: 1)
-
-CustomEnumerable-Where-OrderBy-First chains optimization
-
-simplify senseless chains like OrderBy(x => x.Long).OrderBy(x => x.Int).ToArray
 
 ArrayPool rent/return tests
 
@@ -23,8 +13,14 @@ CustomEnumerable should not be a special case - introduce Source Type Traits
 
 /*&& result.Count == 2*/
 
+# Optimizations
+CustomEnumerable-Where-OrderBy-First chains optimization
+
+simplify senseless chains like OrderBy(x => x.Long).OrderBy(x => x.Int).ToArray
+
 En->SelectMany_List->Last optimization (last enumerator, first list element)
 List->SelectMany_En->Last optimization  (first list, last enumerator element)
+
 Array_SkipWhile_Last can be optimized: skip while true and calc start i0 value, then go from end to i0
 
 #Posponed0

@@ -8,7 +8,7 @@ namespace MetaLinqBenchmark;
 //[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MeanColumn]
 [MemoryDiagnoser]
-public class Where_LastBenchmarks {
+public class Where_LastOrDefaultBenchmarks {
     TestData[] testData = { };
 
     [Params(10, 100, 1_000/*, 10_000*/)]
@@ -24,10 +24,10 @@ public class Where_LastBenchmarks {
     }
 
     [Benchmark(Baseline = true)]
-    public TestData Standard_() => Standard.OrderBy_First(testData);
+    public TestData? Standard_() => Standard.Where_Last(testData);
 
     [Benchmark]
-    public TestData Meta_() {
-        return Meta.OrderBy_First(testData);
+    public TestData? Meta_() {
+        return Meta.Where_Last(testData);
     }
 }

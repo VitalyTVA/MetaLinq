@@ -1695,6 +1695,7 @@ $@"Data __() {{
 $@"Data __() {{
     var ex = Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Where(x => x.Int > 5).Last(x => x.Int == 0));
     Assert.AreEqual(""{expectedMessage}"", ex!.Message);
+    Assert.AreEqual(6, Data.Array(10).Where(static x => x.Int % 3 == 0).Last(static x => x.Int % 2 == 0).Int);
     var source = Data.Array(15);
     var result = source.Where(x => x.Int < 12).Last(x => x.Int % 4 == 0);
     Assert.AreEqual(0, source[7].Int_GetCount);

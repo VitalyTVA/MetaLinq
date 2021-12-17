@@ -11,7 +11,8 @@ namespace MetaLinqBenchmark;
 
 class Program {
     static void Main(string[] args) {
-        BenchmarkRunner.Run<Where_LastBenchmarks>();
+        //new Where_LastBenchmarks { N = 10 }.Standard_();
+        BenchmarkRunner.Run<Where_LastOrDefaultBenchmarks>();
         //BenchmarkRunner.Run<OrderBy_FirstBenchmarks>();
 
         //BenchmarkRunner.Run<ListIterationsBenchmarks>();

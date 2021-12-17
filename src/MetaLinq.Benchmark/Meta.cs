@@ -21,5 +21,5 @@ static class Meta {
     public static Dictionary<int, TestData> Select_ToDictionary(TestData[] data) => data.Select(static x => x).ToDictionary(static x => x.Value);
 
     public static TestData OrderBy_First(TestData[] testData) => testData.OrderBy(static x => x.Value).First(x => x.Value > testData.Length / 2);
-    public static TestData Where_Last(TestData[] testData) => testData.Where(static x => x.Value % 5 == 0).Last(x => x.Value > testData.Length / 2);
+    public static TestData? Where_Last(TestData[] testData) => testData.Where(static x => x.Value % 3 == 0).LastOrDefault(static x => x.Value % 2 == 0);
 }
