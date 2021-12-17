@@ -49,14 +49,15 @@ public static class ToValueSourceBuilder {
                 builder.Tab.AppendLine($"var skipWhile{item.Level.Next} = true;");
         }
 
-        EmitLoop(source, builder.Tab, topLevel, sourcePath,
+        EmitLoop(source, piece.LoopType.IsForwardLoop(), builder.Tab, topLevel, sourcePath,
             bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
 
         foreach(var item in piece.Contexts) {
             if(item.Element is TakeWhileNode)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
-        if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.LoopType is not LoopType.Sort)
+        if((toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.LoopType is LoopType.Forward)
+            || (toInstanceType is ToValueType.Last or ToValueType.LastOrDefault && piece.LoopType is LoopType.Backward))
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
         builder.Tab.AppendMultipleLines(result);
@@ -86,7 +87,7 @@ var result_{lastLevel} = result{topLevel}!;";
 $@"var result_{lastLevel} = result{topLevel};";
 
         switch((piece.KnownSize, piece.LoopType, toValueType)) {
-            case (_, LoopType.Forward, ToValueType.First):
+            case (_, LoopType.Forward, ToValueType.First) or (_, LoopType.Backward, ToValueType.Last):
                 return (
 $@"var result{topLevel} = default({outputType});
 bool found{topLevel} = false;",
@@ -97,7 +98,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
 }}",
 GetFirstLastResultStatement()
                 );
-            case (_, LoopType.Forward, ToValueType.FirstOrDefault):
+            case (_, LoopType.Forward, ToValueType.FirstOrDefault) or (_, LoopType.Backward, ToValueType.LastOrDefault):
                 return (
 $@"var result{topLevel} = default({outputType});",
 $@"if(predicate(item{lastLevel.Next})) {{
@@ -238,18 +239,27 @@ bool found{topLevel} = false;
         };
     }
 
-    static void EmitLoop(SourceType source, CodeBuilder builder, Level level, string sourceExpression, Action<CodeBuilder> emitBody) {
+    static void EmitLoop(SourceType source, bool forward, CodeBuilder builder, Level level, string sourceExpression, Action<CodeBuilder> emitBody) {
         builder.AppendLine($"var source{level} = {sourceExpression};");
         if(source.HasIndexer()) {
-            builder.AppendMultipleLines($@"
+            if(forward)
+                builder.AppendMultipleLines($@"
 var len{level} = source{level}.{source.GetCountName()};
 for(int i{level} = 0; i{level} < len{level}; i{level}++) {{
     var item{level} = source{level}[i{level}];");
+            else
+                builder.AppendMultipleLines($@"
+var len{level} = source{level}.{source.GetCountName()};
+for(int i{level} = len{level} - 1; i{level} >= 0; i{level}--) {{
+    var item{level} = source{level}[i{level}];");
         }
-        if(!source.HasIndexer())
+        if(!source.HasIndexer()) {
+            if(!forward)
+                throw new InvalidOperationException("Forward loop expected.");
             builder.AppendMultipleLines($@"
 int i{level} = 0;
 foreach(var item{level} in source{level}) {{");
+        }
         emitBody(builder.Tab);
         if(!source.HasIndexer())
             builder.AppendLine($"i{level}++;");
@@ -313,7 +323,7 @@ if(skipWhile{level.Next}) {{
                 EmitNext(builder);
                 break;
             case SelectManyNode selectMany:
-                EmitLoop(selectMany.SourceType, builder, level.Next, $"this{sourcePath}.selector(item{level})",
+                EmitLoop(selectMany.SourceType, piece.LoopType.IsForwardLoop(), builder, level.Next, $"this{sourcePath}.selector(item{level})", //TODO forward should not always be true here
                     bodyBuilder => EmitNext(bodyBuilder));
                 break;
             case OrderByNode:

@@ -19,7 +19,13 @@ Add max capacity to large array builder (like in LargeArrayBuilder from net6)
 
 research how large array builder works without dispose int net6 (dispose on ToArray???)
 
-CustomEnumerable should not be a special case
+CustomEnumerable should not be a special case - introduce Source Type Traits
+
+/*&& result.Count == 2*/
+
+En->SelectMany_List->Last optimization (last enumerator, first list element)
+List->SelectMany_En->Last optimization  (first list, last enumerator element)
+Array_SkipWhile_Last can be optimized: skip while true and calc start i0 value, then go from end to i0
 
 #Posponed0
 

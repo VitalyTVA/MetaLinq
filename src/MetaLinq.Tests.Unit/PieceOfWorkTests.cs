@@ -62,7 +62,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Where_First(
-    [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+    [Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Where }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
@@ -70,8 +70,27 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void CustomEnumerable_Where_Last(
+[Values(ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Where }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+
+    [Test]
     public void CustomEnumerable_Select_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Select }, new[] {
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select]",
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void CustomEnumerable_Select_Last(
+[Values(ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Select }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select]",
@@ -107,7 +126,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Where_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Where }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
@@ -115,11 +134,29 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void Where_Last(
+[Values(ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Where }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Backward, Nodes: [Where]",
+        }, toValueType: toValueType);
+    }
+
+    [Test]
     public void Select_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Select }, new[] {
 "KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Select]",
+        }, toValueType: toValueType);
+    }
+
+    [Test]
+    public void Select_Last(
+[Values(ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Select }, new[] {
+"KnownType: False, KnownSize: True, LoopType: Backward, Nodes: [Select]",
         }, toValueType: toValueType);
     }
 

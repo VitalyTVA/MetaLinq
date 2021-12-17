@@ -1127,7 +1127,11 @@ public class GenerationTests : BaseFixture {
     [Test]
     public void Array_SkipWhile_Last() {
         AssertGeneration(
-            "Data __() => Data.Array(20).SkipWhile(x => x.Int < 5).Last(x => x.Int % 4 == 0);",
+@"Data __() { 
+    var source = Data.Array(20);
+    Assert.AreEqual(16, source.SkipWhile(x => x.Int > 10).Last(x => x.Int % 4 == 0).Int);
+    return source.SkipWhile(x => x.Int < 5).Last(x => x.Int % 4 == 0);
+}",
             (Data x) => Assert.AreEqual(16, x.Int),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "SkipWhile", new[] {
@@ -1693,7 +1697,7 @@ $@"Data __() {{
     Assert.AreEqual(""{expectedMessage}"", ex!.Message);
     var source = Data.Array(15);
     var result = source.Where(x => x.Int < 12).Last(x => x.Int % 4 == 0);
-    //Assert.AreEqual(0, source[7].Int_GetCount);
+    Assert.AreEqual(0, source[7].Int_GetCount);
     return result;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -1712,7 +1716,7 @@ $@"Data __() {{
     Assert.Null(Data.Array(10).Where(x => x.Int > 5).LastOrDefault(x => x.Int == 0));
     var source = Data.Array(15);
     var result = source.Where(x => x.Int < 12).LastOrDefault(x => x.Int % 4 == 0);
-    //Assert.AreEqual(0, source[7].Int_GetCount);
+    Assert.AreEqual(0, source[7].Int_GetCount);
     return result!;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -1731,7 +1735,7 @@ $@"Data __() {{
 $@"Data __() {{
     var source = Data.Array(15);
     var result = new CustomEnumerable<Data>(source).Where(x => x.Int < 12).Last(x => x.Int % 4 == 0);
-    //Assert.AreEqual(0, source[7].Int_GetCount);
+    Assert.AreEqual(2, source[7].Int_GetCount);
     return result;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -2022,7 +2026,7 @@ $@"Data __() {{
     Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Select(x => x.Self).Last(x => x.Int == -1));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Last(x => x.Int % 4 == 0);
-    //Assert.AreEqual(0, source[7].Int_GetCount);
+    Assert.AreEqual(0, source[7].Int_GetCount);
     return result;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -2042,7 +2046,7 @@ $@"Data __() {{
     Assert.Null(Data.Array(10).Select(x => x.Self).LastOrDefault(x => x.Int == -1));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).LastOrDefault(x => x.Int % 4 == 0);
-    //Assert.AreEqual(0, source[7].Int_GetCount);
+    Assert.AreEqual(0, source[7].Int_GetCount);
     return result!;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -2060,7 +2064,7 @@ $@"Data __() {{
 $@"Data __() {{
     var source = Data.Array(10);
     var result = new CustomEnumerable<Data>(source).Select(x => x.Self).Last(x => x.Int > 0 && x.Int % 4 == 0);
-    //Assert.AreEqual(0, source[7].Int_GetCount);
+    Assert.AreEqual(2, source[7].Int_GetCount);
     return result;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -2788,14 +2792,20 @@ $@"Data __() {{
     [Test]
     public void Array_SelectManyList_Last() {
         AssertGeneration(
-$@"Data __() {{
+$@"void __() {{
     var source = Data.Array(5);
     var result = source.SelectMany(x => x.DataList).Last(x => x.Int % 4 == 0);
-    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
-    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
-    return result;
+    Assert.AreEqual(1, source[4].DataList[0].Int_GetCount);
+    Assert.AreEqual(0, source[3].DataList[1].Int_GetCount);
+    Assert.AreEqual(8, result.Int);
+
+    source = Data.Array(5);
+    result = source.SelectMany(x => x.DataList).Last(x => x.Int % 4 == 3);
+    Assert.AreEqual(1, source[3].DataList[1].Int_GetCount);
+    Assert.AreEqual(0, source[3].DataList[0].Int_GetCount);
+    Assert.AreEqual(7, result.Int);
 }}",
-            (Data x) => Assert.AreEqual(8, x.Int),
+            NoAssert,
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("Last")
@@ -2811,8 +2821,8 @@ $@"Data __() {{
     Assert.Null(Data.Array(5).SelectMany(x => x.DataList).LastOrDefault(x => x.Int < 0));
     var source = Data.Array(5);
     var result = source.SelectMany(x => x.DataList).LastOrDefault(x => x.Int % 4 == 0);
-    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
-    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    Assert.AreEqual(1, source[4].DataList[0].Int_GetCount);
+    Assert.AreEqual(0, source[3].DataList[1].Int_GetCount);
     return result!;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -2830,8 +2840,8 @@ $@"Data __() {{
 $@"Data __() {{
     var source = Data.Array(5);
     var result = new CustomEnumerable<Data>(source).SelectMany(x => new CustomEnumerable<Data>(x.DataList)).LastOrDefault(x => x.Int % 4 == 0);
-    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
-    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    Assert.AreEqual(1, source[4].DataList[0].Int_GetCount);
+    Assert.AreEqual(1, source[3].DataList[1].Int_GetCount);
     return result!;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -2849,8 +2859,8 @@ $@"Data __() {{
 $@"Data __() {{
     var source = Data.Array(5);
     var result = source.SelectMany(x => new CustomEnumerable<Data>(x.DataList)).LastOrDefault(x => x.Int % 4 == 0);
-    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
-    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    Assert.AreEqual(1, source[4].DataList[0].Int_GetCount);
+    Assert.AreEqual(1, source[3].DataList[1].Int_GetCount);
     return result!;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -2868,8 +2878,8 @@ $@"Data __() {{
 $@"Data __() {{
     var source = Data.Array(5);
     var result = new CustomEnumerable<Data>(source).SelectMany(x => x.DataList).LastOrDefault(x => x.Int % 4 == 0);
-    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
-    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    Assert.AreEqual(1, source[4].DataList[0].Int_GetCount);
+    Assert.AreEqual(1, source[3].DataList[1].Int_GetCount);
     return result!;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
