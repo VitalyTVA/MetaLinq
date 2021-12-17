@@ -56,7 +56,7 @@ public static class ToValueSourceBuilder {
             if(item.Element is TakeWhileNode)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
-        if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.ResultType is not ResultType.OrderBy)
+        if(toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.LoopType is not LoopType.Sort)
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
         builder.Tab.AppendMultipleLines(result);
@@ -68,7 +68,7 @@ public static class ToValueSourceBuilder {
         var topLevel = piece.TopLevel;
         var lastLevel = piece.LastLevel;
 
-        var capacityExpression = piece.SameSize ? $"{sourcePath}.{source.GetCountName()}" : null;
+        var capacityExpression = piece.KnownSize ? $"{sourcePath}.{source.GetCountName()}" : null;
 
         (Level Level, string sortKeyGenericType, ListSortDirection direction)[] GetOrder() => piece.Contexts
             .SkipWhile(x => x.Element is not (OrderByNode or ThenByNode))
@@ -85,8 +85,8 @@ var result_{lastLevel} = result{topLevel}!;";
         string GetFirstLastOrDefaultResultStatement() =>
 $@"var result_{lastLevel} = result{topLevel};";
 
-        switch((piece.SameSize, piece.ResultType, toValueType)) {
-            case (_, ResultType.ToValue, ToValueType.First):
+        switch((piece.KnownSize, piece.LoopType, toValueType)) {
+            case (_, LoopType.Forward, ToValueType.First):
                 return (
 $@"var result{topLevel} = default({outputType});
 bool found{topLevel} = false;",
@@ -97,7 +97,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
 }}",
 GetFirstLastResultStatement()
                 );
-            case (_, ResultType.ToValue, ToValueType.FirstOrDefault):
+            case (_, LoopType.Forward, ToValueType.FirstOrDefault):
                 return (
 $@"var result{topLevel} = default({outputType});",
 $@"if(predicate(item{lastLevel.Next})) {{
@@ -106,7 +106,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
 }}",
 GetFirstLastOrDefaultResultStatement()
                 );
-            case (_, ResultType.ToValue, ToValueType.Last):
+            case (_, LoopType.Forward, ToValueType.Last):
                 return (
 $@"var result{topLevel} = default({outputType});
 bool found{topLevel} = false;",
@@ -116,7 +116,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
 }}",
 GetFirstLastResultStatement()
                 );
-            case (_, ResultType.ToValue, ToValueType.LastOrDefault):
+            case (_, LoopType.Forward, ToValueType.LastOrDefault):
                 return (
 $@"var result{topLevel} = default({outputType});",
 $@"if(predicate(item{lastLevel.Next})) {{
@@ -125,31 +125,31 @@ $@"if(predicate(item{lastLevel.Next})) {{
 GetFirstLastOrDefaultResultStatement()
                 );
 
-            case (false, ResultType.ToValue, ToValueType.ToArray):
+            case (false, LoopType.Forward, ToValueType.ToArray):
                 return (
                     $"using var result{topLevel} = new LargeArrayBuilder<{outputType}>();",
                     $"result{topLevel}.Add(item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel}.ToArray();"
                 );
-            case (true, ResultType.ToValue, ToValueType.ToArray):
+            case (true, LoopType.Forward, ToValueType.ToArray):
                 return (
                     $"var result{topLevel} = Allocator.Array<{outputType}>({capacityExpression});",
                     $"result{topLevel}[i{topLevel}] = item{lastLevel.Next};",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
-            case (_, ResultType.ToValue, ToValueType.ToHashSet):
+            case (_, LoopType.Forward, ToValueType.ToHashSet):
                 return (
                     $"var result{topLevel} = new HashSet<{outputType}>({capacityExpression});",
                     $"result{topLevel}.Add(item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
-            case (_, ResultType.ToValue, ToValueType.ToDictionary):
+            case (_, LoopType.Forward, ToValueType.ToDictionary):
                 return (
                     $"var result{topLevel} = Allocator.Dictionary<TKey, {outputType}>({capacityExpression});",
                     $"result{topLevel}.Add(keySelector(item{lastLevel.Next}), item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
-            case (true, ResultType.OrderBy, ToValueType.ToArray or ToValueType.ToDictionary or ToValueType.ToHashSet):
+            case (true, LoopType.Sort, ToValueType.ToArray or ToValueType.ToDictionary or ToValueType.ToHashSet):
                 var order = GetOrder();
                 var sortKeyVars = order.Select((x, i) => {
                     return $"var sortKeys{topLevel}_{i} = Allocator.Array<{x.sortKeyGenericType}>({capacityExpression});\r\n";
@@ -180,7 +180,7 @@ GetFirstLastOrDefaultResultStatement()
                     resultExpression = $"System.Linq.Enumerable.First({resultExpression}, predicate)";
                 if(toValueType == ToValueType.FirstOrDefault)
                     resultExpression = $"System.Linq.Enumerable.FirstOrDefault({resultExpression}, predicate)";
-                bool useSourceInSort = piece.SameType && source.HasIndexer();
+                bool useSourceInSort = piece.KnownType && source.HasIndexer();
                 return (
 @$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"Allocator.Array<{sourceGenericArg}>({capacityExpression})")};
 {string.Join(null, sortKeyVars)}
@@ -193,7 +193,7 @@ var comparer{lastLevel} = {comparerExpression};
 var result_{lastLevel} = {resultExpression};"
                 );
 
-            case (_, ResultType.OrderBy, ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault):
+            case (_, LoopType.Sort, ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault):
                 var order_ = GetOrder();
                 var itemLevel = order_.First().Level;
                 var keyDefinitions = order_

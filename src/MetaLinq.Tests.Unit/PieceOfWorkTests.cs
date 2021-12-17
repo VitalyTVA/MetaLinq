@@ -7,7 +7,7 @@ public class PieceOfWorkTests {
     [Test]
     public void OrderBy_() {
         AssertPieces(new[] { OrderBy }, new[] {
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         });
     }
 
@@ -16,8 +16,8 @@ public class PieceOfWorkTests {
         [Values(ToValueType.ToHashSet, ToValueType.ToArray, ToValueType.ToDictionary)] ToValueType toValueType
     ) {
         AssertPieces(new[] { OrderBy }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: []",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: []",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -26,7 +26,7 @@ public class PieceOfWorkTests {
         [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
     ) {
         AssertPieces(new[] { OrderBy }, new[] {
-"SameType: True, SameSize: False, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: True, KnownSize: False, LoopType: Sort, Nodes: [OrderBy]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -35,8 +35,8 @@ public class PieceOfWorkTests {
         [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
     ) {
         AssertPieces(new[] { Where, OrderBy }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -45,8 +45,8 @@ public class PieceOfWorkTests {
     [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { OfType, OrderBy }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -55,8 +55,8 @@ public class PieceOfWorkTests {
 [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Cast]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Cast]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -65,7 +65,7 @@ public class PieceOfWorkTests {
     [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Where }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -74,8 +74,35 @@ public class PieceOfWorkTests {
 [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Select }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Select]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select]",
         }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void CustomEnumerable_SelectManyArray_First(
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { SelectMany(SourceType.Array) }, new[] {
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany Array]",
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void CustomEnumerable_SelectManyCustomEnumerable_First(
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { SelectMany(SourceType.CustomEnumerable) }, new[] {
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany CustomEnumerable]",
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void Array_SelectManyCustomEnumerable_First(
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+) {
+        AssertPieces(new[] { SelectMany(SourceType.CustomEnumerable) }, new[] {
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany CustomEnumerable]",
+        }, SourceType.Array, toValueType);
     }
 
     [Test]
@@ -83,7 +110,7 @@ public class PieceOfWorkTests {
 [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Where }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
         }, toValueType: toValueType);
     }
 
@@ -92,7 +119,7 @@ public class PieceOfWorkTests {
 [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Select }, new[] {
-"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Select]",
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Select]",
         }, toValueType: toValueType);
     }
 
@@ -101,316 +128,316 @@ public class PieceOfWorkTests {
 [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Cast, OrderBy]"
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Cast, OrderBy]"
         }, SourceType.List, toValueType);
     }
 
     [Test]
     public void Cast_OrderBy() {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Cast, OrderBy]"
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Cast, OrderBy]"
         }, SourceType.List);
     }
 
     [Test]
     public void OrderBy_ThenBy() {
         AssertPieces(new[] { OrderBy, ThenBy}, new[] {
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenBy]"
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy, ThenBy]"
         });
     }
 
     [Test]
     public void Where_OrderBy_ThenBy() {
         AssertPieces(new[] { Where, OrderBy, ThenBy }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenBy]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy, ThenBy]"
         });
     }
 
     [Test]
     public void TakeWhile_OrderBy_ThenBy() {
         AssertPieces(new[] { TakeWhile, OrderBy, ThenBy }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenBy]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [TakeWhile]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy, ThenBy]"
         });
     }
 
     [Test]
     public void OrderBy_ThenByDescending() {
         AssertPieces(new[] { OrderBy, ThenByDescending }, new[] {
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy, ThenByDescending]"
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy, ThenByDescending]"
         });
     }
 
     [Test]
     public void OrderBy_Select() {
         AssertPieces(new[] { OrderBy, Select }, new[] {
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Select]"
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Select]"
         });
     }
 
     [Test]
     public void OrderBy_Select_OrderBy() {
         AssertPieces(new[] { OrderBy, Select, OrderBy }, new[] {
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]"
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Select, OrderBy]"
         });
     }
 
     [Test]
     public void OrderBy_Select_OrderByDescending_ThenBy() {
         AssertPieces(new[] { OrderBy, Select, OrderByDescending, ThenBy }, new[] {
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderByDescending, ThenBy]"
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Select, OrderByDescending, ThenBy]"
         });
     }
 
     [Test]
     public void Select_() {
         AssertPieces(new[] { Select }, new[] {
-"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Select]"
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Select]"
         });
     }
 
     [Test]
     public void Select_CustomEnumerable() {
         AssertPieces(new[] { Select }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Select]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select]"
         }, SourceType.CustomEnumerable);
     }
 
     [Test]
     public void Select_OrderBy() {
         AssertPieces(new[] { Select, OrderBy }, new[] {
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]"
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Select, OrderBy]"
         });
     }
 
     [Test]
     public void Select_Select_OrderBy() {
         AssertPieces(new[] { Select, Select, OrderBy }, new[] {
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, Select, OrderBy]"
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Select, Select, OrderBy]"
         });
     }
 
     [Test]
     public void SelectMany_() {
         AssertPieces(new[] { SelectMany(SourceType.List) }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [SelectMany List]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany List]"
         });
     }
 
     [Test]
     public void Where_OrderBy() {
         AssertPieces(new[] { Where, OrderBy }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         });
     }
 
     [Test]
     public void SkipWhile_OrderBy() {
         AssertPieces(new[] { SkipWhile, OrderBy }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [SkipWhile]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [SkipWhile]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         });
     }
 
     [Test]
     public void Where_Select_OrderBy() {
         AssertPieces(new[] { Where, Select, OrderBy }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Select]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Where, Select]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         });
     }
 
     [Test]
     public void TakeWhile_Select_OrderBy() {
         AssertPieces(new[] { TakeWhile, Select, OrderBy }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile, Select]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [TakeWhile, Select]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         });
     }
 
     [Test]
     public void Where_Select_OrderBy_SelectMany_Where() {
         AssertPieces(new[] { Where, Select, OrderBy, SelectMany(SourceType.List), Where}, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Select]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [SelectMany List, Where]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Where, Select]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany List, Where]",
         });
     }
 
     [Test]
     public void Where_Select_OrderBy_OfType_Where() {
         AssertPieces(new[] { Where, Select, OrderBy, OfType, Where }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Select]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType, Where]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Where, Select]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType, Where]",
         });
     }
 
     [Test]
     public void Where_Select_OrderBy_Cast_Where() {
         AssertPieces(new[] { Where, Select, OrderBy, Cast, Where }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Select]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Cast, Where]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Where, Select]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Cast, Where]",
         });
     }
 
     [Test]
     public void TakeWhile_Select_OrderBy_SelectMany_Where() {
         AssertPieces(new[] { TakeWhile, Select, OrderBy, SelectMany(SourceType.List), Where }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile, Select]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [SelectMany List, Where]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [TakeWhile, Select]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany List, Where]",
         });
     }
 
     [Test]
     public void SkipWhile_Select_OrderBy_SelectMany_TakeWhile() {
         AssertPieces(new[] { SkipWhile, Select, OrderBy, SelectMany(SourceType.List), TakeWhile }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [SkipWhile, Select]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [SelectMany List, TakeWhile]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SkipWhile, Select]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany List, TakeWhile]",
         });
     }
 
     [Test]
     public void Where_OrderBy_Select() {
         AssertPieces(new[] { Where, OrderBy, Select }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Select]",
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Select]",
         });
     }
 
     [Test]
     public void TakeWhile_OrderBy_Select() {
         AssertPieces(new[] { TakeWhile, OrderBy, Select }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Select]",
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [TakeWhile]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Select]",
         });
     }
 
     [Test]
     public void SkipWhile_OrderBy_Select() {
         AssertPieces(new[] { SkipWhile, OrderBy, Select }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [SkipWhile]",
-"SameType: True, SameSize: True, ResultType: OrderBy, Nodes: [OrderBy]",
-"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Select]",
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [SkipWhile]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Select]",
         });
     }
 
     [Test]
     public void Select_OrderBy_Where() {
         AssertPieces(new[] { Select, OrderBy, Where }, new[] {
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]",
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]",
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Select, OrderBy]",
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
         });
     }
 
     [Test]
     public void Select_OrderBy_TakeWhile() {
         AssertPieces(new[] { Select, OrderBy, TakeWhile }, new[] {
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]",
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile]",
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Select, OrderBy]",
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [TakeWhile]",
         });
     }
 
     [Test]
     public void Select_OrderBy_SkipWhile() {
         AssertPieces(new[] { Select, OrderBy, SkipWhile }, new[] {
-"SameType: False, SameSize: True, ResultType: OrderBy, Nodes: [Select, OrderBy]",
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [SkipWhile]",
+"KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Select, OrderBy]",
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [SkipWhile]",
         });
     }
 
     [Test]
     public void Where_() {
         AssertPieces(new[] { Where }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [Where]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]"
         });
     }
 
     [Test]
     public void OfType_() {
         AssertPieces(new[] { OfType }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType]"
         });
     }
 
     [Test]
     public void Cast_() {
         AssertPieces(new[] { Cast }, new[] {
-"SameType: False, SameSize: True, ResultType: ToValue, Nodes: [Cast]"
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Cast]"
         });
     }
 
     [Test]
     public void SkipWhile_() {
         AssertPieces(new[] { SkipWhile }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [SkipWhile]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [SkipWhile]"
         });
     }
 
     [Test]
     public void TakeWhile_() {
         AssertPieces(new[] { TakeWhile }, new[] {
-"SameType: True, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [TakeWhile]"
         });
     }
 
     [Test]
     public void Select_Where() {
         AssertPieces(new[] { Select, Where }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Select, Where]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select, Where]"
         });
         AssertPieces(new[] { Where, Select }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Select]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Where, Select]"
         });
     }
 
     [Test]
     public void Select_OfType() {
         AssertPieces(new[] { Select, OfType }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Select, OfType]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select, OfType]"
         });
         AssertPieces(new[] { OfType, Select }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [OfType, Select]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType, Select]"
         });
     }
 
     [Test]
     public void Where_Cast() {
         AssertPieces(new[] { Cast, Where }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Cast, Where]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Cast, Where]"
         });
         AssertPieces(new[] { Where, Cast }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Where, Cast]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Where, Cast]"
         });
     }
 
     [Test]
     public void Select_TakeWhile() {
         AssertPieces(new[] { Select, TakeWhile }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Select, TakeWhile]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select, TakeWhile]"
         });
         AssertPieces(new[] { TakeWhile, Select }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [TakeWhile, Select]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [TakeWhile, Select]"
         });
     }
 
     [Test]
     public void Select_SkipWhile() {
         AssertPieces(new[] { Select, SkipWhile }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [Select, SkipWhile]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select, SkipWhile]"
         });
         AssertPieces(new[] { SkipWhile, Select }, new[] {
-"SameType: False, SameSize: False, ResultType: ToValue, Nodes: [SkipWhile, Select]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SkipWhile, Select]"
         });
     }
 

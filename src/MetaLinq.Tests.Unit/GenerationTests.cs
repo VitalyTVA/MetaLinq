@@ -2829,7 +2829,7 @@ $@"Data __() {{
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(5);
-    var result = new CustomEnumerable<Data>(source).SelectMany(x => new CustomEnumerable<Data>(x.DataList)).LastOrDefault(x => x.Int > 0 && x.Int % 4 == 0);
+    var result = new CustomEnumerable<Data>(source).SelectMany(x => new CustomEnumerable<Data>(x.DataList)).LastOrDefault(x => x.Int % 4 == 0);
     //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
     //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
     return result!;
@@ -2837,6 +2837,25 @@ $@"Data __() {{
             (Data x) => Assert.AreEqual(8, x.Int),
             new[] {
                 new MetaLinqMethodInfo(SourceType.CustomEnumerable, "SelectMany", new[] {
+                    new StructMethod("LastOrDefault")
+                })
+            }
+        );
+        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+    }
+    [Test]
+    public void Array_SelectManyCustomEnumerable_Last() {
+        AssertGeneration(
+$@"Data __() {{
+    var source = Data.Array(5);
+    var result = source.SelectMany(x => new CustomEnumerable<Data>(x.DataList)).LastOrDefault(x => x.Int % 4 == 0);
+    //Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    //Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
                     new StructMethod("LastOrDefault")
                 })
             }

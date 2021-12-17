@@ -1,17 +1,17 @@
 ﻿namespace MetaLinq.Generator;
 
-public enum ResultType { ToValue, OrderBy }
-public record PieceOfWork(EmitContext[] Contexts, bool SameSize) {
+public enum LoopType { Forward, Sort }
+public record PieceOfWork(EmitContext[] Contexts, bool KnownSize) {
     public Level LastLevel => Contexts.LastOrDefault()?.Level ?? Level.MinusOne;
     public Level TopLevel => Contexts.FirstOrDefault()?.Level ?? Level.MinusOne;
     //public bool SameSize => Contexts.Any() && Contexts.All(x => x.Node is not (WhereNode or SkipWhileNode or TakeWhileNode or SelectManyChainElement));
-    public bool SameType => Contexts.All(x => x.Element is not (SelectNode or SelectManyNode or OfTypeNode or CastNode));
-    public ResultType ResultType 
+    public bool KnownType => Contexts.All(x => x.Element is not (SelectNode or SelectManyNode or OfTypeNode or CastNode));
+    public LoopType LoopType 
         => Contexts.LastOrDefault()?.Element is OrderByNode or ThenByNode
-        ? ResultType.OrderBy 
-        : ResultType.ToValue; 
+        ? LoopType.Sort 
+        : LoopType.Forward; 
     public override string ToString() {
-        return $"SameType: {SameType}, SameSize: {SameSize}, ResultType: {ResultType}, Nodes: [{string.Join(", ", Contexts.Select(x => x.Element.Type))}]";
+        return $"KnownType: {KnownType}, KnownSize: {KnownSize}, LoopType: {LoopType}, Nodes: [{string.Join(", ", Contexts.Select(x => x.Element.Type))}]";
     }
 }
 
@@ -22,7 +22,7 @@ public static class PieceOfWorkExtensions {
             && !result.First().Contexts.Any()
             /*&& result.Count == 2*/) {
             result.RemoveAt(0);
-            result[0] = result[0] with { SameSize = false };
+            result[0] = result[0] with { KnownSize = false };
         }
         return result.AsReadOnly();
     }
