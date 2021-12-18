@@ -29,7 +29,7 @@ public class GenerationTests : BaseFixture {
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 1);
     }
 
     [Test]
@@ -47,8 +47,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -66,8 +65,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -84,8 +82,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -102,8 +99,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -123,8 +119,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -144,8 +139,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -163,8 +157,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -182,8 +175,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -202,8 +194,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(2, TestTrace.ArrayCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -241,8 +232,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -280,8 +270,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -299,7 +288,7 @@ public class GenerationTests : BaseFixture {
                 })
             })
         });
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -317,7 +306,7 @@ public class GenerationTests : BaseFixture {
                 })
             })
         });
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -339,8 +328,7 @@ public class GenerationTests : BaseFixture {
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(3, TestTrace.ArrayCreatedCount);
+        AssertAllocations(array: 3);
     }
 
     [Test]
@@ -361,7 +349,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 2);
     }
 
 
@@ -381,7 +369,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -402,7 +390,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 3);
     }
 
     [Test]
@@ -427,7 +415,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 4);
     }
 
     [Test]
@@ -446,7 +434,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 1);
     }
 
 
@@ -466,7 +454,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -485,8 +473,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -507,7 +494,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -528,7 +515,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -551,8 +538,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(2, TestTrace.ArrayCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -575,8 +561,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -599,8 +584,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -621,7 +605,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -642,7 +626,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -661,7 +645,7 @@ public class GenerationTests : BaseFixture {
                 })
         }
     );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 1);
     }
     [Test]
     public void Array_OrderBy_ToArray_AssertSortMethod() {
@@ -674,7 +658,6 @@ public class GenerationTests : BaseFixture {
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
     }
 
     [Test]
@@ -693,7 +676,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -716,7 +699,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -739,7 +722,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -762,7 +745,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -788,7 +771,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -809,7 +792,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 2);
     }
 
     [Test]
@@ -831,7 +814,7 @@ public class GenerationTests : BaseFixture {
         },
         assertGeneratedCode: x => StringAssert.Contains("new HashSet<T3_Result>(result_2.Length)", x.Single())
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -852,9 +835,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.DictionaryWithCapacityCreatedCount);
-        Assert.AreEqual(0, TestTrace.DictionaryCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, dictionaryWithCapacity: 1, array: 1);
     }
 
     [Test]
@@ -877,7 +858,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 3);
     }
 
     [Test]
@@ -900,8 +881,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -924,8 +904,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -948,8 +927,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -972,8 +950,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
     }
 
     [Test]
@@ -998,7 +975,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 2, array: 2);
     }
 
     [Test]
@@ -1023,7 +1000,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 2, array: 2);
     }
 
     [Test]
@@ -1048,7 +1025,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 2, array: 2);
     }
     #endregion
 
@@ -1064,7 +1041,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_TakeWhile_FirstOrDefault() {
@@ -1080,7 +1057,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_TakeWhile_LastOrDefault() {
@@ -1096,7 +1073,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_SkipWhile_ToArray() {
@@ -1109,7 +1086,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_SkipWhile_First() {
@@ -1122,7 +1099,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_SkipWhile_Last() {
@@ -1139,7 +1116,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Select_TakeWhile_ToArray() {
@@ -1154,7 +1131,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_Select_TakeWhile_ToArrayStandard() {
@@ -1183,7 +1160,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_Select_SkipWhile_ToArrayStandard() {
@@ -1212,7 +1189,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_SelectMany_SkipWhile_ToArray() {
@@ -1227,7 +1204,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_SelectMany_SkipWhile_First() {
@@ -1242,8 +1219,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_SelectMany_SkipWhile_Last() {
@@ -1258,8 +1234,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_SkipWhile_OrderBy_Select_SkipWhile_OrderByDescending_ToArray() {
@@ -1283,7 +1258,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 2, array: 2);
     }
     [Test]
     public void Array_TakeWhile_OrderBy_Select_TakeWhile_OrderByDescending_ToArray() {
@@ -1307,7 +1282,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 2, array: 2);
     }
     [Test]
     public void Array_TakeWhile_OrderBy_Select_TakeWhile_OrderByDescending_First() {
@@ -1331,8 +1306,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 2, array: 1);
     }
     [Test]
     public void Array_TakeWhile_OrderBy_Select_TakeWhile_OrderByDescending_Last() {
@@ -1356,8 +1330,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        Assert.AreEqual(2, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 2, array: 1);
     }
     #endregion
 
@@ -1373,8 +1346,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_Where_ToHashSet() {
@@ -1388,7 +1360,7 @@ public class GenerationTests : BaseFixture {
             },
             assertGeneratedCode: x => StringAssert.Contains("new HashSet<TSource>()", x.Single())
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Where_ToDictionary() {
@@ -1401,9 +1373,7 @@ public class GenerationTests : BaseFixture {
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.DictionaryWithCapacityCreatedCount);
-        Assert.AreEqual(1, TestTrace.DictionaryCreatedCount);
+        AssertAllocations(dictionary: 1);
     }
     [Test]
     public void Array_Where_ToList() {
@@ -1514,7 +1484,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void CustomCollection_Where_ToArray() {
@@ -1527,7 +1497,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void CustomEnumerable_Where_ToArray() {
@@ -1540,7 +1510,7 @@ public class GenerationTests : BaseFixture {
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_Where_StandardToArray() {
@@ -1648,7 +1618,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Where_FirstOrDefault() {
@@ -1667,7 +1637,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void CustomEnumerable_Where_First() {
@@ -1686,7 +1656,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Where_Last() {
@@ -1708,7 +1678,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Where_LastOrDefault() {
@@ -1727,7 +1697,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void CustomEnumerable_Where_Last() {
@@ -1746,7 +1716,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     #endregion
 
@@ -1762,8 +1732,7 @@ $@"Data __() {{
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(array: 1);
     }
     [Test]
     public void Array_Select_ToHashSet() {
@@ -1789,8 +1758,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(1, TestTrace.DictionaryWithCapacityCreatedCount);
-        Assert.AreEqual(0, TestTrace.DictionaryCreatedCount);
+        AssertAllocations(dictionaryWithCapacity: 1);
     }
     [Test]
     public void List_Select_ToHashSet() {
@@ -1815,8 +1783,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(1, TestTrace.DictionaryWithCapacityCreatedCount);
-        Assert.AreEqual(0, TestTrace.DictionaryCreatedCount);
+        AssertAllocations(dictionaryWithCapacity: 1);
     }
     [Test]
     public void Array_Select_Select_ToArray() {
@@ -1831,7 +1798,7 @@ $@"Data __() {{
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 1);
     }
     [Test]
     public void Array_Select_Select_ToHashSet() {
@@ -1846,7 +1813,7 @@ $@"Data __() {{
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Select_Select_ToDictionary() {
@@ -1861,7 +1828,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(dictionaryWithCapacity: 1);
     }
     [Test]
     public void List_Select_ToArray() {
@@ -1886,7 +1853,7 @@ $@"Data __() {{
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(array: 1);
     }
     [Test]
     public void CustomEnumerable_Select_ToArray() {
@@ -1899,7 +1866,7 @@ $@"Data __() {{
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_Select_StandardToArray() {
@@ -1936,7 +1903,7 @@ $@"Data __() {{
                     }, implementsIEnumerable: true)
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -1980,8 +1947,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Select_FirstOrDefault() {
@@ -2000,7 +1966,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void CustomEnumerable_Select_First() {
@@ -2018,7 +1984,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Select_Last() {
@@ -2037,8 +2003,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.ArrayCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_Select_LastOrDefault() {
@@ -2057,7 +2022,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void CustomEnumerable_Select_Last() {
@@ -2075,7 +2040,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     #endregion
 
@@ -2105,8 +2070,7 @@ $@"Data __() {{
                 })
             },
             assertGeneratedCode: x => StringAssert.Contains("Cast<TResult>(this IList source)", x.Single()));
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(3, TestTrace.ArrayCreatedCount);
+        AssertAllocations(array: 3);
     }
 
     [Test]
@@ -2127,8 +2091,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(array: 1);
     }
 
     [Test]
@@ -2149,8 +2112,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(array: 1);
     }
 
     [Test]
@@ -2171,8 +2133,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(1, TestTrace.ArrayCreatedCount);
+        AssertAllocations(array: 1);
     }
 
     [Test]
@@ -2195,7 +2156,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -2218,7 +2179,7 @@ $@"Data __() {{
                 })
             },
             assertGeneratedCode: x => StringAssert.Contains("Cast<TResult>(this IList source)", x.Single()));
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -2240,7 +2201,7 @@ $@"Data __() {{
                 }, implementsIEnumerable: true)
             },
             assertGeneratedCode: x => StringAssert.Contains("Cast<TResult>(this IList source)", x.Single()));
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
 
     #endregion
@@ -2277,7 +2238,7 @@ record C(int Value) : A(Value);";
                 })
             },
             assertGeneratedCode: x => StringAssert.Contains("OfType<TResult>(this IList source)", x.Single()));
-        Assert.AreEqual(3, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 3);
     }
 
     [Test]
@@ -2298,7 +2259,7 @@ record C(int Value) : A(Value);";
                 })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -2319,7 +2280,7 @@ record C(int Value) : A(Value);";
                 })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -2340,7 +2301,7 @@ record C(int Value) : A(Value);";
                 })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -2363,7 +2324,7 @@ record C(int Value) : A(Value);";
                 })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -2386,7 +2347,7 @@ record C(int Value) : A(Value);";
                 })
             },
             assertGeneratedCode: x => StringAssert.Contains("OfType<TResult>(this IList source)", x.Single()));
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
 
     [Test]
@@ -2408,7 +2369,7 @@ record C(int Value) : A(Value);";
                 }, implementsIEnumerable: true)
             },
             assertGeneratedCode: x => StringAssert.Contains("OfType<TResult>(this IList source)", x.Single()));
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     #endregion
 
@@ -2429,7 +2390,7 @@ record C(int Value) : A(Value);";
                 })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_SelectManyArray_ToHashSet() {
@@ -2448,7 +2409,7 @@ record C(int Value) : A(Value);";
             },
             assertGeneratedCode: x => StringAssert.Contains("new HashSet<T1_Result>()", x.Single())
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_SelectManyArray_ToDictionary() {
@@ -2466,9 +2427,7 @@ record C(int Value) : A(Value);";
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
-        Assert.AreEqual(0, TestTrace.DictionaryWithCapacityCreatedCount);
-        Assert.AreEqual(1, TestTrace.DictionaryCreatedCount);
+        AssertAllocations(dictionary: 1);
     }
     [Test]
     public void Array_SelectManyArrayNewArrayExpression_ToArray() {
@@ -2653,7 +2612,7 @@ static Data[] source = Data.Array(3);",
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void SelectMany_SelectMany_EnumeratorTests() {
@@ -2748,7 +2707,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_SelectManyList_FirstOrDefault() {
@@ -2768,7 +2727,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void CustomEnumerable_SelectManyCustomEnumerable_First() {
@@ -2787,7 +2746,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
 
     [Test]
@@ -2813,7 +2772,7 @@ $@"void __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_SelectManyList_LastOrDefault() {
@@ -2833,7 +2792,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void CustomEnumerable_SelectManyCustomEnumerable_Last() {
@@ -2852,7 +2811,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void Array_SelectManyCustomEnumerable_Last() {
@@ -2871,7 +2830,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void CustomEnumerable_SelectManyList_Last() {
@@ -2890,7 +2849,7 @@ $@"Data __() {{
                 })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     #endregion
 
@@ -2908,7 +2867,7 @@ $@"Data __() {{
                     })
             }
         );
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
     public void Array_Select_Where_ToHashSet() {
@@ -2924,7 +2883,7 @@ $@"Data __() {{
             },
             assertGeneratedCode: x => StringAssert.Contains("new HashSet<T1_Result>()", x.Single())
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void List_Select_Where_ToArray() {
@@ -2982,7 +2941,7 @@ $@"Data __() {{
                     })
             }
         );
-        Assert.AreEqual(0, TestTrace.LargeArrayBuilderCreatedCount);
+        AssertAllocations();
     }
     [Test]
     public void SelectAndWhere_LongMixedChains() {
@@ -3367,5 +3326,20 @@ public class Executor {{
 
     static bool ImplementsIEnumerable(MethodInfo method) {
         return method.ReturnType.GetInterfaces().Where(x => x.Name.Contains("IEnumerable")).Count() == 2;
+    }
+
+    static void AssertAllocations(
+        int largeArrayBuilder = 0,
+        int array = 0,
+        int dictionary = 0,
+        int dictionaryWithCapacity = 0
+    ) {
+#if DEBUG
+        Assert.AreEqual(largeArrayBuilder, TestTrace.LargeArrayBuilderCreatedCount);
+        Assert.AreEqual(largeArrayBuilder, TestTrace.LargeArrayBuilderDisposedCount);
+        Assert.AreEqual(array, TestTrace.ArrayCreatedCount);
+        Assert.AreEqual(dictionary, TestTrace.DictionaryCreatedCount);
+        Assert.AreEqual(dictionaryWithCapacity, TestTrace.DictionaryWithCapacityCreatedCount);
+#endif
     }
 }
