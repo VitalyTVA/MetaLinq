@@ -10,7 +10,15 @@ using System.Diagnostics.CodeAnalysis;
 namespace MetaLinqTests.SortHelperTests;
 [TestFixture]
 public class SpikeOrderByTests {
-	[Test]
+    [Test]
+    public void Skip_OrderBy_Standard() {
+        var source = new[] { 0, 0, 0, 4, 3, 1, 6, 2 }.Select(x => new Data(x)).ToList();
+        var res = source.Skip(3).OrderBy(x => x.Int).ToArray();
+        CollectionAssert.AreEqual(new[] { 1, 2, 3, 4, 6 }, res.Select(x => x.Int).ToArray());
+
+        var res2 = source.OrderBy(x => x.Int).Skip(3).ToArray();
+    }
+    [Test]
 	public void OrderBy_Standard() {
 		var source = new[] { 4, 3, 1, 6, 2 }.Select(x => new Data(x)).ToList();
 		var en = source.OrderBy(x => x.Int);
