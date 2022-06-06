@@ -16,7 +16,7 @@ public static class PieceOfWorkExtensions {
 
     public static IReadOnlyList<PieceOfWork> GetPieces(this EmitContext context, SourceType sourceType, ToValueType toValueType) {
         var result = context.GetPiecesCore(sourceType).ToList();
-        if(toValueType is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault
+        if(toValueType is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault or ToValueType.Any
             && !result.First().Contexts.Any()
             /*&& result.Count == 2*/) { //TODO check if == 2 needed
             result.RemoveAt(0);

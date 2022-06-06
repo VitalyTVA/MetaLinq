@@ -360,6 +360,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void WhereAny() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, Any });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -Any");
+    }
+
+    [Test]
     public void WhereToArrayAndToList() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where, ToList });

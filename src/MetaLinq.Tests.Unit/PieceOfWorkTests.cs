@@ -23,7 +23,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_OrderBy_First(
-        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
     ) {
         AssertPieces(new[] { OrderBy }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Sort, Nodes: [OrderBy]"
@@ -32,7 +32,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Where_OrderBy_First(
-        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
     ) {
         AssertPieces(new[] { Where, OrderBy }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
@@ -42,7 +42,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_OfType_OrderBy_First(
-    [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+    [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { OfType, OrderBy }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType]",
@@ -52,7 +52,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Cast_OrderBy_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Cast]",
@@ -62,7 +62,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Where_First(
-    [Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+    [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Where }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
@@ -81,7 +81,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Select_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Select }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select]",
@@ -99,7 +99,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_SelectManyArray_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { SelectMany(SourceType.Array) }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany Array]",
@@ -108,7 +108,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_SelectManyCustomEnumerable_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { SelectMany(SourceType.CustomEnumerable) }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany CustomEnumerable]",
@@ -117,7 +117,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Array_SelectManyCustomEnumerable_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { SelectMany(SourceType.CustomEnumerable) }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany CustomEnumerable]",
@@ -126,7 +126,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Where_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Where }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
@@ -144,7 +144,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Select_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Select }, new[] {
 "KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Select]",
@@ -162,7 +162,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Cast_OrderBy_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
 "KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Cast, OrderBy]"
