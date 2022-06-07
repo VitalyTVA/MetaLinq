@@ -16,6 +16,7 @@ public static class ToValueSourceBuilder {
             ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
             ToValueType.First or ToValueType.Last => $"{outputType} {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.FirstOrDefault or ToValueType.LastOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.Any => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
             _ => throw new NotImplementedException(),
         };
         builder.AppendLine($"public {methodDefinition} {{");
@@ -56,7 +57,7 @@ public static class ToValueSourceBuilder {
             if(item.Element is TakeWhileNode)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
-        if((toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.LoopType is LoopType.Forward)
+        if((toInstanceType is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Any && piece.LoopType is LoopType.Forward)
             || (toInstanceType is ToValueType.Last or ToValueType.LastOrDefault && piece.LoopType is LoopType.Backward))
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
@@ -106,6 +107,15 @@ $@"if(predicate(item{lastLevel.Next})) {{
     goto firstFound{lastLevel};
 }}",
 GetFirstLastOrDefaultResultStatement()
+                );
+            case (_, LoopType.Forward, ToValueType.Any):
+                return (
+$@"bool found{topLevel} = false;",
+$@"if(predicate(item{lastLevel.Next})) {{
+    found{topLevel} = true;
+    goto firstFound{lastLevel};
+}}",
+$@"var result_{lastLevel} = found{topLevel};"
                 );
             case (_, LoopType.Forward, ToValueType.Last):
                 return (

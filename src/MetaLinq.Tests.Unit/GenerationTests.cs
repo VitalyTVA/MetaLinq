@@ -1640,6 +1640,26 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
+    public void Array_Where_Any() {
+        AssertGeneration(
+$@"bool __() {{
+    Assert.False(Data.Array(10).Where(x => x.Int > 5).Any(x => x.Int == 0));
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5).Any(x => x.Int % 4 == 0);
+    Assert.AreEqual(2, source[8].Int_GetCount);
+    Assert.AreEqual(0, source[9].Int_GetCount);
+    return result!;
+}}",
+            (bool x) => Assert.AreEqual(true, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("Any")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
     public void CustomEnumerable_Where_First() {
         var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.First(x => x == 0))!.Message;
         AssertGeneration(
@@ -1963,6 +1983,25 @@ $@"Data __() {{
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("FirstOrDefault")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Any() {
+        AssertGeneration(
+$@"bool __() {{
+    Assert.False(Data.Array(10).Select(x => x.Self).Any(x => x.Int == -1));
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Any(x => x.Int > 0 && x.Int % 4 == 0);
+    Assert.AreEqual(0, source[5].Int_GetCount);
+    return result!;
+}}",
+            (bool x) => Assert.True(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Any")
                 })
             }
         );
@@ -2730,6 +2769,26 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
+    public void Array_SelectManyList_Any() {
+        AssertGeneration(
+$@"bool __() {{
+    Assert.False(Data.Array(5).SelectMany(x => x.DataList).Any(x => x.Int < 0));
+    var source = Data.Array(5);
+    var result = source.SelectMany(x => x.DataList).Any(x => x.Int > 0 && x.Int % 4 == 0);
+    Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    return result!;
+}}",
+            (bool x) => Assert.True(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("Any")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
     public void CustomEnumerable_SelectManyCustomEnumerable_First() {
         AssertGeneration(
 $@"Data __() {{
@@ -2743,6 +2802,25 @@ $@"Data __() {{
             new[] {
                 new MetaLinqMethodInfo(SourceType.CustomEnumerable, "SelectMany", new[] {
                     new StructMethod("FirstOrDefault")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void CustomEnumerable_SelectManyCustomEnumerable_Any() {
+        AssertGeneration(
+$@"bool __() {{
+    var source = Data.Array(5);
+    var result = new CustomEnumerable<Data>(source).SelectMany(x => new CustomEnumerable<Data>(x.DataList)).Any(x => x.Int > 0 && x.Int % 4 == 0);
+    Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    return result;
+}}",
+            (bool x) => Assert.True(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "SelectMany", new[] {
+                    new StructMethod("Any")
                 })
             }
         );
@@ -3006,6 +3084,23 @@ $@"Data __() {{
                 new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                     new StructMethod("Select", new[] {
                         new StructMethod("FirstOrDefault")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Where_Select_Any() {
+        AssertGeneration(
+@"bool __() { 
+    Assert.False(Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).Any(x => x == -1));
+    return Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).Any(x => x % 4 == 3); 
+}",
+            (bool x) => Assert.True(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("Any")
                     })
                 })
             }
