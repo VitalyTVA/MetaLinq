@@ -30,6 +30,15 @@ public static class PieceOfWorkExtensions {
         ) {
             result[0] = result[0] with { LoopType =  LoopType.Backward };
         }
+        if(toValueType is ToValueType.Any
+            && result.Last().LoopType is LoopType.Sort) {
+            //if(result[0].Contexts.Length != 1)
+            //    throw new InvalidOperationException();
+            result[result.Count - 1] = result[result.Count - 1] with { 
+                LoopType = LoopType.Forward, 
+            };
+            result[result.Count - 1].Contexts[result[0].Contexts.Length - 1] = result[0].Contexts[result[0].Contexts.Length - 1] with { Element = IdentityNode.Instance };
+        }
         return result.AsReadOnly();
     }
 

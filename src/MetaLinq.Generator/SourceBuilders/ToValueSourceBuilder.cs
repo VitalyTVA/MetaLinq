@@ -57,8 +57,9 @@ public static class ToValueSourceBuilder {
             if(item.Element is TakeWhileNode)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
-        if((toInstanceType is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Any && piece.LoopType is LoopType.Forward)
-            || (toInstanceType is ToValueType.Last or ToValueType.LastOrDefault && piece.LoopType is LoopType.Backward))
+        if((toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.LoopType is LoopType.Forward)
+            || (toInstanceType is ToValueType.Last or ToValueType.LastOrDefault && piece.LoopType is LoopType.Backward)
+            || toInstanceType is ToValueType.Any && piece.LoopType is LoopType.Forward or LoopType.Sort)
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
         builder.Tab.AppendMultipleLines(result);
@@ -243,7 +244,17 @@ bool found{topLevel} = false;
                         ? GetFirstLastResultStatement() 
                         : GetFirstLastOrDefaultResultStatement()
                 );
-
+//            case (_, LoopType.Sort, ToValueType.Any):
+//                var order__ = GetOrder();
+//                var itemLevel_ = order__.First().Level;
+//                return (
+//$@"bool found{topLevel} = false;",
+//$@"if(predicate(item{itemLevel_})) {{
+//    found{topLevel} = true;
+//    goto firstFound{itemLevel_};
+//}}",
+//$@"var result_{itemLevel_} = found{topLevel};"
+//                );
             default:
                 throw new NotImplementedException();
         };
@@ -330,6 +341,10 @@ if(skipWhile{level.Next}) {{
                 break;
             case CastNode:
                 builder.AppendLine($@"var item{level.Next} = ({context.GetResultGenericType()})(object)item{level}!;");
+                EmitNext(builder);
+                break;
+            case IdentityNode:
+                builder.AppendLine($@"var item{level.Next} = item{level};");
                 EmitNext(builder);
                 break;
             case SelectManyNode selectMany:

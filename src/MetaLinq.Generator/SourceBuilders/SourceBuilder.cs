@@ -273,7 +273,7 @@ public static class CodeGenerationTraits {
 
     public static string GetOutputType(this EmitContext context) {
             return context.Element switch {
-                WhereNode or TakeWhileNode or SkipWhileNode or OrderByNode or ThenByNode => context.SourceGenericArg,
+                WhereNode or TakeWhileNode or SkipWhileNode or OrderByNode or ThenByNode or IdentityNode => context.SourceGenericArg,
                 SelectNode or SelectManyNode or OfTypeNode or CastNode => context.GetResultGenericType(),
                 _ => throw new NotImplementedException(),
             };

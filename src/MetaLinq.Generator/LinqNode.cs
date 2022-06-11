@@ -100,6 +100,12 @@ public sealed record CastNode : IntermediateNode {
     internal override string Type => "Cast";
 }
 
+public sealed record IdentityNode : IntermediateNode {
+    public static readonly IdentityNode Instance = new IdentityNode();
+    IdentityNode() { }
+    internal override string Type => "Identity";
+}
+
 public sealed record TakeWhileNode : IntermediateNode {
     public static readonly TakeWhileNode Instance = new TakeWhileNode();
     TakeWhileNode() { }

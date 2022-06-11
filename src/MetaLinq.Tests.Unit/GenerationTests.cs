@@ -161,6 +161,45 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderByDescending_Any() {
+        AssertGeneration(
+@"bool __() {{
+    var source = Data.Array(10).Shuffle();
+    Assert.False(source.OrderByDescending(x => -x.Int).Any(x => x.Int < 0));
+    return source.OrderByDescending(x => -x.Int).Any(x => x.Int > 4);
+}}",
+          (bool x) => Assert.True(x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("Any")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderBy_Any() {
+        AssertGeneration(
+@"bool __() {{
+    var source = Data.Array(10);
+    var result = source.OrderBy(x => -x.Int).Any(x => x.Int > 0);
+    Assert.AreEqual(1, source[0].Int_GetCount);
+    Assert.AreEqual(1, source[1].Int_GetCount);
+    Assert.AreEqual(0, source[2].Int_GetCount);
+    return result;
+}}",
+          (bool x) => Assert.True(x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("Any")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
     public void Array_OrderByDescending_LastOrDefault() {
         AssertGeneration(
 @"Data? __() {{

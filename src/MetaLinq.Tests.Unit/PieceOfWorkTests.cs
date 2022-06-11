@@ -23,7 +23,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_OrderBy_First(
-        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
+        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
     ) {
         AssertPieces(new[] { OrderBy }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Sort, Nodes: [OrderBy]"
@@ -31,8 +31,17 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void CustomEnumerable_OrderBy_Any(
+    [Values(ToValueType.Any)] ToValueType toValueType
+) {
+        AssertPieces(new[] { OrderBy }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Identity]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
     public void CustomEnumerable_Where_OrderBy_First(
-        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
+        [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
     ) {
         AssertPieces(new[] { Where, OrderBy }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
@@ -41,8 +50,18 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void CustomEnumerable_Where_OrderBy_Any(
+    [Values(ToValueType.Any)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Where, OrderBy }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
+"KnownType: True, KnownSize: True, LoopType: Forward, Nodes: [Identity]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
     public void CustomEnumerable_OfType_OrderBy_First(
-    [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
+    [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { OfType, OrderBy }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType]",
@@ -51,12 +70,32 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void CustomEnumerable_OfType_OrderBy_Any(
+[Values(ToValueType.Any)] ToValueType toValueType
+) {
+        AssertPieces(new[] { OfType, OrderBy }, new[] {
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType]",
+"KnownType: True, KnownSize: True, LoopType: Forward, Nodes: [Identity]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
     public void CustomEnumerable_Cast_OrderBy_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Cast]",
 "KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void CustomEnumerable_Cast_OrderBy_Any(
+[Values(ToValueType.Any)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Cast, OrderBy }, new[] {
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Cast]",
+"KnownType: True, KnownSize: True, LoopType: Forward, Nodes: [Identity]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -162,10 +201,19 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Cast_OrderBy_First(
-[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault, ToValueType.Any)] ToValueType toValueType
+[Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
 "KnownType: False, KnownSize: True, LoopType: Sort, Nodes: [Cast, OrderBy]"
+        }, SourceType.List, toValueType);
+    }
+
+    [Test]
+    public void Cast_OrderBy_Any(
+[Values(ToValueType.Any)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Cast, OrderBy }, new[] {
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Cast, Identity]"
         }, SourceType.List, toValueType);
     }
 
