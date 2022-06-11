@@ -17,7 +17,7 @@ CustomEnumerable should not be a special case - introduce Source Type Traits
 
 warning for queries like source.OrderBy(x => -x.Int).Any(x => x.Int > 0); - orderby is not necessary and can be omited
 
-merge any and all pieces of work into one like in CustomEnumerable_Where_OrderBy_Any
+merge any and all pieces of work into one like in CustomEnumerable_Where_OrderBy_Any or CustomEnumerable_Where_OrderBy_First
 
 # Optimizations
 CustomEnumerable-Where-OrderBy-First chains optimization

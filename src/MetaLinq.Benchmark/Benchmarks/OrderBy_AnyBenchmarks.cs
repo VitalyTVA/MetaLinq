@@ -9,7 +9,7 @@ namespace MetaLinqBenchmark;
 //[MinColumn, MaxColumn, MeanColumn, MedianColumn]
 [MeanColumn]
 [MemoryDiagnoser]
-public class OrderBy_FirstBenchmarks {
+public class OrderBy_AnyBenchmarks {
     TestData[] testData = { };
 
     [Params(10, 100, 1_000/*, 10_000*/)]
@@ -25,10 +25,10 @@ public class OrderBy_FirstBenchmarks {
     }
 
     [Benchmark(Baseline = true)]
-    public TestData Standard_() => Standard.OrderBy_First(testData);
+    public bool Standard_() => Standard.OrderBy_Any(testData);
 
     [Benchmark]
-    public TestData Meta_() {
-        return Meta.OrderBy_First(testData);
+    public bool Meta_() {
+        return Meta.OrderBy_Any(testData);
     }
 }

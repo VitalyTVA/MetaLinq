@@ -40,6 +40,24 @@ public class PieceOfWorkTests {
     }
 
     [Test]
+    public void CustomEnumerable_OrderBy_ThenBy_Any(
+[Values(ToValueType.Any)] ToValueType toValueType
+) {
+        AssertPieces(new[] { OrderBy, ThenBy }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Identity, Identity]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
+    public void CustomEnumerable_OrderByDescending_ThenByDescending_Any(
+[Values(ToValueType.Any)] ToValueType toValueType
+) {
+        AssertPieces(new[] { OrderBy, ThenBy }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Identity, Identity]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
+    [Test]
     public void CustomEnumerable_Where_OrderBy_First(
         [Values(ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
     ) {

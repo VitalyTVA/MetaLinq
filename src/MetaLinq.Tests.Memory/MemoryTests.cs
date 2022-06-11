@@ -123,6 +123,10 @@ public class Tests {
     public static void Array_Where_Select_First() {
         MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).First(x => x > 1), null);
     }
+    [Test]
+    public static void Array_Where_Select_Any() {
+        MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).Any(x => x > 1), null);
+    }
     #endregion
 
     #region temp

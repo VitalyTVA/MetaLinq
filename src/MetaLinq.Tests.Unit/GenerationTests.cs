@@ -275,6 +275,27 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_ThenBy_Any() {
+        AssertGeneration(
+@"void __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    Assert.False(source.OrderBy(x => x.Long).ThenBy(x => x.Int).Any(x => x.Int == 1 && x.Long == 3));
+    
+    Assert.True(new[] { (1, 1), (0, 0), (1, 0), (0, 1) }.OrderBy(x => x.Item1).ThenBy(x => x.Item2).Any(x => x.Item1 == 1));
+}}",
+        NoAssert,
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("ThenBy", new[] {
+                        new StructMethod("Any"),
+                    })
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
     public void Array_OrderBy_ThenBy_LastAndLastOrDefault() {
         AssertGeneration(
 @"void __() {{
@@ -1093,6 +1114,22 @@ public class GenerationTests : BaseFixture {
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "TakeWhile", new[] {
                         new StructMethod("FirstOrDefault")
+                    })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_TakeWhile_Any() {
+        AssertGeneration(
+@"bool __() { 
+    Assert.False(Data.Array(20).TakeWhile(x => x.Int < 10).Any(x => x.Int % 15 == 12));
+    return Data.Array(20).TakeWhile(x => x.Int < 10).Any(x => x.Int == 8);
+}",
+            (bool x) => Assert.True(x),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "TakeWhile", new[] {
+                        new StructMethod("Any")
                     })
             }
         );
@@ -2828,7 +2865,7 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_SelectManyCustomEnumerable_First() {
+    public void CustomEnumerable_SelectManyCustomEnumerable_FirstOrDefault() {
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(5);
