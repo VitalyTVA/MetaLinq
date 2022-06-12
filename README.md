@@ -11,6 +11,34 @@ https://github.com/NetFabric/NetFabric.Hyperlinq
 
 https://github.com/kevin-montrose/LinqAF
 
+## MetaLinq notes
+
+Keep delegates clean and side effects free. First, FirstOrDefault, Any, All, Last, LastOrDefault, Single, Sum, Min, Max, Average and some other ignore sort order.
+
+## Things to write about
+
+Main idea
+
+Array builders
+
+Comparers JIT-time meta-programming and optimizations
+
+How stable, key-dependent sorting work
+
+Enumerables state machines
+
+Source builders (Tab, etc.)
+
+Interpolated strings handlers in source builders
+
+Array to list without allocations
+
+Optimized generators
+
+Stack allocations
+
+Architecture - chains piecesof works, code generation
+
 ## Select benchmark
 
 |           Method |    N |        Mean |      Error |    StdDev |      Median | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |

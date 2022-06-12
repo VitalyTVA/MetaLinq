@@ -65,6 +65,15 @@ public enum ToValueType {
     All,
 }
 
+public static class ValueTypeTraits {
+    public static bool IsOrderIndependentLoop(this ToValueType value) { 
+       return value is ToValueType.All or ToValueType.Any;
+    }
+    public static bool IsOrderDependentLoop(this ToValueType value) {
+        return value is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault;
+    }
+}
+
 public abstract record class TerminalNode : LinqNode { }
 
 public sealed record ToValueChainElement(ToValueType Type) : TerminalNode {

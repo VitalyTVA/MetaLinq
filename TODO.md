@@ -1,10 +1,5 @@
 https://andrewlock.net/exploring-dotnet-6-part-9-source-generator-updates-incremental-generators/
 
-replace all checks like
-        Assert.AreEqual(1, TestTrace.LargeArrayBuilderCreatedCount);
-with
-		AssertAllocated(largeArrayBuilder: 1)
-
 ArrayPool rent/return tests
 
 Add max capacity to large array builder (like in LargeArrayBuilder from net6)
@@ -17,10 +12,8 @@ CustomEnumerable should not be a special case - introduce Source Type Traits
 
 warning for queries like source.OrderBy(x => -x.Int).Any(x => x.Int > 0); - orderby is not necessary and can be omited
 
-merge any and all pieces of work into one like in CustomEnumerable_Where_OrderBy_Any or CustomEnumerable_Where_OrderBy_First
-
 # Optimizations
-CustomEnumerable-Where-OrderBy-First chains optimization
+CustomEnumerable-Where-OrderBy-First, CustomEnumerable_Where_OrderBy_Any or CustomEnumerable_Where_OrderBy_First chains optimization - merge pieces of work into one
 
 simplify senseless chains like OrderBy(x => x.Long).OrderBy(x => x.Int).ToArray
 
