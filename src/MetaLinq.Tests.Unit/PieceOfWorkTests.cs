@@ -8,7 +8,8 @@ public class PieceOfWorkTests {
         ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault
     };
     static readonly ToValueType[] OrderIndependentValueTypes = new[] {
-        ToValueType.All, ToValueType.Any
+        ToValueType.All, ToValueType.Any, 
+        ToValueType.Single, ToValueType.SingleOrDefault,
     };
     static readonly ToValueType[] NoSortValueTypes = 
         System.Linq.Enumerable.Concat(OrderIndependentValueTypes, OrderDependentValueTypes).ToArray();

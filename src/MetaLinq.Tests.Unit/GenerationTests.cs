@@ -239,6 +239,50 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_Single() {
+        AssertGeneration(
+@"Data __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(5).OrderBy(x => -x.Int).Single(x => x.Int == -1));
+    var source = Data.Array(10);
+    var result = source.OrderBy(x => -x.Int).Single(x => x.Int == 1);
+    Assert.AreEqual(1, source[0].Int_GetCount);
+    Assert.AreEqual(1, source[1].Int_GetCount);
+    Assert.AreEqual(1, source[2].Int_GetCount);
+    return result;
+}}",
+          (Data x) => Assert.AreEqual(1, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("Single")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderBy_SingleOrDefault() {
+        AssertGeneration(
+@"Data? __() {{
+    Assert.Null(Data.Array(5).OrderBy(x => -x.Int).SingleOrDefault(x => x.Int == -1));
+    var source = Data.Array(10);
+    var result = source.OrderBy(x => -x.Int).SingleOrDefault(x => x.Int == 1);
+    Assert.AreEqual(1, source[0].Int_GetCount);
+    Assert.AreEqual(1, source[1].Int_GetCount);
+    Assert.AreEqual(1, source[2].Int_GetCount);
+    return result;
+}}",
+          (Data? x) => Assert.AreEqual(1, x!.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("SingleOrDefault")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
     public void Array_OrderByDescending_LastOrDefault() {
         AssertGeneration(
 @"Data? __() {{
@@ -3000,6 +3044,47 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
+    public void Array_SelectManyList_Single() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(5).SelectMany(x => x.DataList).Single(x => x.Int > 0 && x.Int % 4 == 0));
+    var source = Data.Array(3);
+    var result = source.SelectMany(x => x.DataList).Single(x => x.Int > 0 && x.Int % 4 == 0);
+    Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    Assert.AreEqual(2, source[2].DataList[1].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(4, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("Single")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_SelectManyList_SingleOrDefault() {
+        AssertGeneration(
+$@"Data? __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(5).SelectMany(x => x.DataList).SingleOrDefault(x => x.Int > 0 && x.Int % 4 == 0));
+    Assert.Null(Data.Array(5).SelectMany(x => x.DataList).SingleOrDefault(x => x.Int < 0));
+    var source = Data.Array(3);
+    var result = source.SelectMany(x => x.DataList).SingleOrDefault(x => x.Int > 0 && x.Int % 4 == 0);
+    Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    Assert.AreEqual(2, source[2].DataList[1].Int_GetCount);
+    return result;
+}}",
+            (Data? x) => Assert.AreEqual(4, x!.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("SingleOrDefault")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
     public void CustomEnumerable_SelectManyCustomEnumerable_FirstOrDefault() {
         AssertGeneration(
 $@"Data __() {{
@@ -3379,6 +3464,52 @@ $@"Data __() {{
                 new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                     new StructMethod("Select", new[] {
                         new StructMethod("LastOrDefault")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Select_Where_Single() {
+        AssertGeneration(
+@"int __() { 
+    var data = Data.List(10);
+    Assert.Throws<System.InvalidOperationException>(() => data.Select(x => x.Int).Where(x => x > 4).Single(x => x > 0));
+    Assert.AreEqual(1, data[5].Int_GetCount);
+    Assert.AreEqual(1, data[6].Int_GetCount);
+    Assert.AreEqual(0, data[7].Int_GetCount);
+    Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4).Single(x => x % 4 == 3));
+    Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4).Single(x => x < 0));
+    return Data.List(10).Select(x => x.Int).Where(x => x > 4).Single(x => x % 4 == 3);
+}",
+            (int x) => Assert.AreEqual(7, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("Where", new[] {
+                        new StructMethod("Single")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Select_Where_SingleOrDefault() {
+        AssertGeneration(
+@"int? __() { 
+    var data = Data.List(10);
+    Assert.Throws<System.InvalidOperationException>(() => data.Select(x => x.Int).Where(x => x > 4).SingleOrDefault(x => x > 0));
+    Assert.AreEqual(1, data[5].Int_GetCount);
+    Assert.AreEqual(1, data[6].Int_GetCount);
+    Assert.AreEqual(0, data[7].Int_GetCount);
+    Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4).SingleOrDefault(x => x % 4 == 3));
+    Assert.Null(Data.List(12).Select(x => (int?)x.Int).Where(x => x > 4).SingleOrDefault(x => x < 0));
+    return Data.List(10).Select(x => x.Int).Where(x => x > 4).SingleOrDefault(x => x % 4 == 3);
+}",
+            (int x) => Assert.AreEqual(7, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("Where", new[] {
+                        new StructMethod("SingleOrDefault")
                     })
                 })
             }

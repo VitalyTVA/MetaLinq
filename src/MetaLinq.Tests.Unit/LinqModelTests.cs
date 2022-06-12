@@ -315,70 +315,21 @@ public class LinqModelTests : BaseFixture {
             -ToArray");
     }
 
-    [Test]
-    public void WhereFirst() {
-        var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, First });
-        AssertModel(model,
-@"Array
-    Root
-        Where
-            -First");
-    }
+    static ToValueChainElement[] NoSortChainElements = new[] {
+        First, FirstOrDefault, Last, LastOrDefault, 
+        All, Any,
+        LinqNode.Single, SingleOrDefault,
+    };
 
-    [Test]
-    public void WhereLast() {
+    [TestCaseSource(nameof(NoSortChainElements))]
+    public void Where_NoSortChainElements(ToValueChainElement element) {
         var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, Last });
+        model.AddChain(SourceType.Array, new[] { Where, element });
         AssertModel(model,
-@"Array
+$@"Array
     Root
         Where
-            -Last");
-    }
-
-    [Test]
-    public void WhereFirstOrDefault() {
-        var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, FirstOrDefault });
-        AssertModel(model,
-@"Array
-    Root
-        Where
-            -FirstOrDefault");
-    }
-
-    [Test]
-    public void WhereLastOrDefault() {
-        var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, LastOrDefault });
-        AssertModel(model,
-@"Array
-    Root
-        Where
-            -LastOrDefault");
-    }
-
-    [Test]
-    public void WhereAny() {
-        var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, Any });
-        AssertModel(model,
-@"Array
-    Root
-        Where
-            -Any");
-    }
-
-    [Test]
-    public void WhereAll() {
-        var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, All });
-        AssertModel(model,
-@"Array
-    Root
-        Where
-            -All");
+            -{element.Type}");
     }
 
     [Test]

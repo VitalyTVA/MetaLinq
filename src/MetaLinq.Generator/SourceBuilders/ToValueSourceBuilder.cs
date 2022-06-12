@@ -14,8 +14,8 @@ public static class ToValueSourceBuilder {
             ToValueType.ToArray => $"{outputType}[] ToArray()",
             ToValueType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
             ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
-            ToValueType.First or ToValueType.Last => $"{outputType} {toValueType}(Func<{outputType}, bool> predicate)",
-            ToValueType.FirstOrDefault or ToValueType.LastOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.First or ToValueType.Last or ToValueType.Single => $"{outputType} {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.FirstOrDefault or ToValueType.LastOrDefault or ToValueType.SingleOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
             _ => throw new NotImplementedException(),
         };
@@ -59,7 +59,7 @@ public static class ToValueSourceBuilder {
         }
         if((toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.LoopType is LoopType.Forward)
             || (toInstanceType is ToValueType.Last or ToValueType.LastOrDefault && piece.LoopType is LoopType.Backward)
-            || (toInstanceType.IsOrderIndependentLoop() && piece.LoopType is LoopType.Forward))
+            || (toInstanceType is ToValueType.Any or ToValueType.All && piece.LoopType is LoopType.Forward))
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
         builder.Tab.AppendMultipleLines(result);
@@ -81,11 +81,11 @@ public static class ToValueSourceBuilder {
                 direction: (x.Element as OrderByNode)?.Direction ?? (x.Element as ThenByNode)!.Direction
             ))
             .ToArray();
-        string GetFirstLastResultStatement() =>
+        string GetFirstLastSingleResultStatement() =>
 $@"if(!found{topLevel})
     throw new InvalidOperationException(""Sequence contains no matching element"");
 var result_{lastLevel} = result{topLevel}!;";
-        string GetFirstLastOrDefaultResultStatement() =>
+        string GetFirstLastSingleOrDefaultResultStatement() =>
 $@"var result_{lastLevel} = result{topLevel};";
 
         switch((piece.KnownSize, piece.LoopType, toValueType)) {
@@ -98,7 +98,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
     goto firstFound{lastLevel};
 }}",
-GetFirstLastResultStatement()
+GetFirstLastSingleResultStatement()
                 );
             case (_, LoopType.Forward, ToValueType.FirstOrDefault) or (_, LoopType.Backward, ToValueType.LastOrDefault):
                 return (
@@ -107,7 +107,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
     goto firstFound{lastLevel};
 }}",
-GetFirstLastOrDefaultResultStatement()
+GetFirstLastSingleOrDefaultResultStatement()
                 );
             case (_, LoopType.Forward, ToValueType.Any or ToValueType.All):
                 string invert = toValueType switch {
@@ -123,6 +123,34 @@ $@"if({invert}predicate(item{lastLevel.Next})) {{
 }}",
 $@"var result_{lastLevel} = {invert}found{topLevel};"
                 );
+            case (_, LoopType.Forward, ToValueType.Single):
+                return (
+$@"var result{topLevel} = default({outputType});
+bool found{topLevel} = false;",
+$@"if(predicate(item{lastLevel.Next})) {{
+    if(!found{topLevel}) {{
+        found{topLevel} = true;
+        result{topLevel} = item{lastLevel.Next};
+    }} else {{
+        throw new InvalidOperationException(""Sequence contains more than one matching element"");
+    }}
+}}",
+GetFirstLastSingleResultStatement()
+                );
+            case (_, LoopType.Forward, ToValueType.SingleOrDefault):
+                return (
+$@"var result{topLevel} = default({outputType});
+bool found{topLevel} = false;",
+$@"if(predicate(item{lastLevel.Next})) {{
+    if(!found{topLevel}) {{
+        found{topLevel} = true;
+        result{topLevel} = item{lastLevel.Next};
+    }} else {{
+        throw new InvalidOperationException(""Sequence contains more than one matching element"");
+    }}
+}}",
+GetFirstLastSingleOrDefaultResultStatement()
+                );
             case (_, LoopType.Forward, ToValueType.Last):
                 return (
 $@"var result{topLevel} = default({outputType});
@@ -131,7 +159,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
     found{topLevel} = true;
     result{topLevel} = item{lastLevel.Next};
 }}",
-GetFirstLastResultStatement()
+GetFirstLastSingleResultStatement()
                 );
             case (_, LoopType.Forward, ToValueType.LastOrDefault):
                 return (
@@ -139,7 +167,7 @@ $@"var result{topLevel} = default({outputType});",
 $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
 }}",
-GetFirstLastOrDefaultResultStatement()
+GetFirstLastSingleOrDefaultResultStatement()
                 );
 
             case (false, LoopType.Forward, ToValueType.ToArray):
@@ -246,8 +274,8 @@ bool found{topLevel} = false;
     found{topLevel} = true;
 }}",
                     toValueType is ToValueType.First or ToValueType.Last 
-                        ? GetFirstLastResultStatement() 
-                        : GetFirstLastOrDefaultResultStatement()
+                        ? GetFirstLastSingleResultStatement() 
+                        : GetFirstLastSingleOrDefaultResultStatement()
                 );
             default:
                 throw new NotImplementedException();

@@ -124,6 +124,10 @@ public class Tests {
         MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).First(x => x > 1), null);
     }
     [Test]
+    public static void Array_Where_Select_Single() {
+        MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).Single(x => x == 20), null);
+    }
+    [Test]
     public static void Array_Where_Select_Any() {
         MemoryTestHelper.AssertDifference(() => intArray.Where(static x => x % 2 == 0).Select(static x => x * 10).Any(x => x < 0), null);
     }

@@ -40,6 +40,8 @@ public abstract record LinqNode {
     public static readonly ToValueChainElement FirstOrDefault = new ToValueChainElement(ToValueType.FirstOrDefault);
     public static readonly ToValueChainElement Last = new ToValueChainElement(ToValueType.Last);
     public static readonly ToValueChainElement LastOrDefault = new ToValueChainElement(ToValueType.LastOrDefault);
+    public static readonly ToValueChainElement Single = new ToValueChainElement(ToValueType.Single);
+    public static readonly ToValueChainElement SingleOrDefault = new ToValueChainElement(ToValueType.SingleOrDefault);
     public static readonly ToValueChainElement Any = new ToValueChainElement(ToValueType.Any);
     public static readonly ToValueChainElement All = new ToValueChainElement(ToValueType.All);
     public static ToListNode ToList => ToListNode.Instance;
@@ -61,13 +63,17 @@ public enum ToValueType {
     FirstOrDefault,
     Last,
     LastOrDefault,
+    Single,
+    SingleOrDefault,
     Any,
     All,
 }
 
 public static class ValueTypeTraits {
     public static bool IsOrderIndependentLoop(this ToValueType value) { 
-       return value is ToValueType.All or ToValueType.Any;
+       return value 
+            is ToValueType.All or ToValueType.Any 
+            or ToValueType.Single or ToValueType.SingleOrDefault;
     }
     public static bool IsOrderDependentLoop(this ToValueType value) {
         return value is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault;
