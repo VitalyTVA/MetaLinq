@@ -371,6 +371,17 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
+    public void WhereAll() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, All });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -All");
+    }
+
+    [Test]
     public void WhereToArrayAndToList() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where, ToList });

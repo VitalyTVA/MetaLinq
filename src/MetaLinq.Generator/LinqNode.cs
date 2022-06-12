@@ -41,6 +41,7 @@ public abstract record LinqNode {
     public static readonly ToValueChainElement Last = new ToValueChainElement(ToValueType.Last);
     public static readonly ToValueChainElement LastOrDefault = new ToValueChainElement(ToValueType.LastOrDefault);
     public static readonly ToValueChainElement Any = new ToValueChainElement(ToValueType.Any);
+    public static readonly ToValueChainElement All = new ToValueChainElement(ToValueType.All);
     public static ToListNode ToList => ToListNode.Instance;
     public static EnumerableNode Enumerable => EnumerableNode.Instance;
 
@@ -61,6 +62,7 @@ public enum ToValueType {
     Last,
     LastOrDefault,
     Any,
+    All,
 }
 
 public abstract record class TerminalNode : LinqNode { }

@@ -179,6 +179,24 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderByDescending_All () {
+        AssertGeneration(
+@"bool __() {{
+    var source = Data.Array(10).Shuffle();
+    Assert.True(source.OrderByDescending(x => -x.Int).All(x => x.Int >= 0));
+    return source.OrderByDescending(x => -x.Int).All(x => x.Int <= 4);
+}}",
+          (bool x) => Assert.False(x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("All")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
     public void Array_OrderBy_Any() {
         AssertGeneration(
 @"bool __() {{
@@ -193,6 +211,27 @@ public class GenerationTests : BaseFixture {
         new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
                     new StructMethod("Any")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderBy_All() {
+        AssertGeneration(
+@"bool __() {{
+    var source = Data.Array(10);
+    var result = source.OrderBy(x => -x.Int).All(x => x.Int <= 0);
+    Assert.AreEqual(1, source[0].Int_GetCount);
+    Assert.AreEqual(1, source[1].Int_GetCount);
+    Assert.AreEqual(0, source[2].Int_GetCount);
+    return result;
+}}",
+          (bool x) => Assert.False(x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("All")
                 })
         }
     );
@@ -288,6 +327,27 @@ public class GenerationTests : BaseFixture {
                 new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
                     new StructMethod("ThenBy", new[] {
                         new StructMethod("Any"),
+                    })
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderBy_ThenBy_All() {
+        AssertGeneration(
+@"void __() {{
+    var source = Data.Array(10).Shuffle(longMaxValue: 3);
+    Assert.True(source.OrderBy(x => x.Long).ThenBy(x => x.Int).All(x => !(x.Int == 1 && x.Long == 3)));
+    
+    Assert.False(new[] { (1, 1), (0, 0), (1, 0), (0, 1) }.OrderBy(x => x.Item1).ThenBy(x => x.Item2).All(x => x.Item1 != 1));
+}}",
+        NoAssert,
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("ThenBy", new[] {
+                        new StructMethod("All"),
                     })
                 })
         }
@@ -1136,6 +1196,22 @@ public class GenerationTests : BaseFixture {
         AssertAllocations();
     }
     [Test]
+    public void Array_TakeWhile_All() {
+        AssertGeneration(
+@"bool __() { 
+    Assert.True(Data.Array(20).TakeWhile(x => x.Int < 10).All(x => x.Int % 15 != 12));
+    return Data.Array(20).TakeWhile(x => x.Int < 10).All(x => x.Int != 8);
+}",
+            (bool x) => Assert.False(x),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "TakeWhile", new[] {
+                        new StructMethod("All")
+                    })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
     public void Array_TakeWhile_LastOrDefault() {
         AssertGeneration(
 @"Data? __() { 
@@ -1736,6 +1812,26 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
+    public void Array_Where_All() {
+        AssertGeneration(
+$@"bool __() {{
+    Assert.True(Data.Array(10).Where(x => x.Int > 5).All(x => x.Int != 0));
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5).All(x => x.Int % 4 != 0);
+    Assert.AreEqual(2, source[8].Int_GetCount);
+    Assert.AreEqual(0, source[9].Int_GetCount);
+    return result!;
+}}",
+            (bool x) => Assert.False(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("All")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
     public void CustomEnumerable_Where_First() {
         var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.First(x => x == 0))!.Message;
         AssertGeneration(
@@ -2078,6 +2174,25 @@ $@"bool __() {{
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Any")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_All() {
+        AssertGeneration(
+$@"bool __() {{
+    Assert.True(Data.Array(10).Select(x => x.Self).All(x => x.Int != -1));
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).All(x => !(x.Int > 0 && x.Int % 4 == 0));
+    Assert.AreEqual(0, source[5].Int_GetCount);
+    return result!;
+}}",
+            (bool x) => Assert.False(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("All")
                 })
             }
         );
@@ -2865,6 +2980,26 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
+    public void Array_SelectManyList_All() {
+        AssertGeneration(
+$@"bool __() {{
+    Assert.True(Data.Array(5).SelectMany(x => x.DataList).All(x => x.Int >= 0));
+    var source = Data.Array(5);
+    var result = source.SelectMany(x => x.DataList).All(x => !(x.Int > 0 && x.Int % 4 == 0));
+    Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    return result!;
+}}",
+            (bool x) => Assert.False(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("All")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
     public void CustomEnumerable_SelectManyCustomEnumerable_FirstOrDefault() {
         AssertGeneration(
 $@"Data __() {{
@@ -2897,6 +3032,25 @@ $@"bool __() {{
             new[] {
                 new MetaLinqMethodInfo(SourceType.CustomEnumerable, "SelectMany", new[] {
                     new StructMethod("Any")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void CustomEnumerable_SelectManyCustomEnumerable_All() {
+        AssertGeneration(
+$@"bool __() {{
+    var source = Data.Array(5);
+    var result = new CustomEnumerable<Data>(source).SelectMany(x => new CustomEnumerable<Data>(x.DataList)).All(x => !(x.Int > 0 && x.Int % 4 == 0));
+    Assert.AreEqual(2, source[2].DataList[0].Int_GetCount);
+    Assert.AreEqual(0, source[2].DataList[1].Int_GetCount);
+    return result;
+}}",
+            (bool x) => Assert.False(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "SelectMany", new[] {
+                    new StructMethod("All")
                 })
             }
         );
@@ -3177,6 +3331,23 @@ $@"Data __() {{
                 new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
                     new StructMethod("Select", new[] {
                         new StructMethod("Any")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Where_Select_All() {
+        AssertGeneration(
+@"bool __() { 
+    Assert.True(Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).All(x => x != -1));
+    return Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).All(x => x % 4 != 3); 
+}",
+            (bool x) => Assert.False(x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                    new StructMethod("Select", new[] {
+                        new StructMethod("All")
                     })
                 })
             }

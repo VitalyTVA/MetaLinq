@@ -139,6 +139,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "Last" => LinqNode.Last,
             "LastOrDefault" => LinqNode.LastOrDefault,
             "Any" => LinqNode.Any,
+            "All" => LinqNode.All,
             _ => null
         };
     }

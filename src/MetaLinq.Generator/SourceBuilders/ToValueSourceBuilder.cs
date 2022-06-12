@@ -16,7 +16,7 @@ public static class ToValueSourceBuilder {
             ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
             ToValueType.First or ToValueType.Last => $"{outputType} {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.FirstOrDefault or ToValueType.LastOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
-            ToValueType.Any => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
             _ => throw new NotImplementedException(),
         };
         builder.AppendLine($"public {methodDefinition} {{");
@@ -59,7 +59,7 @@ public static class ToValueSourceBuilder {
         }
         if((toInstanceType is ToValueType.First or ToValueType.FirstOrDefault && piece.LoopType is LoopType.Forward)
             || (toInstanceType is ToValueType.Last or ToValueType.LastOrDefault && piece.LoopType is LoopType.Backward)
-            || toInstanceType is ToValueType.Any && piece.LoopType is LoopType.Forward or LoopType.Sort)
+            || toInstanceType is ToValueType.Any or ToValueType.All && piece.LoopType is LoopType.Forward)
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
         builder.Tab.AppendMultipleLines(result);
@@ -109,14 +109,19 @@ $@"if(predicate(item{lastLevel.Next})) {{
 }}",
 GetFirstLastOrDefaultResultStatement()
                 );
-            case (_, LoopType.Forward, ToValueType.Any):
+            case (_, LoopType.Forward, ToValueType.Any or ToValueType.All):
+                string invert = toValueType switch {
+                    ToValueType.Any => string.Empty,
+                    ToValueType.All => "!",
+                    _ => throw new InvalidOperationException()
+                };
                 return (
 $@"bool found{topLevel} = false;",
-$@"if(predicate(item{lastLevel.Next})) {{
+$@"if({invert}predicate(item{lastLevel.Next})) {{
     found{topLevel} = true;
     goto firstFound{lastLevel};
 }}",
-$@"var result_{lastLevel} = found{topLevel};"
+$@"var result_{lastLevel} = {invert}found{topLevel};"
                 );
             case (_, LoopType.Forward, ToValueType.Last):
                 return (
@@ -244,17 +249,6 @@ bool found{topLevel} = false;
                         ? GetFirstLastResultStatement() 
                         : GetFirstLastOrDefaultResultStatement()
                 );
-//            case (_, LoopType.Sort, ToValueType.Any):
-//                var order__ = GetOrder();
-//                var itemLevel_ = order__.First().Level;
-//                return (
-//$@"bool found{topLevel} = false;",
-//$@"if(predicate(item{itemLevel_})) {{
-//    found{topLevel} = true;
-//    goto firstFound{itemLevel_};
-//}}",
-//$@"var result_{itemLevel_} = found{topLevel};"
-//                );
             default:
                 throw new NotImplementedException();
         };
