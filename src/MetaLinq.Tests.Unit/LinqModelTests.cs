@@ -319,6 +319,7 @@ public class LinqModelTests : BaseFixture {
         First, FirstOrDefault, Last, LastOrDefault, 
         All, Any,
         LinqNode.Single, SingleOrDefault,
+        Sum_Int,
     };
 
     [TestCaseSource(nameof(NoSortChainElements))]

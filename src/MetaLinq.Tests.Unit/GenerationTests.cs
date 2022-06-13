@@ -2243,6 +2243,24 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
+    public void Array_Select_Sum_Int() {
+        AssertGeneration(
+$@"int __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Sum(x => x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (int x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
     public void CustomEnumerable_Select_First() {
         AssertGeneration(
 $@"Data __() {{

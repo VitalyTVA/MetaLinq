@@ -142,6 +142,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "All" => LinqNode.All,
             "Single" => LinqNode.Single,
             "SingleOrDefault" => LinqNode.SingleOrDefault,
+            "Sum" => LinqNode.Sum_Int,
             _ => null
         };
     }
