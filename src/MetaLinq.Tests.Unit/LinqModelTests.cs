@@ -1,4 +1,5 @@
 ﻿using static MetaLinq.Generator.LinqNode;
+using static MetaLinq.Generator.ToValueType;
 
 namespace MetaLinqTests.Unit;
 
@@ -13,7 +14,7 @@ public class LinqModelTests : BaseFixture {
     [Test]
     public void ToArray_() {
         var model = new LinqModel();
-        model.AddChain(SourceType.List, new[] { ToArray });
+        model.AddChain(SourceType.List, new[] { ToArray.AsElement() });
         AssertModel(model,
 @"List
     Root
@@ -23,7 +24,7 @@ public class LinqModelTests : BaseFixture {
     [Test]
     public void ToArrayAndToList() {
         var model = new LinqModel();
-        model.AddChain(SourceType.List, new[] { ToArray });
+        model.AddChain(SourceType.List, new[] { ToArray.AsElement() });
         model.AddChain(SourceType.List, new[] { ToList });
         AssertModel(model,
 @"List
@@ -35,8 +36,8 @@ public class LinqModelTests : BaseFixture {
     [Test]
     public void ToArrayAndToHashSet() {
         var model = new LinqModel();
-        model.AddChain(SourceType.List, new[] { ToArray });
-        model.AddChain(SourceType.List, new[] { ToHashSet });
+        model.AddChain(SourceType.List, new[] { ToArray.AsElement() });
+        model.AddChain(SourceType.List, new[] { ToHashSet.AsElement() });
         AssertModel(model,
 @"List
     Root
@@ -47,8 +48,8 @@ public class LinqModelTests : BaseFixture {
     [Test]
     public void ToArrayAndToDictionary() {
         var model = new LinqModel();
-        model.AddChain(SourceType.List, new[] { ToArray });
-        model.AddChain(SourceType.List, new[] { ToDictionary });
+        model.AddChain(SourceType.List, new[] { ToArray.AsElement() });
+        model.AddChain(SourceType.List, new[] { ToDictionary.AsElement() });
         AssertModel(model,
 @"List
     Root
@@ -198,7 +199,7 @@ public class LinqModelTests : BaseFixture {
         var model = new LinqModel();
         model.AddChain(SourceType.List, new[] { Select });
         model.AddChain(SourceType.List, new[] { OrderBy });
-        model.AddChain(SourceType.List, new[] { OrderBy, ToArray });
+        model.AddChain(SourceType.List, new[] { OrderBy, ToArray.AsElement() });
         model.AddChain(SourceType.List, new[] { OrderBy, ThenBy });
         AssertModel(model,
 @"List
@@ -216,7 +217,7 @@ public class LinqModelTests : BaseFixture {
         var model = new LinqModel();
         model.AddChain(SourceType.List, new[] { Select });
         model.AddChain(SourceType.List, new[] { OrderByDescending });
-        model.AddChain(SourceType.List, new[] { OrderByDescending, ToArray });
+        model.AddChain(SourceType.List, new[] { OrderByDescending, ToArray.AsElement() });
         model.AddChain(SourceType.List, new[] { OrderByDescending, ThenByDescending });
         AssertModel(model,
 @"List
@@ -307,7 +308,7 @@ public class LinqModelTests : BaseFixture {
     [Test]
     public void WhereToArray() {
         var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, ToArray });
+        model.AddChain(SourceType.Array, new[] { Where, ToArray.AsElement() });
         AssertModel(model,
 @"Array
     Root
@@ -315,29 +316,29 @@ public class LinqModelTests : BaseFixture {
             -ToArray");
     }
 
-    static ToValueChainElement[] NoSortChainElements = new[] {
+    static ToValueType[] NoSortChainElements = new[] {
         First, FirstOrDefault, Last, LastOrDefault, 
         All, Any,
-        LinqNode.Single, SingleOrDefault,
+        ToValueType.Single, SingleOrDefault,
         Sum_Int, Sum_Long
     };
 
     [TestCaseSource(nameof(NoSortChainElements))]
-    public void Where_NoSortChainElements(ToValueChainElement element) {
+    public void Where_NoSortChainElements(ToValueType element) {
         var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, element });
+        model.AddChain(SourceType.Array, new[] { Where, element.AsElement() });
         AssertModel(model,
 $@"Array
     Root
         Where
-            -{element.Type}");
+            -{element}");
     }
 
     [Test]
     public void WhereToArrayAndToList() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where, ToList });
-        model.AddChain(SourceType.Array, new[] { Where, ToArray });
+        model.AddChain(SourceType.Array, new[] { Where, ToArray.AsElement() });
         AssertModel(model,
 @"Array
     Root
@@ -349,8 +350,8 @@ $@"Array
     [Test]
     public void WhereToArrayAndToHashSet() {
         var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, ToHashSet });
-        model.AddChain(SourceType.Array, new[] { Where, ToArray });
+        model.AddChain(SourceType.Array, new[] { Where, ToHashSet.AsElement() });
+        model.AddChain(SourceType.Array, new[] { Where, ToArray.AsElement() });
         AssertModel(model,
 @"Array
     Root
@@ -376,7 +377,7 @@ $@"Array
     [Test]
     public void SelectToArray() {
         var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Select, ToArray });
+        model.AddChain(SourceType.Array, new[] { Select, ToArray.AsElement() });
         AssertModel(model,
 @"Array
     Root
@@ -400,7 +401,7 @@ $@"Array
     [Test]
     public void WhereSelectToHashSet() {
         var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Where, Select, ToHashSet });
+        model.AddChain(SourceType.Array, new[] { Where, Select, ToHashSet.AsElement() });
         AssertModel(model,
 @"Array
     Root
@@ -413,12 +414,12 @@ $@"Array
     public void MultipleTrunks() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where, Select, ToList });
-        model.AddChain(SourceType.Array, new[] { Where, Select, ToArray });
+        model.AddChain(SourceType.Array, new[] { Where, Select, ToArray.AsElement() });
         model.AddChain(SourceType.Array, new[] { Where, Where, ToList });
         model.AddChain(SourceType.Array, new[] { Where, Where });
         model.AddChain(SourceType.Array, new[] { Select });
         model.AddChain(SourceType.Array, new[] { Select, ToList });
-        model.AddChain(SourceType.Array, new[] { Select, ToArray });
+        model.AddChain(SourceType.Array, new[] { Select, ToArray.AsElement() });
         AssertModel(model,
 @"Array
     Root
@@ -440,7 +441,7 @@ $@"Array
     public void MultipleSources() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where });
-        model.AddChain(SourceType.List, new[] { Where, ToArray });
+        model.AddChain(SourceType.List, new[] { Where, ToArray.AsElement() });
         AssertModel(model,
 @"List
     Root
@@ -456,7 +457,7 @@ Array
     public void Where_WhereToArray() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where });
-        model.AddChain(SourceType.Array, new[] { Where, ToArray });
+        model.AddChain(SourceType.Array, new[] { Where, ToArray.AsElement() });
         AssertModel(model,
 @"Array
     Root
@@ -469,9 +470,9 @@ Array
     public void DuplicateChains1() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where });
-        model.AddChain(SourceType.Array, new[] { Where, ToArray });
+        model.AddChain(SourceType.Array, new[] { Where, ToArray.AsElement() });
         model.AddChain(SourceType.Array, new[] { Where });
-        model.AddChain(SourceType.Array, new[] { Where, ToArray });
+        model.AddChain(SourceType.Array, new[] { Where, ToArray.AsElement() });
         AssertModel(model,
 @"Array
     Root
@@ -483,19 +484,19 @@ Array
     [Test]
     public void DuplicateChains2() {
         var model = new LinqModel();
-        model.AddChain(SourceType.Array, new[] { Select, Where, ToArray });
-        model.AddChain(SourceType.Array, new[] { Where, Select, ToArray });
-        model.AddChain(SourceType.Array, new[] { Where, ToArray });
+        model.AddChain(SourceType.Array, new[] { Select, Where, ToArray.AsElement() });
+        model.AddChain(SourceType.Array, new[] { Where, Select, ToArray.AsElement() });
+        model.AddChain(SourceType.Array, new[] { Where, ToArray.AsElement() });
         model.AddChain(SourceType.Array, new[] { Where });
-        model.AddChain(SourceType.List, new[] { Where, ToArray });
+        model.AddChain(SourceType.List, new[] { Where, ToArray.AsElement() });
         model.AddChain(SourceType.List, new[] { Where });
-        model.AddChain(SourceType.Array, new[] { Select, ToArray });
+        model.AddChain(SourceType.Array, new[] { Select, ToArray.AsElement() });
         model.AddChain(SourceType.Array, new[] { Select });
-        model.AddChain(SourceType.List, new[] { Select, ToArray});
+        model.AddChain(SourceType.List, new[] { Select, ToArray.AsElement() });
         model.AddChain(SourceType.List, new[] { Select });
-        model.AddChain(SourceType.List, new[] { OrderBy, ToArray });
+        model.AddChain(SourceType.List, new[] { OrderBy, ToArray.AsElement() });
         model.AddChain(SourceType.List, new[] { OrderBy });
-        model.AddChain(SourceType.List, new[] { OrderByDescending, ToArray });
+        model.AddChain(SourceType.List, new[] { OrderByDescending, ToArray.AsElement() });
         model.AddChain(SourceType.List, new[] { OrderByDescending });
 
         AssertModel(model,
@@ -541,16 +542,16 @@ Array
         AssertNodeComparison(1, Where, Select);
 
         AssertNodeComparison(0, ToList, ToList);
-        AssertNodeComparison(-1, ToList, ToArray);
-        AssertNodeComparison(1, ToArray, ToList);
+        AssertNodeComparison(-1, ToList, ToArray.AsElement());
+        AssertNodeComparison(1, ToArray.AsElement(), ToList);
 
-        AssertNodeComparison(0, ToHashSet, ToHashSet);
-        AssertNodeComparison(1, ToHashSet, ToArray);
-        AssertNodeComparison(-1, ToArray, ToHashSet);
+        AssertNodeComparison(0, ToHashSet.AsElement(), ToHashSet.AsElement());
+        AssertNodeComparison(1, ToHashSet.AsElement(), ToArray.AsElement());
+        AssertNodeComparison(-1, ToArray.AsElement(), ToHashSet.AsElement());
 
-        AssertNodeComparison(0, ToDictionary, ToDictionary);
-        AssertNodeComparison(-1, ToDictionary, ToHashSet);
-        AssertNodeComparison(1, ToHashSet, ToDictionary);
+        AssertNodeComparison(0, ToDictionary.AsElement(), ToDictionary.AsElement());
+        AssertNodeComparison(-1, ToDictionary.AsElement(), ToHashSet.AsElement());
+        AssertNodeComparison(1, ToHashSet.AsElement(), ToDictionary.AsElement());
 
         AssertNodeComparison(0, SelectMany(SourceType.Array), SelectMany(SourceType.Array));
         AssertNodeComparison(-1, SelectMany(SourceType.Array), SelectMany(SourceType.List));

@@ -130,25 +130,27 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "OrderByDescending" => LinqNode.OrderByDescending,
             "ThenBy" => LinqNode.ThenBy,
             "ThenByDescending" => LinqNode.ThenByDescending,
-            "ToArray" => LinqNode.ToArray,
             "ToList" => LinqNode.ToList,
-            "ToHashSet" => LinqNode.ToHashSet,
-            "ToDictionary" => LinqNode.ToDictionary,
-            "First" => LinqNode.First,
-            "FirstOrDefault" => LinqNode.FirstOrDefault,
-            "Last" => LinqNode.Last,
-            "LastOrDefault" => LinqNode.LastOrDefault,
-            "Any" => LinqNode.Any,
-            "All" => LinqNode.All,
-            "Single" => LinqNode.Single,
-            "SingleOrDefault" => LinqNode.SingleOrDefault,
+            _ => null
+        } ?? ValueTypeTraits.AsElement(method.Name switch {
+            "ToArray" => ToValueType.ToArray,
+            "ToHashSet" => ToValueType.ToHashSet,
+            "ToDictionary" => ToValueType.ToDictionary,
+            "First" => ToValueType.First,
+            "FirstOrDefault" => ToValueType.FirstOrDefault,
+            "Last" => ToValueType.Last,
+            "LastOrDefault" => ToValueType.LastOrDefault,
+            "Any" => ToValueType.Any,
+            "All" => ToValueType.All,
+            "Single" => ToValueType.Single,
+            "SingleOrDefault" => ToValueType.SingleOrDefault,
             "Sum" => ((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1].SpecialType switch {
-                SpecialType.System_Int32 => LinqNode.Sum_Int,
-                SpecialType.System_Int64 => LinqNode.Sum_Long,
+                SpecialType.System_Int32 => ToValueType.Sum_Int,
+                SpecialType.System_Int64 => ToValueType.Sum_Long,
                 _ => throw new InvalidOperationException()
             },
             _ => null
-        };
+        });
     }
     SourceType? GetSourceType(GeneratorSyntaxContext context, ExpressionSyntax expression) {
         var returnType = context.SemanticModel.GetTypeInfo(expression).Type;

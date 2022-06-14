@@ -78,8 +78,9 @@ public abstract class LinqTreeBase : LinqTreeNode {
     }
     public IEnumerable<LinqTreeNode> GetNodes() {
         IEnumerable<KeyValuePair<LinqNode, LinqTreeNode>> pairs = Nodes;
-        if(Nodes.ContainsKey(LinqNode.ToList) && !Nodes.ContainsKey(LinqNode.ToArray))
-            pairs = pairs.Concat(new[] { new KeyValuePair<LinqNode, LinqTreeNode>(LinqNode.ToArray, new LinqTreeTerminalNode(LinqNode.ToArray)) });
+        var toArrayNode = ToValueType.ToArray.AsElement();
+        if(Nodes.ContainsKey(LinqNode.ToList) && !Nodes.ContainsKey(toArrayNode))
+            pairs = pairs.Concat(new[] { new KeyValuePair<LinqNode, LinqTreeNode>(toArrayNode, new LinqTreeTerminalNode(toArrayNode)) });
         var nodes = pairs
             .OrderBy(x => x.Key, LinqNode.Comparer)
             .Select(x => x.Value);

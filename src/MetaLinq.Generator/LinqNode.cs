@@ -33,19 +33,6 @@ public abstract record LinqNode {
     public static LinqNode ThenByDescending => new ThenByNode(ListSortDirection.Descending);
     public static LinqNode SelectMany(SourceType sourceType) => new SelectManyNode(sourceType);
     public static LinqNode OfType => OfTypeNode.Instance;
-    public static readonly ToValueChainElement ToArray = new ToValueChainElement(ToValueType.ToArray);
-    public static readonly ToValueChainElement ToHashSet = new ToValueChainElement(ToValueType.ToHashSet);
-    public static readonly ToValueChainElement ToDictionary = new ToValueChainElement(ToValueType.ToDictionary);
-    public static readonly ToValueChainElement First = new ToValueChainElement(ToValueType.First);
-    public static readonly ToValueChainElement FirstOrDefault = new ToValueChainElement(ToValueType.FirstOrDefault);
-    public static readonly ToValueChainElement Last = new ToValueChainElement(ToValueType.Last);
-    public static readonly ToValueChainElement LastOrDefault = new ToValueChainElement(ToValueType.LastOrDefault);
-    public static readonly ToValueChainElement Single = new ToValueChainElement(ToValueType.Single);
-    public static readonly ToValueChainElement SingleOrDefault = new ToValueChainElement(ToValueType.SingleOrDefault);
-    public static readonly ToValueChainElement Any = new ToValueChainElement(ToValueType.Any);
-    public static readonly ToValueChainElement All = new ToValueChainElement(ToValueType.All);
-    public static readonly ToValueChainElement Sum_Int = new ToValueChainElement(ToValueType.Sum_Int);
-    public static readonly ToValueChainElement Sum_Long = new ToValueChainElement(ToValueType.Sum_Long);
     public static ToListNode ToList => ToListNode.Instance;
     public static EnumerableNode Enumerable => EnumerableNode.Instance;
 
@@ -83,6 +70,8 @@ public static class ValueTypeTraits {
     public static bool IsOrderDependentLoop(this ToValueType value) {
         return value is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault;
     }
+    public static ToValueChainElement AsElement(this ToValueType type) => new ToValueChainElement(type);
+    public static ToValueChainElement? AsElement(this ToValueType? type) => type != null ? new ToValueChainElement(type.Value) : null;
 }
 
 public abstract record class TerminalNode : LinqNode { }
