@@ -2261,6 +2261,8 @@ $@"bool __() {{
         );
         AssertAllocations();
     }
+
+    #region Sum
     [Test]
     public void Array_Select_Sum_Int() {
         AssertGeneration(
@@ -2271,6 +2273,23 @@ $@"int __() {{
     return result;
 }}",
             (int x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_IntN() {
+        AssertGeneration(
+$@"int? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (int?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (int?)x.Int);
+}}",
+            (int? x) => Assert.AreEqual(25, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Sum")
@@ -2297,6 +2316,7 @@ $@"long __() {{
         );
         AssertAllocations();
     }
+    #endregion
     [Test]
     public void CustomEnumerable_Select_First() {
         AssertGeneration(

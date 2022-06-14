@@ -47,7 +47,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         INamedTypeSymbol iListType,
         INamedTypeSymbol iCollectionType,
         INamedTypeSymbol? customCollectionType,
-        INamedTypeSymbol? customEnumerableType
+        INamedTypeSymbol? customEnumerableType,
+        INamedTypeSymbol nullableType
     );
 
     Types? types;
@@ -76,7 +77,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             iListType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.IList")!,
             iCollectionType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Collections.ICollection")!,
             customCollectionType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomCollection`1"),
-            customEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomEnumerable`1")
+            customEnumerableType: context.SemanticModel.Compilation.GetTypeByMetadataName("MetaLinq.Tests.CustomEnumerable`1"),
+            nullableType: context.SemanticModel.Compilation.GetTypeByMetadataName("System.Nullable`1")!
         );
 
         if(context.Node is InvocationExpressionSyntax invocation
@@ -118,7 +120,15 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             }
         }
     }
-    static LinqNode? TryGetSimpleChainElement(IMethodSymbol method) {
+    LinqNode? TryGetSimpleChainElement(IMethodSymbol method) {
+        (SpecialType, bool nullable) GetAggregateTypeInfo() {
+            var type = (INamedTypeSymbol)((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1];
+            bool nullable = SymbolEqualityComparer.Default.Equals(type.ConstructedFrom, types!.nullableType);
+            if(nullable) { 
+                type = (INamedTypeSymbol)type.TypeArguments.Single();
+            }
+            return (type.SpecialType, nullable);
+        };
         return method.Name switch {
             "Where" => LinqNode.Where,
             "OfType" => LinqNode.OfType,
@@ -144,9 +154,10 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "All" => ToValueType.All,
             "Single" => ToValueType.Single,
             "SingleOrDefault" => ToValueType.SingleOrDefault,
-            "Sum" => ((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1].SpecialType switch {
-                SpecialType.System_Int32 => ToValueType.Sum_Int,
-                SpecialType.System_Int64 => ToValueType.Sum_Long,
+            "Sum" => GetAggregateTypeInfo() switch {
+                (SpecialType.System_Int32, false) => ToValueType.Sum_Int,
+                (SpecialType.System_Int32, true) => ToValueType.Sum_IntN,
+                (SpecialType.System_Int64, false) => ToValueType.Sum_Long,
                 _ => throw new InvalidOperationException()
             },
             _ => null

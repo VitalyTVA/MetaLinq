@@ -57,6 +57,7 @@ public enum ToValueType {
     Any,
     All,
     Sum_Int,
+    Sum_IntN,
     Sum_Long,
 }
 
@@ -65,7 +66,8 @@ public static class ValueTypeTraits {
        return value 
             is ToValueType.All or ToValueType.Any 
             or ToValueType.Single or ToValueType.SingleOrDefault
-            or ToValueType.Sum_Int or ToValueType.Sum_Long;
+            or ToValueType.Sum_Int or ToValueType.Sum_IntN
+            or ToValueType.Sum_Long;
     }
     public static bool IsOrderDependentLoop(this ToValueType value) {
         return value is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault;
