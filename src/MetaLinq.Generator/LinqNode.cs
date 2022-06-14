@@ -45,6 +45,7 @@ public abstract record LinqNode {
     public static readonly ToValueChainElement Any = new ToValueChainElement(ToValueType.Any);
     public static readonly ToValueChainElement All = new ToValueChainElement(ToValueType.All);
     public static readonly ToValueChainElement Sum_Int = new ToValueChainElement(ToValueType.Sum_Int);
+    public static readonly ToValueChainElement Sum_Long = new ToValueChainElement(ToValueType.Sum_Long);
     public static ToListNode ToList => ToListNode.Instance;
     public static EnumerableNode Enumerable => EnumerableNode.Instance;
 
@@ -69,6 +70,7 @@ public enum ToValueType {
     Any,
     All,
     Sum_Int,
+    Sum_Long,
 }
 
 public static class ValueTypeTraits {
@@ -76,7 +78,7 @@ public static class ValueTypeTraits {
        return value 
             is ToValueType.All or ToValueType.Any 
             or ToValueType.Single or ToValueType.SingleOrDefault
-            or ToValueType.Sum_Int;
+            or ToValueType.Sum_Int or ToValueType.Sum_Long;
     }
     public static bool IsOrderDependentLoop(this ToValueType value) {
         return value is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault;

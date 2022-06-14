@@ -283,6 +283,25 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_Sum_Int() {
+        AssertGeneration(
+@"int __() {{
+    var source = Data.Array(10);
+    var result = source.OrderBy(x => -x.Int).Sum(x => x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+          (int x) => Assert.AreEqual(45, x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("Sum")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
     public void Array_OrderByDescending_LastOrDefault() {
         AssertGeneration(
 @"Data? __() {{
@@ -2252,6 +2271,24 @@ $@"int __() {{
     return result;
 }}",
             (int x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_Long() {
+        AssertGeneration(
+$@"long __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Sum(x => (long)x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (long x) => Assert.AreEqual(45, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Sum")

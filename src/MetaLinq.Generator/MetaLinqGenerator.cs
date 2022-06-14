@@ -91,7 +91,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                     var currentSymbolInfo = context.SemanticModel.GetSymbolInfo(currentMemberAccess.Name);
                     if(currentSymbolInfo.Symbol is IMethodSymbol currentMethodSymbol
                         && SymbolEqualityComparer.Default.Equals(currentMethodSymbol.OriginalDefinition.ContainingType, types!.enumerableType)) {
-                        var element = TryGetSimpleChainElement(currentMethodSymbol.Name);
+                        var element = TryGetSimpleChainElement(currentMethodSymbol);
                         if(element != null) {
                             chain.Push(element);
                             chained = true;
@@ -118,8 +118,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             }
         }
     }
-    static LinqNode? TryGetSimpleChainElement(string funcName) {
-        return funcName switch {
+    static LinqNode? TryGetSimpleChainElement(IMethodSymbol method) {
+        return method.Name switch {
             "Where" => LinqNode.Where,
             "OfType" => LinqNode.OfType,
             "Cast" => LinqNode.Cast,
@@ -142,7 +142,11 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "All" => LinqNode.All,
             "Single" => LinqNode.Single,
             "SingleOrDefault" => LinqNode.SingleOrDefault,
-            "Sum" => LinqNode.Sum_Int,
+            "Sum" => ((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1].SpecialType switch {
+                SpecialType.System_Int32 => LinqNode.Sum_Int,
+                SpecialType.System_Int64 => LinqNode.Sum_Long,
+                _ => throw new InvalidOperationException()
+            },
             _ => null
         };
     }

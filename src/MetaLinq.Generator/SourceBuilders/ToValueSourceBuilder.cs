@@ -18,6 +18,7 @@ public static class ToValueSourceBuilder {
             ToValueType.FirstOrDefault or ToValueType.LastOrDefault or ToValueType.SingleOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.Sum_Int => $"int Sum(Func<{outputType}, int> selector)",
+            ToValueType.Sum_Long => $"long Sum(Func<{outputType}, long> selector)",
 
             _ => throw new NotImplementedException(),
         };
@@ -156,6 +157,12 @@ GetFirstLastSingleOrDefaultResultStatement()
             case (_, LoopType.Forward, ToValueType.Sum_Int):
                 return (
 $@"var result{topLevel} = default(int);",
+$@"result{topLevel} += selector(item{lastLevel.Next});",
+$@"var result_{lastLevel} = result{topLevel};"
+                );
+            case (_, LoopType.Forward, ToValueType.Sum_Long):
+                return (
+$@"var result{topLevel} = default(long);",
 $@"result{topLevel} += selector(item{lastLevel.Next});",
 $@"var result_{lastLevel} = result{topLevel};"
                 );

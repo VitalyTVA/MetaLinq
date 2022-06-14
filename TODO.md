@@ -12,6 +12,8 @@ CustomEnumerable should not be a special case - introduce Source Type Traits
 
 warning for queries like source.OrderBy(x => -x.Int).Any(x => x.Int > 0); - orderby is not necessary and can be omited
 
+check fake Sum methods with invalid parameters ((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1].SpecialType
+
 # Optimizations
 CustomEnumerable-Where-OrderBy-First, CustomEnumerable_Where_OrderBy_Any or CustomEnumerable_Where_OrderBy_First chains optimization - merge pieces of work into one
 
