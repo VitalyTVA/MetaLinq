@@ -10,17 +10,22 @@ public static class ToValueSourceBuilder {
 
         var sourcePath = CodeGenerationTraits.GetSourcePath(context.Level.Next.Value);
 
-        var methodDefinition = toValueType switch {
+        string? GetAggregateMethodDefinition(ToValueType toValueType) {
+            var info = toValueType.GetAggregateInfo();
+            if(info is not null) {
+                var type = info.Value.GetAggregateType();
+                return $"{type} {info.Value.Kind}(Func<{outputType}, {type}> selector)";
+            }
+            return null;
+        };
+
+        var methodDefinition = GetAggregateMethodDefinition(toValueType) ?? toValueType switch {
             ToValueType.ToArray => $"{outputType}[] ToArray()",
             ToValueType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
             ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
             ToValueType.First or ToValueType.Last or ToValueType.Single => $"{outputType} {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.FirstOrDefault or ToValueType.LastOrDefault or ToValueType.SingleOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
-            ToValueType.Sum_Int => $"int Sum(Func<{outputType}, int> selector)",
-            ToValueType.Sum_IntN => $"int? Sum(Func<{outputType}, int?> selector)",
-            ToValueType.Sum_Long => $"long Sum(Func<{outputType}, long> selector)",
-
             _ => throw new NotImplementedException(),
         };
         builder.AppendLine($"public {methodDefinition} {{");
@@ -40,6 +45,8 @@ public static class ToValueSourceBuilder {
         builder.Tab.AppendLine($"return result_{context.Level};");
         builder.AppendLine("}");
     }
+
+    static string GetAggregateType(this AggregateInfo info) => info.Type.ToString().ToLower() + (info.Nullable ? "?" : null);
 
     static void EmitPieceOrWork(SourceType source, ToValueType toInstanceType, CodeBuilder builder, string sourcePath, PieceOfWork piece, Level totalLevels) {
 
@@ -91,6 +98,18 @@ $@"if(!found{topLevel})
 var result_{lastLevel} = result{topLevel}!;";
         string GetFirstLastSingleOrDefaultResultStatement() =>
 $@"var result_{lastLevel} = result{topLevel};";
+
+        var aggregateInfo = toValueType?.GetAggregateInfo();
+        if(aggregateInfo != null) {
+            if(piece.LoopType != LoopType.Forward)
+                throw new InvalidOperationException();
+            return (
+$@"{aggregateInfo.Value.GetAggregateType()} result{topLevel} = 0;",
+$@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
+{(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)}result{topLevel} += value{lastLevel.Next};",
+$@"var result_{lastLevel} = result{topLevel};"
+            );
+        }
 
         switch((piece.KnownSize, piece.LoopType, toValueType)) {
             case (_, LoopType.Forward, ToValueType.First) or (_, LoopType.Backward, ToValueType.Last):
@@ -154,26 +173,6 @@ $@"if(predicate(item{lastLevel.Next})) {{
     }}
 }}",
 GetFirstLastSingleOrDefaultResultStatement()
-                );
-            case (_, LoopType.Forward, ToValueType.Sum_Int):
-                return (
-$@"int result{topLevel} = default(int);",
-$@"result{topLevel} += selector(item{lastLevel.Next});",
-$@"var result_{lastLevel} = result{topLevel};"
-                );
-            case (_, LoopType.Forward, ToValueType.Sum_IntN):
-                return (
-$@"int? result{topLevel} = 0;",
-$@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
-if(value{lastLevel.Next} != null)
-    result{topLevel} += value{lastLevel.Next};",
-$@"var result_{lastLevel} = result{topLevel};"
-                );
-            case (_, LoopType.Forward, ToValueType.Sum_Long):
-                return (
-$@"long result{topLevel} = default(long);",
-$@"result{topLevel} += selector(item{lastLevel.Next});",
-$@"var result_{lastLevel} = result{topLevel};"
                 );
             case (_, LoopType.Forward, ToValueType.Last):
                 return (

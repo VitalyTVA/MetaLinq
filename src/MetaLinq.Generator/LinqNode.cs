@@ -61,13 +61,23 @@ public enum ToValueType {
     Sum_Long,
 }
 
+public enum AggregateValueType { Int, Long }
+public enum AggregateKind { Sum, Min, Max, Average }
+public record struct AggregateInfo(AggregateKind Kind, AggregateValueType Type, bool Nullable);
+
 public static class ValueTypeTraits {
+    public static AggregateInfo? GetAggregateInfo(this ToValueType value) {
+        return value switch {
+            ToValueType.Sum_Int => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Int, false),
+            ToValueType.Sum_IntN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Int, true),
+            ToValueType.Sum_Long => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Long, false),
+            _ => null
+        };
+    }
     public static bool IsOrderIndependentLoop(this ToValueType value) { 
-       return value 
+       return GetAggregateInfo(value) != null || value 
             is ToValueType.All or ToValueType.Any 
-            or ToValueType.Single or ToValueType.SingleOrDefault
-            or ToValueType.Sum_Int or ToValueType.Sum_IntN
-            or ToValueType.Sum_Long;
+            or ToValueType.Single or ToValueType.SingleOrDefault;
     }
     public static bool IsOrderDependentLoop(this ToValueType value) {
         return value is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault;

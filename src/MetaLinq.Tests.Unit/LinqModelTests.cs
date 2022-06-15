@@ -317,12 +317,8 @@ public class LinqModelTests : BaseFixture {
     }
 
     static ToValueType[] NoSortChainElements = new[] {
-        First, FirstOrDefault, Last, LastOrDefault, 
-        All, Any,
-        ToValueType.Single, SingleOrDefault,
-        Sum_Int, Sum_IntN,
-        Sum_Long
-    };
+        First, FirstOrDefault, Last, LastOrDefault
+    }.Concat(PieceOfWorkTests.OrderIndependentValueTypes).ToArray();
 
     [TestCaseSource(nameof(NoSortChainElements))]
     public void Where_NoSortChainElements(ToValueType element) {

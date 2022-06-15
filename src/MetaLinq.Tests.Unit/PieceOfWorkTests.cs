@@ -7,10 +7,10 @@ public class PieceOfWorkTests {
     static readonly ToValueType[] OrderDependentValueTypes = new[] {
         ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault
     };
-    static readonly ToValueType[] OrderIndependentValueTypes = new[] {
+    public static readonly ToValueType[] OrderIndependentValueTypes = new[] {
         ToValueType.All, ToValueType.Any, 
         ToValueType.Single, ToValueType.SingleOrDefault,
-        ToValueType.Sum_Int, ToValueType.Sum_Long,
+        ToValueType.Sum_Int, ToValueType.Sum_IntN, ToValueType.Sum_Long,
     };
     static readonly ToValueType[] NoSortValueTypes = 
         System.Linq.Enumerable.Concat(OrderIndependentValueTypes, OrderDependentValueTypes).ToArray();

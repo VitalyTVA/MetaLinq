@@ -121,13 +121,18 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         }
     }
     LinqNode? TryGetSimpleChainElement(IMethodSymbol method) {
-        (SpecialType, bool nullable) GetAggregateTypeInfo() {
+        ToValueType GetAggregateToValueType(ToValueType @int, ToValueType intN, ToValueType @long) {
             var type = (INamedTypeSymbol)((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1];
             bool nullable = SymbolEqualityComparer.Default.Equals(type.ConstructedFrom, types!.nullableType);
             if(nullable) { 
                 type = (INamedTypeSymbol)type.TypeArguments.Single();
             }
-            return (type.SpecialType, nullable);
+            return (type.SpecialType, nullable) switch {
+                (SpecialType.System_Int32, false) => @int,
+                (SpecialType.System_Int32, true) => intN,
+                (SpecialType.System_Int64, false) => @long,
+                _ => throw new InvalidOperationException()
+            };
         };
         return method.Name switch {
             "Where" => LinqNode.Where,
@@ -154,12 +159,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "All" => ToValueType.All,
             "Single" => ToValueType.Single,
             "SingleOrDefault" => ToValueType.SingleOrDefault,
-            "Sum" => GetAggregateTypeInfo() switch {
-                (SpecialType.System_Int32, false) => ToValueType.Sum_Int,
-                (SpecialType.System_Int32, true) => ToValueType.Sum_IntN,
-                (SpecialType.System_Int64, false) => ToValueType.Sum_Long,
-                _ => throw new InvalidOperationException()
-            },
+            "Sum" => GetAggregateToValueType(ToValueType.Sum_Int, ToValueType.Sum_IntN, ToValueType.Sum_Long),
             _ => null
         });
     }
