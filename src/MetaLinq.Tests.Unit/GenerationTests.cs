@@ -2316,6 +2316,128 @@ $@"long __() {{
         );
         AssertAllocations();
     }
+    [Test]
+    public void Array_Select_Sum_LongN() {
+        AssertGeneration(
+$@"long? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (long?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (long?)x.Int);
+}}",
+            (long? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_Float() {
+        AssertGeneration(
+$@"float __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Sum(x => (float)x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (float x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_FloatN() {
+        AssertGeneration(
+$@"float? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (float?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (float?)x.Int);
+}}",
+            (float? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_Double() {
+        AssertGeneration(
+$@"double __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Sum(x => (double)x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (double x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_DoubleN() {
+        AssertGeneration(
+$@"double? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (double?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (double?)x.Int);
+}}",
+            (double? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_Decimal() {
+        AssertGeneration(
+$@"decimal __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Sum(x => (decimal)x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (decimal x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_DecimalN() {
+        AssertGeneration(
+$@"decimal? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (decimal?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (decimal?)x.Int);
+}}",
+            (decimal? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
     #endregion
     [Test]
     public void CustomEnumerable_Select_First() {

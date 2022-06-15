@@ -121,7 +121,13 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
         }
     }
     LinqNode? TryGetSimpleChainElement(IMethodSymbol method) {
-        ToValueType GetAggregateToValueType(ToValueType @int, ToValueType intN, ToValueType @long) {
+        ToValueType GetAggregateToValueType(
+            ToValueType @int, ToValueType intN,
+            ToValueType @long, ToValueType longN,
+            ToValueType @float, ToValueType floatN,
+            ToValueType @double, ToValueType doubleN,
+            ToValueType @decimal, ToValueType decimalN
+        ) {
             var type = (INamedTypeSymbol)((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1];
             bool nullable = SymbolEqualityComparer.Default.Equals(type.ConstructedFrom, types!.nullableType);
             if(nullable) { 
@@ -131,6 +137,13 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 (SpecialType.System_Int32, false) => @int,
                 (SpecialType.System_Int32, true) => intN,
                 (SpecialType.System_Int64, false) => @long,
+                (SpecialType.System_Int64, true) => longN,
+                (SpecialType.System_Single, false) => @float,
+                (SpecialType.System_Single, true) => floatN,
+                (SpecialType.System_Double, false) => @double,
+                (SpecialType.System_Double, true) => doubleN,
+                (SpecialType.System_Decimal, false) => @decimal,
+                (SpecialType.System_Decimal, true) => decimalN,
                 _ => throw new InvalidOperationException()
             };
         };
@@ -159,7 +172,13 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "All" => ToValueType.All,
             "Single" => ToValueType.Single,
             "SingleOrDefault" => ToValueType.SingleOrDefault,
-            "Sum" => GetAggregateToValueType(ToValueType.Sum_Int, ToValueType.Sum_IntN, ToValueType.Sum_Long),
+            "Sum" => GetAggregateToValueType(
+                ToValueType.Sum_Int, ToValueType.Sum_IntN, 
+                ToValueType.Sum_Long, ToValueType.Sum_LongN,
+                ToValueType.Sum_Float, ToValueType.Sum_FloatN,
+                ToValueType.Sum_Double, ToValueType.Sum_DoubleN,
+                ToValueType.Sum_Decimal, ToValueType.Sum_DecimalN
+            ),
             _ => null
         });
     }

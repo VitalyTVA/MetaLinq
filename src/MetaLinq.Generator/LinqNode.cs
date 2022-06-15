@@ -56,12 +56,14 @@ public enum ToValueType {
     SingleOrDefault,
     Any,
     All,
-    Sum_Int,
-    Sum_IntN,
-    Sum_Long,
+    Sum_Int, Sum_IntN, 
+    Sum_Long, Sum_LongN, 
+    Sum_Float, Sum_FloatN, 
+    Sum_Double, Sum_DoubleN,
+    Sum_Decimal, Sum_DecimalN,
 }
 
-public enum AggregateValueType { Int, Long }
+public enum AggregateValueType { Int, Long, Float, Double, Decimal }
 public enum AggregateKind { Sum, Min, Max, Average }
 public record struct AggregateInfo(AggregateKind Kind, AggregateValueType Type, bool Nullable);
 
@@ -71,6 +73,13 @@ public static class ValueTypeTraits {
             ToValueType.Sum_Int => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Int, false),
             ToValueType.Sum_IntN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Int, true),
             ToValueType.Sum_Long => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Long, false),
+            ToValueType.Sum_LongN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Long, true),
+            ToValueType.Sum_Float => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Float, false),
+            ToValueType.Sum_FloatN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Float, true),
+            ToValueType.Sum_Double => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Double, false),
+            ToValueType.Sum_DoubleN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Double, true),
+            ToValueType.Sum_Decimal => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Decimal, false),
+            ToValueType.Sum_DecimalN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Decimal, true),
             _ => null
         };
     }
