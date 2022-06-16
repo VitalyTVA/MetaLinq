@@ -61,6 +61,11 @@ public enum ToValueType {
     Sum_Float, Sum_FloatN, 
     Sum_Double, Sum_DoubleN,
     Sum_Decimal, Sum_DecimalN,
+    Average_Int, Average_IntN,
+    Average_Long, Average_LongN,
+    Average_Float, Average_FloatN,
+    Average_Double, Average_DoubleN,
+    Average_Decimal, Average_DecimalN,
 }
 
 public enum AggregateValueType { Int, Long, Float, Double, Decimal }
@@ -80,6 +85,16 @@ public static class ValueTypeTraits {
             ToValueType.Sum_DoubleN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Double, true),
             ToValueType.Sum_Decimal => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Decimal, false),
             ToValueType.Sum_DecimalN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Decimal, true),
+            ToValueType.Average_Int => new AggregateInfo(AggregateKind.Average, AggregateValueType.Int, false),
+            ToValueType.Average_IntN => new AggregateInfo(AggregateKind.Average, AggregateValueType.Int, true),
+            ToValueType.Average_Long => new AggregateInfo(AggregateKind.Average, AggregateValueType.Long, false),
+            ToValueType.Average_LongN => new AggregateInfo(AggregateKind.Average, AggregateValueType.Long, true),
+            ToValueType.Average_Float => new AggregateInfo(AggregateKind.Average, AggregateValueType.Float, false),
+            ToValueType.Average_FloatN => new AggregateInfo(AggregateKind.Average, AggregateValueType.Float, true),
+            ToValueType.Average_Double => new AggregateInfo(AggregateKind.Average, AggregateValueType.Double, false),
+            ToValueType.Average_DoubleN => new AggregateInfo(AggregateKind.Average, AggregateValueType.Double, true),
+            ToValueType.Average_Decimal => new AggregateInfo(AggregateKind.Average, AggregateValueType.Decimal, false),
+            ToValueType.Average_DecimalN => new AggregateInfo(AggregateKind.Average, AggregateValueType.Decimal, true),
             _ => null
         };
     }

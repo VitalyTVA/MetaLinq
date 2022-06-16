@@ -13,8 +13,7 @@ public static class ToValueSourceBuilder {
         string? GetAggregateMethodDefinition(ToValueType toValueType) {
             var info = toValueType.GetAggregateInfo();
             if(info is not null) {
-                var type = info.Value.GetAggregateType();
-                return $"{type} {info.Value.Kind}(Func<{outputType}, {type}> selector)";
+                return $"{info.Value.GetAggregateOutputType()} {info.Value.Kind}(Func<{outputType}, {info.Value.GetAggregateInputType()}> selector)";
             }
             return null;
         };
@@ -46,7 +45,15 @@ public static class ToValueSourceBuilder {
         builder.AppendLine("}");
     }
 
-    static string GetAggregateType(this AggregateInfo info) => info.Type.ToString().ToLower() + (info.Nullable ? "?" : null);
+    static string GetAggregateInputType(this AggregateInfo info)
+        => GetAggregateTypeCore(info) + GetAggregateNullableAnnotation(info);
+    static string GetAggregateOutputType(this AggregateInfo info)
+        => (info.Kind is AggregateKind.Average && info.Type is AggregateValueType.Int or AggregateValueType.Long
+            ? "double"
+            : GetAggregateTypeCore(info))
+            + GetAggregateNullableAnnotation(info);
+    static string GetAggregateTypeCore(AggregateInfo info) => info.Type.ToString().ToLower();
+    static string? GetAggregateNullableAnnotation(AggregateInfo info) => (info.Nullable ? "?" : null);
 
     static void EmitPieceOrWork(SourceType source, ToValueType toInstanceType, CodeBuilder builder, string sourcePath, PieceOfWork piece, Level totalLevels) {
 
@@ -87,7 +94,7 @@ public static class ToValueSourceBuilder {
         (Level Level, string sortKeyGenericType, ListSortDirection direction)[] GetOrder() => piece.Contexts
             .SkipWhile(x => x.Element is not (OrderByNode or ThenByNode))
             .Select(x => (
-                x.Level, 
+                x.Level,
                 sortKeyGenericType: x.GetResultGenericType(),
                 direction: (x.Element as OrderByNode)?.Direction ?? (x.Element as ThenByNode)!.Direction
             ))
@@ -104,10 +111,15 @@ $@"var result_{lastLevel} = result{topLevel};";
             if(piece.LoopType != LoopType.Forward)
                 throw new InvalidOperationException();
             return (
-$@"{aggregateInfo.Value.GetAggregateType()} result{topLevel} = 0;",
+$@"{aggregateInfo.Value.GetAggregateOutputType()} result{topLevel} = 0;
+{(aggregateInfo.Value.Kind == AggregateKind.Average ? $"var count{lastLevel.Next} = 0;" : null)}",
 $@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
-{(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)}result{topLevel} += value{lastLevel.Next};",
-$@"var result_{lastLevel} = result{topLevel};"
+{(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)} {{ 
+    result{topLevel} += value{lastLevel.Next};
+    {(aggregateInfo.Value.Kind == AggregateKind.Average ? $"count{lastLevel.Next}++;" : null)}
+}}",
+$@"{(aggregateInfo.Value.Kind == AggregateKind.Average && !aggregateInfo.Value.Nullable ? $"if(count{lastLevel.Next} == 0) throw new InvalidOperationException(\"Sequence contains no elements\");" : null)}
+var result_{lastLevel} = {(aggregateInfo.Value.Kind == AggregateKind.Average && aggregateInfo.Value.Nullable ? $"count{lastLevel.Next} == 0 ? null : " : null)} result{topLevel}{(aggregateInfo.Value.Kind == AggregateKind.Average ? $"/count{lastLevel.Next}" : null)};"
             );
         }
 
@@ -296,8 +308,8 @@ bool found{topLevel} = false;
     }}
     found{topLevel} = true;
 }}",
-                    toValueType is ToValueType.First or ToValueType.Last 
-                        ? GetFirstLastSingleResultStatement() 
+                    toValueType is ToValueType.First or ToValueType.Last
+                        ? GetFirstLastSingleResultStatement()
                         : GetFirstLastSingleOrDefaultResultStatement()
                 );
             default:

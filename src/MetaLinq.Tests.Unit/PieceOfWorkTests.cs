@@ -15,6 +15,11 @@ public class PieceOfWorkTests {
         ToValueType.Sum_Float, ToValueType.Sum_FloatN,
         ToValueType.Sum_Double, ToValueType.Sum_DoubleN,
         ToValueType.Sum_Decimal, ToValueType.Sum_DecimalN,
+        ToValueType.Average_Int, ToValueType.Average_IntN,
+        ToValueType.Average_Long, ToValueType.Average_LongN,
+        ToValueType.Average_Float, ToValueType.Average_FloatN,
+        ToValueType.Average_Double, ToValueType.Average_DoubleN,
+        ToValueType.Average_Decimal, ToValueType.Average_DecimalN,
     };
     static readonly ToValueType[] NoSortValueTypes = 
         System.Linq.Enumerable.Concat(OrderIndependentValueTypes, OrderDependentValueTypes).ToArray();

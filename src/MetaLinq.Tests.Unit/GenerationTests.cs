@@ -2439,6 +2439,190 @@ $@"decimal? __() {{
         AssertAllocations();
     }
     #endregion
+
+    #region Average
+    [Test]
+    public void Array_Select_Average_Int() {
+        AssertGeneration(
+$@"double __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Self).Average(x => x.Int));
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Average(x => x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (double x) => Assert.AreEqual(4.5d, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Average_IntN() {
+        Assert.Null(new int?[] { }.Average());
+        Assert.Null(new int?[] { null }.Average());
+        AssertGeneration(
+$@"double? __() {{
+    Assert.Null(Data.Array(0).Select(x => x.Self).Average(x => (int?)x.Int));
+    Assert.Null(Data.Array(3).Select(x => x.Self).Average(x => (int?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (int?)x.Int);
+}}",
+            (double? x) => Assert.AreEqual(5, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+/*
+    [Test]
+    public void Array_Select_Average_Long() {
+        AssertGeneration(
+$@"long __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Average(x => (long)x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (long x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Average_LongN() {
+        AssertGeneration(
+$@"long? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Average(x => (long?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (long?)x.Int);
+}}",
+            (long? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Average_Float() {
+        AssertGeneration(
+$@"float __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Average(x => (float)x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (float x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Average_FloatN() {
+        AssertGeneration(
+$@"float? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Average(x => (float?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (float?)x.Int);
+}}",
+            (float? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Average_Double() {
+        AssertGeneration(
+$@"double __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Average(x => (double)x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (double x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Average_DoubleN() {
+        AssertGeneration(
+$@"double? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Average(x => (double?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (double?)x.Int);
+}}",
+            (double? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Average_Decimal() {
+        AssertGeneration(
+$@"decimal __() {{
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Self).Average(x => (decimal)x.Int);
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (decimal x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Average_DecimalN() {
+        AssertGeneration(
+$@"decimal? __() {{
+    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Average(x => (decimal?)null));
+    var source = Data.Array(10);
+    return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (decimal?)x.Int);
+}}",
+            (decimal? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Average")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+*/
+    #endregion
     [Test]
     public void CustomEnumerable_Select_First() {
         AssertGeneration(
