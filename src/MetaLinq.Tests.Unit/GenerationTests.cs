@@ -2265,8 +2265,10 @@ $@"bool __() {{
     #region Sum
     [Test]
     public void Array_Select_Sum_Int() {
+        Assert.AreEqual(0, new int[] { }.Sum());
         AssertGeneration(
 $@"int __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Sum(x => x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
@@ -2283,8 +2285,11 @@ $@"int __() {{
     }
     [Test]
     public void Array_Select_Sum_IntN() {
+        Assert.AreEqual(0, new int?[] { }.Sum());
+        Assert.AreEqual(0, new int?[] { null }.Sum());
         AssertGeneration(
 $@"int? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (int?)null));
     Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (int?)null));
     var source = Data.Array(10);
     return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (int?)x.Int);
@@ -2302,6 +2307,7 @@ $@"int? __() {{
     public void Array_Select_Sum_Long() {
         AssertGeneration(
 $@"long __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (long)x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Sum(x => (long)x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
@@ -2320,6 +2326,7 @@ $@"long __() {{
     public void Array_Select_Sum_LongN() {
         AssertGeneration(
 $@"long? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (long?)null));
     Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (long?)null));
     var source = Data.Array(10);
     return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (long?)x.Int);
@@ -2337,6 +2344,7 @@ $@"long? __() {{
     public void Array_Select_Sum_Float() {
         AssertGeneration(
 $@"float __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (float)x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Sum(x => (float)x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
@@ -2355,6 +2363,7 @@ $@"float __() {{
     public void Array_Select_Sum_FloatN() {
         AssertGeneration(
 $@"float? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (float?)x.Int));
     Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (float?)null));
     var source = Data.Array(10);
     return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (float?)x.Int);
@@ -2372,6 +2381,7 @@ $@"float? __() {{
     public void Array_Select_Sum_Double() {
         AssertGeneration(
 $@"double __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (double)x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Sum(x => (double)x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
@@ -2390,6 +2400,7 @@ $@"double __() {{
     public void Array_Select_Sum_DoubleN() {
         AssertGeneration(
 $@"double? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (double?)x.Int));
     Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (double?)null));
     var source = Data.Array(10);
     return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (double?)x.Int);
@@ -2407,6 +2418,7 @@ $@"double? __() {{
     public void Array_Select_Sum_Decimal() {
         AssertGeneration(
 $@"decimal __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (decimal)x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Sum(x => (decimal)x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
@@ -2425,6 +2437,7 @@ $@"decimal __() {{
     public void Array_Select_Sum_DecimalN() {
         AssertGeneration(
 $@"decimal? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (decimal?)null));
     Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Sum(x => (decimal?)null));
     var source = Data.Array(10);
     return source.Select(x => x.Self).Sum(x => x.Int % 2 == 0 ? null : (decimal?)x.Int);
@@ -2443,6 +2456,7 @@ $@"decimal? __() {{
     #region Average
     [Test]
     public void Array_Select_Average_Int() {
+        Assert.Throws<InvalidOperationException>(() => new int[] { }.Average());
         AssertGeneration(
 $@"double __() {{
     Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Self).Average(x => x.Int));
@@ -2480,17 +2494,18 @@ $@"double? __() {{
         );
         AssertAllocations();
     }
-/*
     [Test]
     public void Array_Select_Average_Long() {
+        Assert.Throws<InvalidOperationException>(() => new long[] { }.Average());
         AssertGeneration(
-$@"long __() {{
+$@"double __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Self).Average(x => (long)x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Average(x => (long)x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
     return result;
 }}",
-            (long x) => Assert.AreEqual(45, x),
+            (double x) => Assert.AreEqual(4.5d, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Average")
@@ -2501,13 +2516,16 @@ $@"long __() {{
     }
     [Test]
     public void Array_Select_Average_LongN() {
+        Assert.Null(new long?[] { }.Average());
+        Assert.Null(new long?[] { null }.Average());
         AssertGeneration(
-$@"long? __() {{
-    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Average(x => (long?)null));
+$@"double? __() {{
+    Assert.Null(Data.Array(0).Select(x => x.Self).Average(x => (long?)x.Int));
+    Assert.Null(Data.Array(3).Select(x => x.Self).Average(x => (long?)null));
     var source = Data.Array(10);
     return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (long?)x.Int);
 }}",
-            (long? x) => Assert.AreEqual(25, x),
+            (double? x) => Assert.AreEqual(5, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Average")
@@ -2518,14 +2536,16 @@ $@"long? __() {{
     }
     [Test]
     public void Array_Select_Average_Float() {
+        Assert.Throws<InvalidOperationException>(() => new float[] { }.Average());
         AssertGeneration(
 $@"float __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Self).Average(x => (float)x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Average(x => (float)x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
     return result;
 }}",
-            (float x) => Assert.AreEqual(45, x),
+            (float x) => Assert.AreEqual(4.5d, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Average")
@@ -2536,13 +2556,16 @@ $@"float __() {{
     }
     [Test]
     public void Array_Select_Average_FloatN() {
+        Assert.Null(new int?[] { }.Average());
+        Assert.Null(new int?[] { null }.Average());
         AssertGeneration(
 $@"float? __() {{
-    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Average(x => (float?)null));
+    Assert.Null(Data.Array(0).Select(x => x.Self).Average(x => (float?)x.Int));
+    Assert.Null(Data.Array(3).Select(x => x.Self).Average(x => (float?)null));
     var source = Data.Array(10);
     return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (float?)x.Int);
 }}",
-            (float? x) => Assert.AreEqual(25, x),
+            (float? x) => Assert.AreEqual(5, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Average")
@@ -2553,14 +2576,16 @@ $@"float? __() {{
     }
     [Test]
     public void Array_Select_Average_Double() {
+        Assert.Throws<InvalidOperationException>(() => new double[] { }.Average());
         AssertGeneration(
 $@"double __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Self).Average(x => (double)x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Average(x => (double)x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
     return result;
 }}",
-            (double x) => Assert.AreEqual(45, x),
+            (double x) => Assert.AreEqual(4.5d, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Average")
@@ -2571,13 +2596,16 @@ $@"double __() {{
     }
     [Test]
     public void Array_Select_Average_DoubleN() {
+        Assert.Null(new int?[] { }.Average());
+        Assert.Null(new int?[] { null }.Average());
         AssertGeneration(
 $@"double? __() {{
-    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Average(x => (double?)null));
+    Assert.Null(Data.Array(0).Select(x => x.Self).Average(x => (double?)x.Int));
+    Assert.Null(Data.Array(3).Select(x => x.Self).Average(x => (double?)null));
     var source = Data.Array(10);
     return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (double?)x.Int);
 }}",
-            (double? x) => Assert.AreEqual(25, x),
+            (double? x) => Assert.AreEqual(5, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Average")
@@ -2588,14 +2616,16 @@ $@"double? __() {{
     }
     [Test]
     public void Array_Select_Average_Decimal() {
+        Assert.Throws<InvalidOperationException>(() => new double[] { }.Average());
         AssertGeneration(
-$@"decimal __() {{
+$@"double __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Self).Average(x => (double)x.Int));
     var source = Data.Array(10);
-    var result = source.Select(x => x.Self).Average(x => (decimal)x.Int);
+    var result = source.Select(x => x.Self).Average(x => (double)x.Int);
     Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
     return result;
 }}",
-            (decimal x) => Assert.AreEqual(45, x),
+            (double x) => Assert.AreEqual(4.5d, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Average")
@@ -2606,13 +2636,16 @@ $@"decimal __() {{
     }
     [Test]
     public void Array_Select_Average_DecimalN() {
+        Assert.Null(new int?[] { }.Average());
+        Assert.Null(new int?[] { null }.Average());
         AssertGeneration(
-$@"decimal? __() {{
-    Assert.AreEqual(0, Data.Array(3).Select(x => x.Self).Average(x => (decimal?)null));
+$@"double? __() {{
+    Assert.Null(Data.Array(0).Select(x => x.Self).Average(x => (double?)x.Int));
+    Assert.Null(Data.Array(3).Select(x => x.Self).Average(x => (double?)null));
     var source = Data.Array(10);
-    return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (decimal?)x.Int);
+    return source.Select(x => x.Self).Average(x => x.Int % 2 == 0 ? null : (double?)x.Int);
 }}",
-            (decimal? x) => Assert.AreEqual(25, x),
+            (double? x) => Assert.AreEqual(5, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("Average")
@@ -2621,7 +2654,6 @@ $@"decimal? __() {{
         );
         AssertAllocations();
     }
-*/
     #endregion
     [Test]
     public void CustomEnumerable_Select_First() {
