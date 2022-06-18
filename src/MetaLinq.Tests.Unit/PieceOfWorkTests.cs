@@ -10,16 +10,24 @@ public class PieceOfWorkTests {
     public static readonly ToValueType[] OrderIndependentValueTypes = new[] {
         ToValueType.All, ToValueType.Any, 
         ToValueType.Single, ToValueType.SingleOrDefault,
+
         ToValueType.Sum_Int, ToValueType.Sum_IntN, 
         ToValueType.Sum_Long, ToValueType.Sum_LongN,
         ToValueType.Sum_Float, ToValueType.Sum_FloatN,
         ToValueType.Sum_Double, ToValueType.Sum_DoubleN,
         ToValueType.Sum_Decimal, ToValueType.Sum_DecimalN,
+
         ToValueType.Average_Int, ToValueType.Average_IntN,
         ToValueType.Average_Long, ToValueType.Average_LongN,
         ToValueType.Average_Float, ToValueType.Average_FloatN,
         ToValueType.Average_Double, ToValueType.Average_DoubleN,
         ToValueType.Average_Decimal, ToValueType.Average_DecimalN,
+
+        ToValueType.Min_Int, ToValueType.Min_IntN,
+        ToValueType.Min_Long, ToValueType.Min_LongN,
+        ToValueType.Min_Float, ToValueType.Min_FloatN,
+        ToValueType.Min_Double, ToValueType.Min_DoubleN,
+        ToValueType.Min_Decimal, ToValueType.Min_DecimalN,
     };
     static readonly ToValueType[] NoSortValueTypes = 
         System.Linq.Enumerable.Concat(OrderIndependentValueTypes, OrderDependentValueTypes).ToArray();

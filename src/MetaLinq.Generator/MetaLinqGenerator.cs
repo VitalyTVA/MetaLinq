@@ -186,6 +186,13 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 ToValueType.Average_Double, ToValueType.Average_DoubleN,
                 ToValueType.Average_Decimal, ToValueType.Average_DecimalN
             ),
+            "Min" => GetAggregateToValueType(
+                ToValueType.Min_Int, ToValueType.Min_IntN,
+                ToValueType.Min_Long, ToValueType.Min_LongN,
+                ToValueType.Min_Float, ToValueType.Min_FloatN,
+                ToValueType.Min_Double, ToValueType.Min_DoubleN,
+                ToValueType.Min_Decimal, ToValueType.Min_DecimalN
+            ),
             _ => null
         });
     }

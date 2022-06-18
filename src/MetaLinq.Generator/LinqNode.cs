@@ -66,6 +66,11 @@ public enum ToValueType {
     Average_Float, Average_FloatN,
     Average_Double, Average_DoubleN,
     Average_Decimal, Average_DecimalN,
+    Min_Int, Min_IntN,
+    Min_Long, Min_LongN,
+    Min_Float, Min_FloatN,
+    Min_Double, Min_DoubleN,
+    Min_Decimal, Min_DecimalN,
 }
 
 public enum AggregateValueType { Int, Long, Float, Double, Decimal }
@@ -85,6 +90,7 @@ public static class ValueTypeTraits {
             ToValueType.Sum_DoubleN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Double, true),
             ToValueType.Sum_Decimal => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Decimal, false),
             ToValueType.Sum_DecimalN => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Decimal, true),
+
             ToValueType.Average_Int => new AggregateInfo(AggregateKind.Average, AggregateValueType.Int, false),
             ToValueType.Average_IntN => new AggregateInfo(AggregateKind.Average, AggregateValueType.Int, true),
             ToValueType.Average_Long => new AggregateInfo(AggregateKind.Average, AggregateValueType.Long, false),
@@ -95,6 +101,18 @@ public static class ValueTypeTraits {
             ToValueType.Average_DoubleN => new AggregateInfo(AggregateKind.Average, AggregateValueType.Double, true),
             ToValueType.Average_Decimal => new AggregateInfo(AggregateKind.Average, AggregateValueType.Decimal, false),
             ToValueType.Average_DecimalN => new AggregateInfo(AggregateKind.Average, AggregateValueType.Decimal, true),
+
+            ToValueType.Min_Int => new AggregateInfo(AggregateKind.Min, AggregateValueType.Int, false),
+            ToValueType.Min_IntN => new AggregateInfo(AggregateKind.Min, AggregateValueType.Int, true),
+            ToValueType.Min_Long => new AggregateInfo(AggregateKind.Min, AggregateValueType.Long, false),
+            ToValueType.Min_LongN => new AggregateInfo(AggregateKind.Min, AggregateValueType.Long, true),
+            ToValueType.Min_Float => new AggregateInfo(AggregateKind.Min, AggregateValueType.Float, false),
+            ToValueType.Min_FloatN => new AggregateInfo(AggregateKind.Min, AggregateValueType.Float, true),
+            ToValueType.Min_Double => new AggregateInfo(AggregateKind.Min, AggregateValueType.Double, false),
+            ToValueType.Min_DoubleN => new AggregateInfo(AggregateKind.Min, AggregateValueType.Double, true),
+            ToValueType.Min_Decimal => new AggregateInfo(AggregateKind.Min, AggregateValueType.Decimal, false),
+            ToValueType.Min_DecimalN => new AggregateInfo(AggregateKind.Min, AggregateValueType.Decimal, true),
+
             _ => null
         };
     }

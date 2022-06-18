@@ -39,6 +39,8 @@ Stack allocations
 
 Architecture - chains piecesof works, code generation
 
+Allocation tests
+
 ## Select benchmark
 
 |           Method |    N |        Mean |      Error |    StdDev |      Median | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |

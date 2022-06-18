@@ -110,17 +110,47 @@ $@"var result_{lastLevel} = result{topLevel};";
         if(aggregateInfo != null) {
             if(piece.LoopType != LoopType.Forward)
                 throw new InvalidOperationException();
-            return (
-$@"{aggregateInfo.Value.GetAggregateOutputType()} result{topLevel} = 0;
-{(aggregateInfo.Value.Kind == AggregateKind.Average ? $"var count{lastLevel.Next} = 0;" : null)}",
+            switch(aggregateInfo.Value.Kind) {
+                case AggregateKind.Sum:
+                    return (
+$@"{aggregateInfo.Value.GetAggregateOutputType()} result{topLevel} = 0;",
 $@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
 {(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)} {{ 
     result{topLevel} += value{lastLevel.Next};
-    {(aggregateInfo.Value.Kind == AggregateKind.Average ? $"count{lastLevel.Next}++;" : null)}
 }}",
-$@"{(aggregateInfo.Value.Kind == AggregateKind.Average && !aggregateInfo.Value.Nullable ? $"if(count{lastLevel.Next} == 0) throw new InvalidOperationException(\"Sequence contains no elements\");" : null)}
-var result_{lastLevel} = {(aggregateInfo.Value.Kind == AggregateKind.Average && aggregateInfo.Value.Nullable ? $"count{lastLevel.Next} == 0 ? null : " : null)} result{topLevel}{(aggregateInfo.Value.Kind == AggregateKind.Average ? $"/count{lastLevel.Next}" : null)};"
-            );
+$@"var result_{lastLevel} = result{topLevel};"
+                    );
+                case AggregateKind.Average:
+                    return (
+$@"{aggregateInfo.Value.GetAggregateOutputType()} result{topLevel} = 0;
+var count{lastLevel.Next} = 0;",
+$@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
+{(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)} {{ 
+    result{topLevel} += value{lastLevel.Next};
+    count{lastLevel.Next}++;
+}}",
+$@"{(!aggregateInfo.Value.Nullable ? $"if(count{lastLevel.Next} == 0) throw new InvalidOperationException(\"Sequence contains no elements\");" : null)}
+var result_{lastLevel} = {(aggregateInfo.Value.Nullable ? $"count{lastLevel.Next} == 0 ? null : " : null)} result{topLevel} / count{lastLevel.Next};"
+                    );
+                case AggregateKind.Min:
+                    return (
+$@"{aggregateInfo.Value.GetAggregateOutputType()} result{topLevel} = 0;
+var found{lastLevel.Next} = false;",
+$@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
+{(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)} {{
+    if(found{lastLevel.Next} && value{lastLevel.Next} < result{topLevel}) {{
+        result{topLevel} = value{lastLevel.Next};
+    }} else if(!found{lastLevel.Next}) {{
+        result{topLevel} = value{lastLevel.Next};
+        found{lastLevel.Next} = true;
+    }}
+}}",
+$@"{(!aggregateInfo.Value.Nullable ? $"if(!found{lastLevel.Next}) throw new InvalidOperationException(\"Sequence contains no elements\");" : null)}
+var result_{lastLevel} = {(aggregateInfo.Value.Nullable ? $"!found{lastLevel.Next} ? null : " : null)} result{topLevel};"
+                    );
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         switch((piece.KnownSize, piece.LoopType, toValueType)) {
