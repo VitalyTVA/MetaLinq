@@ -47,7 +47,8 @@ public abstract record LinqNode {
 public enum ToValueType { 
     ToArray, 
     ToHashSet, 
-    ToDictionary, 
+    ToDictionary,
+    //Aggregate,
     First,
     FirstOrDefault,
     Last,

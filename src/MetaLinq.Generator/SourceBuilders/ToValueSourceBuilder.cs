@@ -35,7 +35,7 @@ public static class ToValueSourceBuilder {
             bool last = pieces.Last() == piece;
             EmitPieceOrWork(
                 first ? source : SourceType.Array,
-                last ? toValueType : default,
+                last ? toValueType : ToValueType.ToArray,
                 builder,
                 first ? "this" + sourcePath : "result_" + piece.TopLevel.Prev,
                 piece,
@@ -83,7 +83,7 @@ public static class ToValueSourceBuilder {
         builder.Tab.AppendMultipleLines(result);
     }
 
-    static (string init, string add, string result) GetArrayBuilder(SourceType source, ToValueType? toValueType, string sourcePath, PieceOfWork piece) {
+    static (string init, string add, string result) GetArrayBuilder(SourceType source, ToValueType toValueType, string sourcePath, PieceOfWork piece) {
         var sourceGenericArg = piece.Contexts.LastOrDefault()?.SourceGenericArg ?? EmitContext.RootSourceType;
         var outputType = piece.Contexts.LastOrDefault()?.GetOutputType() ?? EmitContext.RootSourceType;
         var topLevel = piece.TopLevel;
@@ -106,7 +106,8 @@ var result_{lastLevel} = result{topLevel}!;";
         string GetFirstLastSingleOrDefaultResultStatement() =>
 $@"var result_{lastLevel} = result{topLevel};";
 
-        var aggregateInfo = toValueType?.GetAggregateInfo();
+        #region aggregates
+        var aggregateInfo = toValueType.GetAggregateInfo();
         if(aggregateInfo != null) {
             if(piece.LoopType != LoopType.Forward)
                 throw new InvalidOperationException();
@@ -152,6 +153,7 @@ var result_{lastLevel} = {(aggregateInfo.Value.Nullable ? $"!found{lastLevel.Nex
                     throw new NotImplementedException();
             }
         }
+        #endregion
 
         switch((piece.KnownSize, piece.LoopType, toValueType)) {
             case (_, LoopType.Forward, ToValueType.First) or (_, LoopType.Backward, ToValueType.Last):
@@ -286,10 +288,6 @@ GetFirstLastSingleOrDefaultResultStatement()
                     resultExpression = $"new HashSet<{sourceGenericArg}>({resultExpression})";
                 if(toValueType == ToValueType.ToDictionary)
                     resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
-                if(toValueType == ToValueType.First)
-                    resultExpression = $"System.Linq.Enumerable.First({resultExpression}, predicate)";
-                if(toValueType == ToValueType.FirstOrDefault)
-                    resultExpression = $"System.Linq.Enumerable.FirstOrDefault({resultExpression}, predicate)";
                 bool useSourceInSort = piece.KnownType && source.HasIndexer();
                 return (
 @$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"Allocator.Array<{sourceGenericArg}>({capacityExpression})")};
