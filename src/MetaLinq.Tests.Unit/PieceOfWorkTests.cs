@@ -28,6 +28,12 @@ public class PieceOfWorkTests {
         ToValueType.Min_Float, ToValueType.Min_FloatN,
         ToValueType.Min_Double, ToValueType.Min_DoubleN,
         ToValueType.Min_Decimal, ToValueType.Min_DecimalN,
+
+        ToValueType.Max_Int, ToValueType.Max_IntN,
+        ToValueType.Max_Long, ToValueType.Max_LongN,
+        ToValueType.Max_Float, ToValueType.Max_FloatN,
+        ToValueType.Max_Double, ToValueType.Max_DoubleN,
+        ToValueType.Max_Decimal, ToValueType.Max_DecimalN,
     };
     static readonly ToValueType[] NoSortValueTypes = 
         System.Linq.Enumerable.Concat(OrderIndependentValueTypes, OrderDependentValueTypes).ToArray();

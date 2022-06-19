@@ -132,13 +132,13 @@ $@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
 $@"{(!aggregateInfo.Value.Nullable ? $"if(count{lastLevel.Next} == 0) throw new InvalidOperationException(\"Sequence contains no elements\");" : null)}
 var result_{lastLevel} = {(aggregateInfo.Value.Nullable ? $"count{lastLevel.Next} == 0 ? null : " : null)} result{topLevel} / count{lastLevel.Next};"
                     );
-                case AggregateKind.Min:
+                case AggregateKind.Min or AggregateKind.Max:
                     return (
 $@"{aggregateInfo.Value.GetAggregateOutputType()} result{topLevel} = 0;
 var found{lastLevel.Next} = false;",
 $@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
 {(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)} {{
-    if(found{lastLevel.Next} && value{lastLevel.Next} < result{topLevel}) {{
+    if(found{lastLevel.Next} && value{lastLevel.Next} {(aggregateInfo.Value.Kind == AggregateKind.Min ? '<' : '>')} result{topLevel}) {{
         result{topLevel} = value{lastLevel.Next};
     }} else if(!found{lastLevel.Next}) {{
         result{topLevel} = value{lastLevel.Next};

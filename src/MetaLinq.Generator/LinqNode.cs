@@ -71,6 +71,11 @@ public enum ToValueType {
     Min_Float, Min_FloatN,
     Min_Double, Min_DoubleN,
     Min_Decimal, Min_DecimalN,
+    Max_Int, Max_IntN,
+    Max_Long, Max_LongN,
+    Max_Float, Max_FloatN,
+    Max_Double, Max_DoubleN,
+    Max_Decimal, Max_DecimalN,
 }
 
 public enum AggregateValueType { Int, Long, Float, Double, Decimal }
@@ -112,6 +117,17 @@ public static class ValueTypeTraits {
             ToValueType.Min_DoubleN => new AggregateInfo(AggregateKind.Min, AggregateValueType.Double, true),
             ToValueType.Min_Decimal => new AggregateInfo(AggregateKind.Min, AggregateValueType.Decimal, false),
             ToValueType.Min_DecimalN => new AggregateInfo(AggregateKind.Min, AggregateValueType.Decimal, true),
+
+            ToValueType.Max_Int => new AggregateInfo(AggregateKind.Max, AggregateValueType.Int, false),
+            ToValueType.Max_IntN => new AggregateInfo(AggregateKind.Max, AggregateValueType.Int, true),
+            ToValueType.Max_Long => new AggregateInfo(AggregateKind.Max, AggregateValueType.Long, false),
+            ToValueType.Max_LongN => new AggregateInfo(AggregateKind.Max, AggregateValueType.Long, true),
+            ToValueType.Max_Float => new AggregateInfo(AggregateKind.Max, AggregateValueType.Float, false),
+            ToValueType.Max_FloatN => new AggregateInfo(AggregateKind.Max, AggregateValueType.Float, true),
+            ToValueType.Max_Double => new AggregateInfo(AggregateKind.Max, AggregateValueType.Double, false),
+            ToValueType.Max_DoubleN => new AggregateInfo(AggregateKind.Max, AggregateValueType.Double, true),
+            ToValueType.Max_Decimal => new AggregateInfo(AggregateKind.Max, AggregateValueType.Decimal, false),
+            ToValueType.Max_DecimalN => new AggregateInfo(AggregateKind.Max, AggregateValueType.Decimal, true),
 
             _ => null
         };
