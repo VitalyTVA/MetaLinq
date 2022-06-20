@@ -251,7 +251,7 @@ GetFirstLastSingleOrDefaultResultStatement()
                 );
             case (_, LoopType.Forward, ToValueType.ToHashSet):
                 return (
-                    $"var result{topLevel} = new HashSet<{outputType}>({capacityExpression});",
+                    $"var result{topLevel} = Allocator.HashSet<{outputType}>({capacityExpression});",
                     $"result{topLevel}.Add(item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
@@ -261,7 +261,7 @@ GetFirstLastSingleOrDefaultResultStatement()
                     $"result{topLevel}.Add(keySelector(item{lastLevel.Next}), item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
-            case (true, LoopType.Sort, ToValueType.ToArray or ToValueType.ToDictionary or ToValueType.ToHashSet):
+            case (true, LoopType.Sort, ToValueType.ToArray):
                 var order = GetOrder();
                 var sortKeyVars = order.Select((x, i) => {
                     return $"var sortKeys{topLevel}_{i} = Allocator.Array<{x.sortKeyGenericType}>({capacityExpression});\r\n";
@@ -284,10 +284,10 @@ GetFirstLastSingleOrDefaultResultStatement()
                     .ToArray();
                 var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
                 var resultExpression = $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)";
-                if(toValueType == ToValueType.ToHashSet)
-                    resultExpression = $"new HashSet<{sourceGenericArg}>({resultExpression})";
-                if(toValueType == ToValueType.ToDictionary)
-                    resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
+                //if(toValueType == ToValueType.ToHashSet)
+                //    resultExpression = $"new HashSet<{sourceGenericArg}>({resultExpression})";
+                //if(toValueType == ToValueType.ToDictionary)
+                //    resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
                 bool useSourceInSort = piece.KnownType && source.HasIndexer();
                 return (
 @$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"Allocator.Array<{sourceGenericArg}>({capacityExpression})")};

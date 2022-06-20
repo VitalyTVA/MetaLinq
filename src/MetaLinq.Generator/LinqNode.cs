@@ -136,7 +136,8 @@ public static class ValueTypeTraits {
     public static bool IsOrderIndependentLoop(this ToValueType value) { 
        return GetAggregateInfo(value) != null || value 
             is ToValueType.All or ToValueType.Any 
-            or ToValueType.Single or ToValueType.SingleOrDefault;
+            or ToValueType.Single or ToValueType.SingleOrDefault
+            or ToValueType.ToDictionary or ToValueType.ToHashSet;
     }
     public static bool IsOrderDependentLoop(this ToValueType value) {
         return value is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault;

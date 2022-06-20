@@ -48,14 +48,23 @@ public class PieceOfWorkTests {
     }
 
     [Test]
-    public void CustomEnumerable_OrderBy(
-        [Values(ToValueType.ToHashSet, ToValueType.ToArray, ToValueType.ToDictionary)] ToValueType toValueType
+    public void CustomEnumerable_OrderBy_ToArray(
+        [Values(ToValueType.ToArray)] ToValueType toValueType
     ) {
         AssertPieces(new[] { OrderBy }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: []",
 "KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
         }, SourceType.CustomEnumerable, toValueType);
     }
+    [Test]
+    public void CustomEnumerable_OrderBy_ToDictionaryAndHashSet(
+    [Values(ToValueType.ToHashSet, ToValueType.ToDictionary)] ToValueType toValueType
+) {
+        AssertPieces(new[] { OrderBy }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Identity]"
+        }, SourceType.CustomEnumerable, toValueType);
+    }
+
     [TestCaseSource(nameof(OrderDependentValueTypes))]
     public void CustomEnumerable_OrderBy_First(ToValueType toValueType) {
         AssertPieces(new[] { OrderBy }, new[] {
@@ -77,9 +86,10 @@ public class PieceOfWorkTests {
         }, SourceType.CustomEnumerable, toValueType);
     }
 
+
     [TestCaseSource(nameof(OrderIndependentValueTypes))]
     public void CustomEnumerable_OrderByDescending_ThenByDescending_Any(ToValueType toValueType) {
-        AssertPieces(new[] { OrderBy, ThenBy }, new[] {
+        AssertPieces(new[] { OrderByDescending, ThenByDescending }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Identity, Identity]"
         }, SourceType.CustomEnumerable, toValueType);
     }
@@ -95,8 +105,7 @@ public class PieceOfWorkTests {
     [TestCaseSource(nameof(OrderIndependentValueTypes))]
     public void CustomEnumerable_Where_OrderBy_Any(ToValueType toValueType) {
         AssertPieces(new[] { Where, OrderBy }, new[] {
-"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
-"KnownType: True, KnownSize: True, LoopType: Forward, Nodes: [Identity]"
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where, Identity]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -111,8 +120,7 @@ public class PieceOfWorkTests {
     [TestCaseSource(nameof(OrderIndependentValueTypes))]
     public void CustomEnumerable_OfType_OrderBy_Any(ToValueType toValueType) {
         AssertPieces(new[] { OfType, OrderBy }, new[] {
-"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType]",
-"KnownType: True, KnownSize: True, LoopType: Forward, Nodes: [Identity]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [OfType, Identity]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -124,12 +132,10 @@ public class PieceOfWorkTests {
         }, SourceType.CustomEnumerable, toValueType);
     }
 
-
     [TestCaseSource(nameof(OrderIndependentValueTypes))]
     public void CustomEnumerable_Cast_OrderBy_Any(ToValueType toValueType) {
         AssertPieces(new[] { Cast, OrderBy }, new[] {
-"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Cast]",
-"KnownType: True, KnownSize: True, LoopType: Forward, Nodes: [Identity]"
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Cast, Identity]"
         }, SourceType.CustomEnumerable, toValueType);
     }
 
@@ -542,6 +548,18 @@ public class PieceOfWorkTests {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SkipWhile, Select]"
         });
     }
+
+    [Test]
+    public void Array_Where_OrderBy_Select_Where_OrderByDescending_ToDictionaryAndHashSet(
+[Values(ToValueType.ToHashSet, ToValueType.ToDictionary)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Where, OrderBy, Select, Where, OrderByDescending }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select, Where, Identity]"
+        }, SourceType.Array, toValueType);
+    }
+
 
     static void AssertPieces(LinqNode[] chain, string[] expected, SourceType sourceType = SourceType.List, ToValueType toValueType = ToValueType.ToArray) {
         var context = chain.Cast<IntermediateNode>().Skip(1).Aggregate(

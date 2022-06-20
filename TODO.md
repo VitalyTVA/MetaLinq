@@ -10,7 +10,7 @@ CustomEnumerable should not be a special case - introduce Source Type Traits
 
 /*&& result.Count == 2*/
 
-warning for queries like source.OrderBy(x => -x.Int).Any(x => x.Int > 0); - orderby is not necessary and can be omited
+warning for queries like source.OrderBy(x => -x.Int).Any(x => x.Int > 0); - orderby is not necessary and can be omited + Order.ToHashSet
 
 check fake Sum methods with invalid parameters ((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1].SpecialType
 

@@ -37,9 +37,17 @@ public static class PieceOfWorkExtensions {
             result[result.Count - 1] = result[result.Count - 1] with {
                 LoopType = LoopType.Forward,
                 Contexts = result[result.Count - 1].Contexts
-                    .Select(x => x.Element is OrderByNode or ThenByNode ? x with { Element = IdentityNode.Instance } : x)
+                    .Select(x => x.Element is OrderByNode or ThenByNode? x with { Element = IdentityNode.Instance } : x)
                     .ToArray()
             };
+            if(result.Count > 1 
+                && result[result.Count - 2].LoopType is LoopType.Forward 
+                && result[result.Count - 1].Contexts.All(x => x.Element is IdentityNode)) {
+                result[result.Count - 2] = result[result.Count - 2] with { 
+                    Contexts = Enumerable.Concat(result[result.Count - 2].Contexts,  result[result.Count - 1].Contexts).ToArray() 
+                };
+                result.RemoveAt(result.Count - 1);
+            }
         }
         return result.AsReadOnly();
     }

@@ -9,6 +9,8 @@ public static class TestTrace {
     public static int ArrayCreatedCount { get; private set; }
     public static int DictionaryCreatedCount { get; private set; }
     public static int DictionaryWithCapacityCreatedCount { get; private set; }
+    public static int HashSetCreatedCount { get; private set; }
+    public static int HashSetWithCapacityCreatedCount { get; private set; }
 #endif
     [Conditional("DEBUG")]
     public static void ArrayCreated() {
@@ -26,6 +28,18 @@ public static class TestTrace {
     public static void DictionaryWithCapacityCreated() {
 #if DEBUG
         DictionaryWithCapacityCreatedCount++;
+#endif
+    }
+    [Conditional("DEBUG")]
+    public static void HashSetCreated() {
+#if DEBUG
+        HashSetCreatedCount++;
+#endif
+    }
+    [Conditional("DEBUG")]
+    public static void HashSetWithCapacityCreated() {
+#if DEBUG
+        HashSetWithCapacityCreatedCount++;
 #endif
     }
     [Conditional("DEBUG")]
@@ -48,6 +62,8 @@ public static class TestTrace {
         ArrayCreatedCount = 0;
         DictionaryCreatedCount = 0;
         DictionaryWithCapacityCreatedCount = 0;
+        HashSetCreatedCount = 0;
+        HashSetWithCapacityCreatedCount = 0;
 #endif
     }
     [Conditional("DEBUG")]
@@ -58,6 +74,8 @@ public static class TestTrace {
         Debug.Assert(ArrayCreatedCount == 0);
         Debug.Assert(DictionaryCreatedCount == 0);
         Debug.Assert(DictionaryWithCapacityCreatedCount == 0);
+        Debug.Assert(HashSetCreatedCount == 0);
+        Debug.Assert(HashSetWithCapacityCreatedCount == 0);
 #endif
     }
 

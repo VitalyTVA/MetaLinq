@@ -471,7 +471,7 @@ public class GenerationTests : BaseFixture {
                 })
             })
         });
-        AssertAllocations(array: 2);
+        AssertAllocations(hashSetWithCapacity: 1);
     }
 
     [Test]
@@ -489,7 +489,7 @@ public class GenerationTests : BaseFixture {
                 })
             })
         });
-        AssertAllocations(array: 2);
+        AssertAllocations(dictionaryWithCapacity: 1);
     }
 
     [Test]
@@ -995,9 +995,9 @@ public class GenerationTests : BaseFixture {
                 })
             })
         },
-        assertGeneratedCode: x => StringAssert.Contains("new HashSet<T3_Result>(result_2.Length)", x.Single())
+        assertGeneratedCode: x => StringAssert.Contains("Allocator.HashSet<T3_Result>(result_2.Length)", x.Single())
     );
-        AssertAllocations(largeArrayBuilder: 1, array: 1);
+        AssertAllocations(largeArrayBuilder: 1, array: 1, hashSetWithCapacity: 1);
     }
 
     [Test]
@@ -1183,7 +1183,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        AssertAllocations(largeArrayBuilder: 2, array: 2);
+        AssertAllocations(largeArrayBuilder: 1, array: 1, hashSet: 1);
     }
 
     [Test]
@@ -1208,7 +1208,7 @@ public class GenerationTests : BaseFixture {
             })
         }
     );
-        AssertAllocations(largeArrayBuilder: 2, array: 2);
+        AssertAllocations(largeArrayBuilder: 1, array: 1, dictionary: 1);
     }
     #endregion
 
@@ -1573,9 +1573,9 @@ public class GenerationTests : BaseFixture {
                     new StructMethod("ToHashSet")
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new HashSet<TSource>()", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("Allocator.HashSet<TSource>()", x.Single())
         );
-        AssertAllocations();
+        AssertAllocations(hashSet: 1);
     }
     [Test]
     public void Array_Where_ToDictionary() {
@@ -1999,7 +1999,7 @@ $@"Data __() {{
                     new StructMethod("ToHashSet")
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T1_Result>(this.source.Length)", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("Allocator.HashSet<T1_Result>(this.source.Length)", x.Single())
         );
     }
     [Test]
@@ -2068,7 +2068,7 @@ $@"Data __() {{
                     })
             }
         );
-        AssertAllocations();
+        AssertAllocations(hashSetWithCapacity: 1);
     }
     [Test]
     public void Array_Select_Select_ToDictionary() {
@@ -3501,9 +3501,9 @@ record C(int Value) : A(Value);";
                     new StructMethod("ToHashSet")
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T1_Result>()", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("Allocator.HashSet<T1_Result>()", x.Single())
         );
-        AssertAllocations();
+        AssertAllocations(hashSet: 1);
     }
     [Test]
     public void Array_SelectManyArray_ToDictionary() {
@@ -4094,9 +4094,9 @@ $@"Data __() {{
                     })
                 })
             },
-            assertGeneratedCode: x => StringAssert.Contains("new HashSet<T1_Result>()", x.Single())
+            assertGeneratedCode: x => StringAssert.Contains("Allocator.HashSet<T1_Result>()", x.Single())
         );
-        AssertAllocations();
+        AssertAllocations(hashSet: 1);
     }
     [Test]
     public void List_Select_Where_ToArray() {
@@ -4625,7 +4625,9 @@ public class Executor {{
         int largeArrayBuilder = 0,
         int array = 0,
         int dictionary = 0,
-        int dictionaryWithCapacity = 0
+        int dictionaryWithCapacity = 0,
+        int hashSet = 0,
+        int hashSetWithCapacity = 0
     ) {
 #if DEBUG
         Assert.AreEqual(largeArrayBuilder, TestTrace.LargeArrayBuilderCreatedCount);
@@ -4633,6 +4635,8 @@ public class Executor {{
         Assert.AreEqual(array, TestTrace.ArrayCreatedCount);
         Assert.AreEqual(dictionary, TestTrace.DictionaryCreatedCount);
         Assert.AreEqual(dictionaryWithCapacity, TestTrace.DictionaryWithCapacityCreatedCount);
+        Assert.AreEqual(hashSet, TestTrace.HashSetCreatedCount);
+        Assert.AreEqual(hashSetWithCapacity, TestTrace.HashSetWithCapacityCreatedCount);
 #endif
     }
 }
