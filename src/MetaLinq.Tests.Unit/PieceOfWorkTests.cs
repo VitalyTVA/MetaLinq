@@ -560,6 +560,24 @@ public class PieceOfWorkTests {
         }, SourceType.Array, toValueType);
     }
 
+    [Test]
+    public void Array_OrderBy_Cast_OrderByDescending_ToDictionaryAndHashSet(
+[Values(ToValueType.ToHashSet, ToValueType.ToDictionary)] ToValueType toValueType
+) {
+        AssertPieces(new[] { OrderBy, Cast, OrderByDescending }, new[] {
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]",
+"KnownType: False, KnownSize: True, LoopType: Forward, Nodes: [Cast, Identity]",
+        }, SourceType.Array, toValueType);
+    }
+
+    [Test]
+    public void Array_Where_Cast_OrderByDescending_ToDictionaryAndHashSet(
+[Values(ToValueType.ToHashSet, ToValueType.ToDictionary)] ToValueType toValueType
+) {
+        AssertPieces(new[] { Where, Cast, OrderByDescending }, new[] {
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Where, Cast, Identity]",
+        }, SourceType.Array, toValueType);
+    }
 
     static void AssertPieces(LinqNode[] chain, string[] expected, SourceType sourceType = SourceType.List, ToValueType toValueType = ToValueType.ToArray) {
         var context = chain.Cast<IntermediateNode>().Skip(1).Aggregate(

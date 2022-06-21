@@ -284,10 +284,6 @@ GetFirstLastSingleOrDefaultResultStatement()
                     .ToArray();
                 var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
                 var resultExpression = $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)";
-                //if(toValueType == ToValueType.ToHashSet)
-                //    resultExpression = $"new HashSet<{sourceGenericArg}>({resultExpression})";
-                //if(toValueType == ToValueType.ToDictionary)
-                //    resultExpression = $"DictionaryHelper.ArrayToDictionary({resultExpression}, keySelector)";
                 bool useSourceInSort = piece.KnownType && source.HasIndexer();
                 return (
 @$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"Allocator.Array<{sourceGenericArg}>({capacityExpression})")};

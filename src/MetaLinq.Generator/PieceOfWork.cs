@@ -16,8 +16,7 @@ public static class PieceOfWorkExtensions {
 
     public static IReadOnlyList<PieceOfWork> GetPieces(this EmitContext context, SourceType sourceType, ToValueType toValueType) {
         var result = context.GetPiecesCore(sourceType).ToList();
-        if((toValueType.IsOrderIndependentLoop() || toValueType.IsOrderDependentLoop())
-            && !result.First().Contexts.Any()
+        if(toValueType.IsOrderDependentLoop() && !result.First().Contexts.Any()
             /*&& result.Count == 2*/) { //TODO check if == 2 needed
             result.RemoveAt(0);
             result[0] = result[0] with { KnownSize = false };
@@ -32,8 +31,6 @@ public static class PieceOfWorkExtensions {
         }
         if(toValueType.IsOrderIndependentLoop()
             && result.Last().LoopType is LoopType.Sort) {
-            //if(result[0].Contexts.Length != 1)
-            //    throw new InvalidOperationException();
             result[result.Count - 1] = result[result.Count - 1] with {
                 LoopType = LoopType.Forward,
                 Contexts = result[result.Count - 1].Contexts
