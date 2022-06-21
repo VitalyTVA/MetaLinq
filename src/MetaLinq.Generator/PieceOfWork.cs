@@ -37,9 +37,9 @@ public static class PieceOfWorkExtensions {
                     .Select(x => x.Element is OrderByNode or ThenByNode? x with { Element = IdentityNode.Instance } : x)
                     .ToArray()
             };
-            if(result.Count > 1 
-                && result[result.Count - 2].LoopType is LoopType.Forward 
-                && result[result.Count - 1].Contexts.All(x => x.Element is IdentityNode)) {
+            if(result.Count > 1 && result[result.Count - 1].Contexts.All(x => x.Element is IdentityNode)) {
+                if(result[result.Count - 2].LoopType is not LoopType.Forward)
+                    throw new InvalidOperationException();
                 result[result.Count - 2] = result[result.Count - 2] with { 
                     Contexts = Enumerable.Concat(result[result.Count - 2].Contexts,  result[result.Count - 1].Contexts).ToArray() 
                 };

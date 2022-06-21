@@ -1022,6 +1022,27 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_Select_OrderBy_ToHashSet() {
+        AssertGeneration(
+@"HashSet<int> __() {{
+    var source = Data.Array(7).Shuffle();
+    return source.OrderBy(x => -x.Int).Select(x => x.Int).OrderBy(x => x).ToHashSet();
+}}",
+        (HashSet<int> x) => CollectionAssert.AreEquivalent(new[] { 0, 1, 2, 3, 4, 5, 6 }, x),
+        new[] {
+            new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                new StructMethod("Select", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("ToHashSet"),
+                    })
+                })
+            })
+        }
+    );
+        AssertAllocations(array: 1, hashSetWithCapacity: 1);
+    }
+
+    [Test]
     public void Array_Where_OrderBy_Select_ToDictionary() {
         AssertGeneration(
 @"Dictionary<int, int> __() {{
