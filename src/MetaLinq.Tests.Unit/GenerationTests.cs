@@ -302,6 +302,40 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_Aggregate_Seed() {
+        AssertGeneration(
+@"string __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.OrderBy(x => x.Int).Aggregate(""seed"", (acc, x) => acc + x.Int);
+}}",
+        (string x) => Assert.AreEqual("seed0123456789", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("Aggregate")
+                })
+        }
+    );
+        AssertAllocations(array: 1);
+    }
+
+    [Test]
+    public void CustomEnumerable_OrderBy_Aggregate_Seed() {
+        AssertGeneration(
+@"string __() {{
+    var source = Data.Array(10).Shuffle();
+    return new CustomEnumerable<Data>(source).OrderBy(x => x.Int).Aggregate(""seed"", (acc, x) => acc + x.Int);
+}}",
+        (string x) => Assert.AreEqual("seed0123456789", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "OrderBy", new[] {
+                    new StructMethod("Aggregate")
+                })
+        }
+    );
+        AssertAllocations(largeArrayBuilder: 1, array: 1);
+    }
+
+    [Test]
     public void Array_OrderByDescending_LastOrDefault() {
         AssertGeneration(
 @"Data? __() {{
@@ -535,6 +569,26 @@ public class GenerationTests : BaseFixture {
         AssertAllocations(largeArrayBuilder: 1, array: 2);
     }
 
+    [Test]
+    public void List_Where_OrderBy_ThenBy_ToArray() {
+        AssertGeneration(
+@"string __() {{
+    var source = Data.List(10).Shuffle(longMaxValue: 3);
+    return source.Where(x => x.Int > 1).OrderBy(x => x.Long).ThenBy(x => x.Int).Aggregate(""seed_"", (acc, x) => acc + x.Long + '.' + x.Int + '_');
+}}",
+        (string x) => Assert.AreEqual("seed_0.4_0.9_1.3_1.5_1.7_2.2_2.6_2.8_", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Where", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("ThenBy", new[] {
+                            new StructMethod("Aggregate"),
+                        })
+                    })
+                })
+        }
+    );
+        AssertAllocations(largeArrayBuilder: 1, array: 2);
+    }
 
     [Test]
     public void Array_OrderBy_ThenByDescending_ToArray() {
@@ -2036,6 +2090,25 @@ $@"string __() {{
         );
         AssertAllocations();
     }
+    [Test]
+    public void CustomEnumerable_Where_Aggregate_Seed() {
+        AssertGeneration(
+$@"string __() {{
+    var source = Data.Array(10);
+    var result = new CustomEnumerable<Data>(source).Where(x => x.Int > 5).Aggregate(""seed"", (acc, x) => acc + x.Int);
+    Assert.AreEqual(1, source[5].Int_GetCount);
+    Assert.AreEqual(2, source[6].Int_GetCount);
+    return result;
+}}",
+            (string x) => Assert.AreEqual("seed6789", x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.CustomEnumerable, "Where", new[] {
+                    new StructMethod("Aggregate")
+                })
+            }
+        );
+        AssertAllocations();
+    }
     #endregion
 
     #region select
@@ -2320,6 +2393,20 @@ $@"bool __() {{
                 new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                     new StructMethod("All")
                 })
+            }
+        );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_Select_Aggregate_Seed() {
+        AssertGeneration(
+            "string __() => Data.Array(5).Select(x => x.Int).Aggregate(\"seed\", (acc, x) => acc + x);",
+            (string x) => Assert.AreEqual("seed01234", x),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Aggregate")
+                    })
             }
         );
         AssertAllocations();
@@ -4127,6 +4214,26 @@ $@"Data __() {{
         );
         AssertAllocations();
     }
+
+    [Test]
+    public void Array_SelectManyArray_Aggregate_Seed() {
+        AssertGeneration(
+@"string __() {{
+    var source = Data.Array(3);
+    var result = source.SelectMany(x => x.IntArray).Aggregate(""seed"", (acc, x) => acc + x);
+    source.AssertAll(x => Assert.AreEqual(1, x.IntArray_GetCount));
+    return result;
+}}",
+            (string x) => Assert.AreEqual("seed012345", x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "SelectMany", new[] {
+                    new StructMethod("Aggregate")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+
     #endregion
 
     #region select and where
@@ -4393,6 +4500,23 @@ $@"Data __() {{
                 new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
                     new StructMethod("Where", new[] {
                         new StructMethod("SingleOrDefault")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Select_Where_Aggregate_Seed() {
+        AssertGeneration(
+@"string __() { 
+    var data = Data.List(10);
+    return Data.List(10).Select(x => x.Int).Where(x => x > 4).Aggregate(""seed"", (acc, x) => acc + x);
+}",
+            (string x) => Assert.AreEqual("seed56789", x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("Where", new[] {
+                        new StructMethod("Aggregate")
                     })
                 })
             }

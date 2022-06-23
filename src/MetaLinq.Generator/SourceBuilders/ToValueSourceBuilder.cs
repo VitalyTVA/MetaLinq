@@ -262,7 +262,7 @@ GetFirstLastSingleOrDefaultResultStatement()
                     $"result{topLevel}.Add(keySelector(item{lastLevel.Next}), item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
-            case (true, LoopType.Sort, ToValueType.ToArray):
+            case (true, LoopType.Sort, ToValueType.ToArray or ToValueType.Aggregate_Seed):
                 var order = GetOrder();
                 var sortKeyVars = order.Select((x, i) => {
                     return $"var sortKeys{topLevel}_{i} = Allocator.Array<{x.sortKeyGenericType}>({capacityExpression});\r\n";
@@ -284,7 +284,11 @@ GetFirstLastSingleOrDefaultResultStatement()
                     .Select((type, i) => $"new {type}(sortKeys{topLevel}_{i}")
                     .ToArray();
                 var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
-                var resultExpression = $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)";
+                var resultExpression = toValueType switch { 
+                    ToValueType.ToArray => $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)",
+                    ToValueType.Aggregate_Seed => $"SortHelper.Aggregate(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length, seed, func)",
+                    _ => throw new InvalidOperationException()
+                };
                 bool useSourceInSort = piece.KnownType && source.HasIndexer();
                 return (
 @$"var result{topLevel} = {(useSourceInSort ? sourcePath : $"Allocator.Array<{sourceGenericArg}>({capacityExpression})")};

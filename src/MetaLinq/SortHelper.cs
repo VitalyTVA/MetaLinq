@@ -6,6 +6,24 @@ namespace MetaLinq.Internal;
 
 public static class SortHelper {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TAccumulate Aggregate<T, TComparer, TAccumulate>(T[] source, int[] map, TComparer comparer, int len, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func) where TComparer : IComparer<int> {
+        SortCore<TComparer>(map, comparer, len);
+        for(int i = 0; i != len; i++) {
+            seed = func(seed, source[map[i]]);
+        }
+        return seed;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TAccumulate Aggregate<T, TComparer, TAccumulate>(IList<T> source, int[] map, TComparer comparer, int len, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func) where TComparer : IComparer<int> {
+        SortCore<TComparer>(map, comparer, len);
+        for(int i = 0; i != len; i++) {
+            seed = func(seed, source[map[i]]);
+        }
+        return seed;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T[] Sort<T, TComparer>(T[] source, int[] map, TComparer comparer, int len) where TComparer : IComparer<int> {
         var sorted = SortAndAllocateResultArray<T, TComparer>(map, comparer, len);
 
@@ -25,10 +43,15 @@ public static class SortHelper {
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static T[] SortAndAllocateResultArray<T, TComparer>(int[] map, TComparer comparer, int len) where TComparer: IComparer<int> {
-        var mapSpan = map.AsSpan().Slice(0, len);
-        ArraySorter<TComparer>.IntrospectiveSort(mapSpan, comparer);
+        SortCore(map, comparer, len);
         var sorted = new T[len];
         return sorted;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static void SortCore<TComparer>(int[] map, TComparer comparer, int len) where TComparer : IComparer<int> {
+        var mapSpan = map.AsSpan().Slice(0, len);
+        ArraySorter<TComparer>.IntrospectiveSort(mapSpan, comparer);
     }
 
     public static int Log2(uint value) {

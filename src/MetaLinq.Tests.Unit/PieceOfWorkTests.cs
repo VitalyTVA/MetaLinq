@@ -579,11 +579,43 @@ public class PieceOfWorkTests {
         }, SourceType.Array, toValueType);
     }
 
-    [Test]
-    public void Where_Aggregate() {
+    static ToValueType[] AggregateTypes = new[] { ToValueType.Aggregate_Seed };
+
+    [TestCaseSource(nameof(AggregateTypes))]
+    public void Where_Aggregate(ToValueType aggregateType) {
         AssertPieces(new[] { Where }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]"
-        }, toValueType: ToValueType.Aggregate_Seed);
+        }, toValueType: aggregateType);
+    }
+
+    [TestCaseSource(nameof(AggregateTypes))]
+    public void OrderBy_Aggregate(ToValueType aggregateType) {
+        AssertPieces(new[] { OrderBy }, new[] {
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
+        }, toValueType: aggregateType);
+    }
+
+    [TestCaseSource(nameof(AggregateTypes))]
+    public void CustomEnumerable_OrderBy_Aggregate(ToValueType aggregateType) {
+        AssertPieces(new[] { OrderBy }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: []",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy]"
+        }, SourceType.CustomEnumerable, toValueType: aggregateType);
+    }
+
+    [TestCaseSource(nameof(AggregateTypes))]
+    public void SelectMany_SkipWhile_Aggregate(ToValueType aggregateType) {
+        AssertPieces(new[] { SelectMany(SourceType.Array), SkipWhile }, new[] {
+"KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [SelectMany Array, SkipWhile]"
+        }, toValueType: aggregateType);
+    }
+
+    [TestCaseSource(nameof(AggregateTypes))]
+    public void Where_OrderBy_ThenBy_Aggregate(ToValueType aggregateType) {
+        AssertPieces(new[] { Where, OrderBy, ThenBy }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
+"KnownType: True, KnownSize: True, LoopType: Sort, Nodes: [OrderBy, ThenBy]"
+        }, toValueType: aggregateType);
     }
 
     static void AssertPieces(LinqNode[] chain, string[] expected, SourceType sourceType = SourceType.List, ToValueType toValueType = ToValueType.ToArray) {
