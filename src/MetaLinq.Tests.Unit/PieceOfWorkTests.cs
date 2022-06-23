@@ -579,6 +579,13 @@ public class PieceOfWorkTests {
         }, SourceType.Array, toValueType);
     }
 
+    [Test]
+    public void Where_Aggregate() {
+        AssertPieces(new[] { Where }, new[] {
+"KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]"
+        }, toValueType: ToValueType.Aggregate_Seed);
+    }
+
     static void AssertPieces(LinqNode[] chain, string[] expected, SourceType sourceType = SourceType.List, ToValueType toValueType = ToValueType.ToArray) {
         var context = chain.Cast<IntermediateNode>().Skip(1).Aggregate(
             EmitContext.Root(sourceType, (IntermediateNode)chain.First()), 

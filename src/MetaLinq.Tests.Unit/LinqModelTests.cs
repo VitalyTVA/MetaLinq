@@ -316,6 +316,18 @@ public class LinqModelTests : BaseFixture {
             -ToArray");
     }
 
+    [Test]
+    public void WhereAggregate() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, Aggregate_Seed.AsElement() });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -Aggregate_Seed");
+    }
+
+
     static ToValueType[] NoSortChainElements = new[] {
         First, FirstOrDefault, Last, LastOrDefault
     }.Concat(PieceOfWorkTests.OrderIndependentValueTypes).ToArray();

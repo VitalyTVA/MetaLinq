@@ -25,6 +25,7 @@ public static class ToValueSourceBuilder {
             ToValueType.First or ToValueType.Last or ToValueType.Single => $"{outputType} {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.FirstOrDefault or ToValueType.LastOrDefault or ToValueType.SingleOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.Aggregate_Seed => $"TAccumulate Aggregate<TAccumulate>(TAccumulate seed, Func<TAccumulate, {outputType}, TAccumulate> func)",
             _ => throw new NotImplementedException(),
         };
         builder.AppendLine($"public {methodDefinition} {{");
@@ -336,6 +337,13 @@ bool found{topLevel} = false;
                         ? GetFirstLastSingleResultStatement()
                         : GetFirstLastSingleOrDefaultResultStatement()
                 );
+            case (_, LoopType.Forward, ToValueType.Aggregate_Seed):
+                return (
+                    $"var result{topLevel} = seed;",
+                    $"result{topLevel} = func(result{topLevel}, item{lastLevel.Next});",
+                    $@"var result_{lastLevel} = result{topLevel};"
+                );
+
             default:
                 throw new NotImplementedException();
         };

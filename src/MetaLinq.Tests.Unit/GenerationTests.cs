@@ -2015,6 +2015,27 @@ $@"Data __() {{
         );
         AssertAllocations();
     }
+    [Test]
+    public void Array_Where_Aggregate_Seed() {
+        Assert.AreEqual("seed", Data.Array(0).Aggregate("seed", (acc, x) => acc + x.Int));
+        AssertGeneration(
+$@"string __() {{
+    Assert.AreEqual(""seed"", Data.Array(0).Where(x => x.Int > 5).Aggregate(""seed"", (acc, x) => acc + x.Int));
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5).Aggregate(""seed"", (acc, x) => acc + x.Int);
+    Assert.AreEqual(1, source[5].Int_GetCount);
+    Assert.AreEqual(2, source[6].Int_GetCount);
+    return result;
+}}",
+            (string x) => Assert.AreEqual("seed6789", x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("Aggregate")
+                })
+            }
+        );
+        AssertAllocations();
+    }
     #endregion
 
     #region select
