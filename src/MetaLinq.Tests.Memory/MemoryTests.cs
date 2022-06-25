@@ -194,6 +194,15 @@ public class Tests {
             }
         );
     }
+    [Test]
+    public static void Array_Where_OrderBy_Aggregate() {
+        MemoryTestHelper.AssertDifference(() => testDataArray_Shuffled.Where(static x => x.Value % 3 == 0).OrderBy(static x => x.Value).Aggregate(0, static (acc, x) => acc * 10 + x.Value),
+            new[] {
+                ($"{typeof(TestData).FullName}[]", 1),
+                ("System.Int32[]", 1),
+            }
+        );
+    }
     //[Test]
     //public static void Array_Where_OrderBy_ToArray_Standard() {
     //    MemoryTestHelper.AssertDifference(() => Enumerable.ToArray(Enumerable.OrderBy(Enumerable.Where(testDataArray_Shuffled, static x => x.Value % 3 == 0), static x => x.Value)),

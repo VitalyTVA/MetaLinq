@@ -579,7 +579,7 @@ public class PieceOfWorkTests {
         }, SourceType.Array, toValueType);
     }
 
-    static ToValueType[] AggregateTypes = new[] { ToValueType.Aggregate, ToValueType.Aggregate_Seed };
+    static ToValueType[] AggregateTypes = new[] { ToValueType.Aggregate, ToValueType.Aggregate_Seed, ToValueType.Aggregate_Seed_Result };
 
     [TestCaseSource(nameof(AggregateTypes))]
     public void Where_Aggregate(ToValueType aggregateType) {

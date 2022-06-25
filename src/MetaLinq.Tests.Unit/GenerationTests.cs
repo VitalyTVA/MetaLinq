@@ -353,6 +353,40 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void Array_OrderBy_Aggregate_Seed_Result() {
+        AssertGeneration(
+@"string __() {{
+    var source = Data.Array(10).Shuffle();
+    return source.OrderBy(x => x.Int).Aggregate((value: ""seed"", count: 0), (acc, x) => (acc.value + x.Int, acc.count + 1), acc => acc.count + acc.value);
+}}",
+        (string x) => Assert.AreEqual("10seed0123456789", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("Aggregate")
+                })
+        }
+    );
+        AssertAllocations(array: 1);
+    }
+
+    [Test]
+    public void List_OrderBy_Aggregate_Seed_Result() {
+        AssertGeneration(
+@"string __() {{
+    var source = Data.List(10).Shuffle();
+    return source.OrderBy(x => x.Int).Aggregate((value: ""seed"", count: 0), (acc, x) => (acc.value + x.Int, acc.count + 1), acc => acc.count + acc.value);
+}}",
+        (string x) => Assert.AreEqual("10seed0123456789", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.List, "OrderBy", new[] {
+                    new StructMethod("Aggregate")
+                })
+        }
+    );
+        AssertAllocations(array: 1);
+    }
+
+    [Test]
     public void Array_Select_OrderBy_Aggregate() {
         var expectedMessage = Assert.Throws<InvalidOperationException>(() => Data.Array(0).Select(x => x.Int.ToString()).OrderBy(x => x).Aggregate((acc, x) => acc + x))!.Message;
         AssertGeneration(
@@ -2163,6 +2197,27 @@ $@"string __() {{
     return result;
 }}",
             (string x) => Assert.AreEqual("seed6789", x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("Aggregate")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Where_Aggregate_Seed_Result() {
+        Assert.AreEqual("0seed", Data.Array(0).Where(x => x.Int > 5).Aggregate((value: "seed", count: 0), (acc, x) => (acc.value + x.Int, acc.count + 1), acc => acc.count + acc.value));
+        AssertGeneration(
+$@"string __() {{
+    Assert.AreEqual(""0seed"", Data.Array(0).Where(x => x.Int > 5).Aggregate((value: ""seed"", count: 0), (acc, x) => (acc.value + x.Int, acc.count + 1), acc => acc.count + acc.value));
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5).Aggregate((value: ""seed"", count: 0), (acc, x) => (acc.value + x.Int, acc.count + 1), acc => acc.count + acc.value);
+    Assert.AreEqual(1, source[5].Int_GetCount);
+    Assert.AreEqual(2, source[6].Int_GetCount);
+    return result;
+}}",
+            (string x) => Assert.AreEqual("4seed6789", x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                     new StructMethod("Aggregate")

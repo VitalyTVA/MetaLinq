@@ -48,7 +48,7 @@ public enum ToValueType {
     ToArray, 
     ToHashSet, 
     ToDictionary,
-    Aggregate, Aggregate_Seed, //+ SelectTest + [List,Array]OrderByTest
+    Aggregate, Aggregate_Seed, Aggregate_Seed_Result,
     First,
     FirstOrDefault,
     Last,

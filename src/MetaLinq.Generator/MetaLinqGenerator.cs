@@ -203,6 +203,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "Aggregate" => method.Parameters.Length switch {
                 1 => ToValueType.Aggregate,
                 2 => ToValueType.Aggregate_Seed,
+                3 => ToValueType.Aggregate_Seed_Result,
                 _ => throw new InvalidOperationException()
             },
             _ => null
