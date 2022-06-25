@@ -200,7 +200,11 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 ToValueType.Max_Double, ToValueType.Max_DoubleN,
                 ToValueType.Max_Decimal, ToValueType.Max_DecimalN
             ),
-            "Aggregate" => ToValueType.Aggregate_Seed,
+            "Aggregate" => method.Parameters.Length switch {
+                1 => ToValueType.Aggregate,
+                2 => ToValueType.Aggregate_Seed,
+                _ => throw new InvalidOperationException()
+            },
             _ => null
         });
     }

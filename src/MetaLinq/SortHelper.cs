@@ -6,6 +6,30 @@ namespace MetaLinq.Internal;
 
 public static class SortHelper {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Aggregate<T, TComparer>(T[] source, int[] map, TComparer comparer, int len, Func<T, T, T> func) where TComparer : IComparer<int> {
+        if(len == 0)
+            throw new InvalidOperationException("Sequence contains no elements");
+        SortCore<TComparer>(map, comparer, len);
+        T result = source[map[0]];
+        for(int i = 1; i != len; i++) {
+            result = func(result, source[map[i]]);
+        }
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T Aggregate<T, TComparer>(IList<T> source, int[] map, TComparer comparer, int len, Func<T, T, T> func) where TComparer : IComparer<int> {
+        if(len == 0)
+            throw new InvalidOperationException("Sequence contains no elements");
+        SortCore<TComparer>(map, comparer, len);
+        T result = source[map[0]];
+        for(int i = 1; i != len; i++) {
+            result = func(result, source[map[i]]);
+        }
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TAccumulate Aggregate<T, TComparer, TAccumulate>(T[] source, int[] map, TComparer comparer, int len, TAccumulate seed, Func<TAccumulate, T, TAccumulate> func) where TComparer : IComparer<int> {
         SortCore<TComparer>(map, comparer, len);
         for(int i = 0; i != len; i++) {
@@ -78,6 +102,8 @@ public static class SortHelper {
             return (int)((long)(object)val1 - (long)(object)val2);
         } else if(typeof(T) == typeof(short)) {
             return (short)(object)val1 - (short)(object)val2;
+        } else if(typeof(T) == typeof(string)) {
+            return string.Compare((string)(object)val1, (string)(object)val2);
         } else {
             throw new InvalidOperationException();
         }

@@ -317,7 +317,7 @@ public class LinqModelTests : BaseFixture {
     }
 
     [Test]
-    public void WhereAggregate() {
+    public void Where_Aggregate_Seed() {
         var model = new LinqModel();
         model.AddChain(SourceType.Array, new[] { Where, Aggregate_Seed.AsElement() });
         AssertModel(model,
@@ -327,6 +327,16 @@ public class LinqModelTests : BaseFixture {
             -Aggregate_Seed");
     }
 
+    [Test]
+    public void Where_Aggregate() {
+        var model = new LinqModel();
+        model.AddChain(SourceType.Array, new[] { Where, Aggregate.AsElement() });
+        AssertModel(model,
+@"Array
+    Root
+        Where
+            -Aggregate");
+    }
 
     static ToValueType[] NoSortChainElements = new[] {
         First, FirstOrDefault, Last, LastOrDefault

@@ -45,6 +45,8 @@ Two modes (using+asmeta)
 
 Feature switch (turn off meta sharp in a moment)
 
+Stack allocations for small arrays
+
 ## Select benchmark
 
 |           Method |    N |        Mean |      Error |    StdDev |      Median | Ratio | RatioSD |  Gen 0 |  Gen 1 | Allocated |

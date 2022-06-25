@@ -25,6 +25,7 @@ public static class ToValueSourceBuilder {
             ToValueType.First or ToValueType.Last or ToValueType.Single => $"{outputType} {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.FirstOrDefault or ToValueType.LastOrDefault or ToValueType.SingleOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.Aggregate => $"{outputType} Aggregate(Func<{outputType}, {outputType}, {outputType}> func)",
             ToValueType.Aggregate_Seed => $"TAccumulate Aggregate<TAccumulate>(TAccumulate seed, Func<TAccumulate, {outputType}, TAccumulate> func)",
             _ => throw new NotImplementedException(),
         };
@@ -262,7 +263,7 @@ GetFirstLastSingleOrDefaultResultStatement()
                     $"result{topLevel}.Add(keySelector(item{lastLevel.Next}), item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
-            case (true, LoopType.Sort, ToValueType.ToArray or ToValueType.Aggregate_Seed):
+            case (true, LoopType.Sort, ToValueType.ToArray or ToValueType.Aggregate or ToValueType.Aggregate_Seed):
                 var order = GetOrder();
                 var sortKeyVars = order.Select((x, i) => {
                     return $"var sortKeys{topLevel}_{i} = Allocator.Array<{x.sortKeyGenericType}>({capacityExpression});\r\n";
@@ -286,6 +287,7 @@ GetFirstLastSingleOrDefaultResultStatement()
                 var comparerExpression = string.Join(", ", parts) + new string(')', comparerTypes.Count);
                 var resultExpression = toValueType switch { 
                     ToValueType.ToArray => $"SortHelper.Sort(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length)",
+                    ToValueType.Aggregate => $"SortHelper.Aggregate(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length, func)",
                     ToValueType.Aggregate_Seed => $"SortHelper.Aggregate(result{topLevel}, map{topLevel}, comparer{lastLevel}, sortKeys{topLevel}_0.Length, seed, func)",
                     _ => throw new InvalidOperationException()
                 };
@@ -347,7 +349,20 @@ bool found{topLevel} = false;
                     $"result{topLevel} = func(result{topLevel}, item{lastLevel.Next});",
                     $@"var result_{lastLevel} = result{topLevel};"
                 );
-
+            case (_, LoopType.Forward, ToValueType.Aggregate):
+                return (
+$@"{outputType} result{topLevel} = default({outputType})!;
+bool found{topLevel} = false;",
+$@"if(found{topLevel}) {{ 
+    result{topLevel} = func(result{topLevel}, item{lastLevel.Next});
+}} else {{
+    result{topLevel} = item{lastLevel.Next};
+    found{topLevel} = true;
+}}",
+$@"if(!found{topLevel})
+    throw new InvalidOperationException(""Sequence contains no elements"");
+var result_{lastLevel} = result{topLevel};"
+                );
             default:
                 throw new NotImplementedException();
         };

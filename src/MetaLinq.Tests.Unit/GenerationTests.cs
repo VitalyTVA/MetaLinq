@@ -319,6 +319,23 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
+    public void List_OrderBy_Aggregate_Seed() {
+        AssertGeneration(
+@"string __() {{
+    var source = Data.List(10).Shuffle();
+    return source.OrderBy(x => x.Int).Aggregate(""seed"", (acc, x) => acc + x.Int);
+}}",
+        (string x) => Assert.AreEqual("seed0123456789", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.List, "OrderBy", new[] {
+                    new StructMethod("Aggregate")
+                })
+        }
+    );
+        AssertAllocations(array: 1);
+    }
+
+    [Test]
     public void CustomEnumerable_OrderBy_Aggregate_Seed() {
         AssertGeneration(
 @"string __() {{
@@ -333,6 +350,70 @@ public class GenerationTests : BaseFixture {
         }
     );
         AssertAllocations(largeArrayBuilder: 1, array: 1);
+    }
+
+    [Test]
+    public void Array_Select_OrderBy_Aggregate() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => Data.Array(0).Select(x => x.Int.ToString()).OrderBy(x => x).Aggregate((acc, x) => acc + x))!.Message;
+        AssertGeneration(
+$@"string __() {{
+    var message = Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Int.ToString()).OrderBy(x => x).Aggregate((acc, x) => acc + x))!.Message;
+    Assert.AreEqual(""{expectedMessage}"", message);
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int.ToString()).OrderBy(x => x).Aggregate((acc, x) => acc + x);
+}}",
+        (string x) => Assert.AreEqual("0123456789", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("Aggregate"),
+                    })
+                })
+        }
+    );
+        AssertAllocations(array: 4);
+    }
+
+    [Test]
+    public void List_Select_OrderBy_Aggregate() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => Data.List(0).Select(x => x.Int.ToString()).OrderBy(x => x).Aggregate((acc, x) => acc + x))!.Message;
+        AssertGeneration(
+$@"string __() {{
+    var message = Assert.Throws<System.InvalidOperationException>(() => Data.List(0).Select(x => x.Int.ToString()).OrderBy(x => x).Aggregate((acc, x) => acc + x))!.Message;
+    Assert.AreEqual(""{expectedMessage}"", message);
+    var source = Data.List(10).Shuffle();
+    return source.Select(x => x.Int.ToString()).OrderBy(x => x).Aggregate((acc, x) => acc + x);
+}}",
+        (string x) => Assert.AreEqual("0123456789", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("OrderBy", new[] {
+                        new StructMethod("Aggregate"),
+                    })
+                })
+        }
+    );
+        AssertAllocations(array: 4);
+    }
+
+    [Test]
+    public void List_OrderBy_Aggregate() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => new List<string>().OrderBy(x => x).Aggregate((acc, x) => acc + x))!.Message;
+        AssertGeneration(
+$@"string __() {{
+    var message = Assert.Throws<System.InvalidOperationException>(() => new List<string>().OrderBy(x => x).Aggregate((acc, x) => acc + x))!.Message;
+    Assert.AreEqual(""{expectedMessage}"", message);
+    var source = new List<string>(Enumerable.Select(Data.List(10).Shuffle(), x => x.Int.ToString()));
+    return source.OrderBy(x => x).Aggregate((acc, x) => acc + x);
+}}",
+        (string x) => Assert.AreEqual("0123456789", x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.List, "OrderBy", new[] {
+                    new StructMethod("Aggregate")
+                })
+        }
+    );
+        AssertAllocations(array: 2);
     }
 
     [Test]
@@ -2403,6 +2484,25 @@ $@"bool __() {{
         AssertGeneration(
             "string __() => Data.Array(5).Select(x => x.Int).Aggregate(\"seed\", (acc, x) => acc + x);",
             (string x) => Assert.AreEqual("seed01234", x),
+            new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Aggregate")
+                    })
+            }
+        );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_Select_Aggregate() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => Data.Array(0).Select(x => x.Int.ToString()).Aggregate((acc, x) => acc + x))!.Message;
+        AssertGeneration(
+$@"string __() {{ 
+    var message = Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Int.ToString()).Aggregate((acc, x) => acc + x))!.Message;
+    Assert.AreEqual(""{expectedMessage}"", message);
+    return Data.Array(5).Select(x => x.Int.ToString()).Aggregate((acc, x) => acc + x);
+}}",
+            (string x) => Assert.AreEqual("01234", x),
             new[] {
                     new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
                         new StructMethod("Aggregate")
