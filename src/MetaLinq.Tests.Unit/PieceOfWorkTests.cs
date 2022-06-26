@@ -5,7 +5,7 @@ namespace MetaLinqTests.Unit;
 [TestFixture]
 public class PieceOfWorkTests {
     static readonly ToValueType[] OrderDependentValueTypes = new[] {
-        ToValueType.First, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault
+        ToValueType.First, ToValueType.First_Predicate, ToValueType.FirstOrDefault, ToValueType.Last, ToValueType.LastOrDefault
     };
     public static readonly ToValueType[] OrderIndependentValueTypes = new[] {
         ToValueType.All, ToValueType.Any, 
@@ -38,7 +38,10 @@ public class PieceOfWorkTests {
     static readonly ToValueType[] NoSortValueTypes = 
         System.Linq.Enumerable.Concat(OrderIndependentValueTypes, OrderDependentValueTypes).ToArray();
     static readonly ToValueType[] NoSortForwardValueTypes =
-        System.Linq.Enumerable.Concat(OrderIndependentValueTypes, new[] { ToValueType.First, ToValueType.FirstOrDefault }).ToArray();
+        System.Linq.Enumerable.Concat(
+            OrderIndependentValueTypes, 
+            new[] { ToValueType.First, ToValueType.First_Predicate, ToValueType.FirstOrDefault }
+        ).ToArray();
 
     [Test]
     public void OrderBy_() {

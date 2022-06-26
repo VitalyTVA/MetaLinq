@@ -33,7 +33,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderBy_First() {
+    public void Array_OrderBy_First_Predicate() {
         AssertGeneration(
 @"Data __() {{
     var source = Data.Array(10).Shuffle();
@@ -41,6 +41,24 @@ public class GenerationTests : BaseFixture {
     return source.OrderBy(x => x.Int).First(x => x.Int > 4);
 }}",
         (Data x) => Assert.AreEqual(5, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("First")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderBy_First() {
+        AssertGeneration(
+@"Data __() {{
+    var source = Data.Array(10).Shuffle();
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).OrderBy(x => x.Int).First());
+    return source.OrderBy(x => x.Int).First();
+}}",
+        (Data x) => Assert.AreEqual(0, x.Int),
         new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
                     new StructMethod("First")
@@ -69,7 +87,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void CustomEnumerable_OrderBy_First() {
+    public void CustomEnumerable_OrderBy_First_Predicate() {
         AssertGeneration(
 @"Data __() {{
     var source = Data.Array(10).Shuffle();
@@ -103,7 +121,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void CustomEnumerable_Where_OrderBy_First() {
+    public void CustomEnumerable_Where_OrderBy_First_Predicate() {
         AssertGeneration(
 @"Data __() {{
     var source = Data.Array(15).Shuffle();
@@ -894,7 +912,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void List_Select_Select_OrderBy_First() {
+    public void List_Select_Select_OrderBy_First_Predicate() {
         AssertGeneration(
 @"int __() {{
     var source = Data.List(10).Shuffle();
@@ -1256,7 +1274,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_Where_OrderBy_Select_OrderByDescending_First() {
+    public void Array_Where_OrderBy_Select_OrderByDescending_First_Predicate() {
         AssertGeneration(
 @"int __() {{
     var source = Data.Array(10).Shuffle();
@@ -1302,7 +1320,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void CustomEnumerable_Where_OrderBy_Select_OrderByDescending_First() {
+    public void CustomEnumerable_Where_OrderBy_Select_OrderByDescending_First_Predicate() {
         AssertGeneration(
 @"int __() {{
     var source = Data.Array(10).Shuffle();
@@ -1515,7 +1533,7 @@ $@"string __() {{
         AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
-    public void Array_SkipWhile_First() {
+    public void Array_SkipWhile_First_Predicate() {
         AssertGeneration(
             "Data __() => Data.Array(10).SkipWhile(x => x.Int < 5).First(x => x.Int % 4 == 0);",
             (Data x) => Assert.AreEqual(8, x.Int),
@@ -1633,7 +1651,7 @@ $@"string __() {{
         AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
-    public void Array_SelectMany_SkipWhile_First() {
+    public void Array_SelectMany_SkipWhile_First_Predicate() {
         AssertGeneration(
             "int __() => Data.Array(5).SelectMany(x => new[] { 2 * x.Int, 2 * x.Int + 1 }).SkipWhile(x => x < 5).First(x => x % 4 == 0);",
             (int x) => Assert.AreEqual(8, x),
@@ -1711,7 +1729,7 @@ $@"string __() {{
         AssertAllocations(largeArrayBuilder: 2, array: 2);
     }
     [Test]
-    public void Array_TakeWhile_OrderBy_Select_TakeWhile_OrderByDescending_First() {
+    public void Array_TakeWhile_OrderBy_Select_TakeWhile_OrderByDescending_First_Predicate() {
         AssertGeneration(
 @"int __() {{
     var source = Enumerable.ToArray(Enumerable.Reverse(Data.Array(10)));
@@ -2026,7 +2044,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_Where_First() {
+    public void Array_Where_First_Predicate() {
         var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.First(x => x == 0))!.Message;
         AssertGeneration(
 $@"Data __() {{
@@ -2038,6 +2056,27 @@ $@"Data __() {{
     return result;
 }}",
             (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("First")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Where_First() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => new int[] { }.First())!.Message;
+        AssertGeneration(
+$@"Data __() {{
+    var ex = Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Where(x => x.Int < 0).First());
+    Assert.AreEqual(""{expectedMessage}"", ex!.Message);
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5).First();
+    Assert.AreEqual(0, source[9].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(6, x.Int),
             new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
                     new StructMethod("First")
@@ -2106,7 +2145,7 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_Where_First() {
+    public void CustomEnumerable_Where_First_Predicate() {
         var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.First(x => x == 0))!.Message;
         AssertGeneration(
 $@"Data __() {{
@@ -2458,7 +2497,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_Select_First() {
+    public void Array_Select_First_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Select(x => x.Self).First(x => x.Int == -1));
@@ -3368,7 +3407,7 @@ $@"decimal? __() {{
     #endregion
 
     [Test]
-    public void CustomEnumerable_Select_First() {
+    public void CustomEnumerable_Select_First_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(10);
@@ -4090,7 +4129,7 @@ static Data[] source = Data.Array(3);",
     }
 
     [Test]
-    public void Array_SelectManyList_First() {
+    public void Array_SelectManyList_First_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(5);
@@ -4519,7 +4558,7 @@ $@"Data __() {{
     }
 
     [Test]
-    public void List_Select_Where_First() {
+    public void List_Select_Where_First_Predicate() {
         AssertGeneration(
             "int __() => Data.List(10).Select(x => x.Int).Where(x => x > 4).First(x => x % 4 == 3);",
             (int x) => Assert.AreEqual(7, x),

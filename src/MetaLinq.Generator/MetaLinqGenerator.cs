@@ -147,6 +147,18 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 _ => throw new InvalidOperationException()
             };
         };
+        ToValueType ChooseOverload(ToValueType? noArgs = null, ToValueType? oneArg = null, ToValueType? twoArgs = null, ToValueType? threeArgs = null) {
+            var type = method.Parameters.Length switch {
+                0 => noArgs,
+                1 => oneArg,
+                2 => twoArgs,
+                3 => threeArgs,
+                _ => throw new InvalidOperationException()
+            };
+            if(type == null)
+                throw new InvalidOperationException();
+            return type.Value;
+        };
         return method.Name switch {
             "Where" => LinqNode.Where,
             "OfType" => LinqNode.OfType,
@@ -164,7 +176,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "ToArray" => ToValueType.ToArray,
             "ToHashSet" => ToValueType.ToHashSet,
             "ToDictionary" => ToValueType.ToDictionary,
-            "First" => ToValueType.First,
+            "First" => ChooseOverload(noArgs: ToValueType.First, oneArg: ToValueType.First_Predicate),
             "FirstOrDefault" => ToValueType.FirstOrDefault,
             "Last" => ToValueType.Last,
             "LastOrDefault" => ToValueType.LastOrDefault,
@@ -200,12 +212,11 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 ToValueType.Max_Double, ToValueType.Max_DoubleN,
                 ToValueType.Max_Decimal, ToValueType.Max_DecimalN
             ),
-            "Aggregate" => method.Parameters.Length switch {
-                1 => ToValueType.Aggregate,
-                2 => ToValueType.Aggregate_Seed,
-                3 => ToValueType.Aggregate_Seed_Result,
-                _ => throw new InvalidOperationException()
-            },
+            "Aggregate" => ChooseOverload(
+                oneArg: ToValueType.Aggregate, 
+                twoArgs: ToValueType.Aggregate_Seed, 
+                threeArgs: ToValueType.Aggregate_Seed_Result
+            ),
             _ => null
         });
     }

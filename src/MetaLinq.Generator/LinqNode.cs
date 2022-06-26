@@ -49,7 +49,7 @@ public enum ToValueType {
     ToHashSet, 
     ToDictionary,
     Aggregate, Aggregate_Seed, Aggregate_Seed_Result,
-    First,
+    First, First_Predicate,
     FirstOrDefault,
     Last,
     LastOrDefault,
@@ -84,6 +84,12 @@ public enum AggregateKind { Sum, Min, Max, Average }
 public record struct AggregateInfo(AggregateKind Kind, AggregateValueType Type, bool Nullable);
 
 public static class ValueTypeTraits {
+    public static string ToMethodName(this ToValueType type) {
+        return type switch {
+            ToValueType.First_Predicate => "First",
+            _ => type.ToString(),
+        };
+    }
     public static AggregateInfo? GetAggregateInfo(this ToValueType value) {
         return value switch {
             ToValueType.Sum_Int => new AggregateInfo(AggregateKind.Sum, AggregateValueType.Int, false),
@@ -140,7 +146,10 @@ public static class ValueTypeTraits {
             or ToValueType.ToDictionary or ToValueType.ToHashSet;
     }
     public static bool IsOrderDependentLoop(this ToValueType value) {
-        return value is ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault;
+        return value is ToValueType.First or ToValueType.First_Predicate 
+            or ToValueType.FirstOrDefault 
+            or ToValueType.Last 
+            or ToValueType.LastOrDefault;
     }
     public static ToValueChainElement AsElement(this ToValueType type) => new ToValueChainElement(type);
     public static ToValueChainElement? AsElement(this ToValueType? type) => type != null ? new ToValueChainElement(type.Value) : null;
