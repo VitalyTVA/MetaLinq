@@ -22,9 +22,9 @@ public static class ToValueSourceBuilder {
             ToValueType.ToArray => $"{outputType}[] ToArray()",
             ToValueType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
             ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
-            ToValueType.First => $"{outputType} {toValueType.ToMethodName()}()",
+            ToValueType.First or ToValueType.FirstOrDefault => $"{outputType} {toValueType.ToMethodName()}()",
             ToValueType.First_Predicate or ToValueType.Last or ToValueType.Single => $"{outputType} {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
-            ToValueType.FirstOrDefault or ToValueType.LastOrDefault or ToValueType.SingleOrDefault => $"{outputType}? {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.FirstOrDefault_Predicate or ToValueType.LastOrDefault or ToValueType.SingleOrDefault => $"{outputType}? {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
             ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.Aggregate => $"{outputType} Aggregate(Func<{outputType}, {outputType}, {outputType}> func)",
             ToValueType.Aggregate_Seed => $"TAccumulate Aggregate<TAccumulate>(TAccumulate seed, Func<TAccumulate, {outputType}, TAccumulate> func)",
@@ -79,7 +79,7 @@ public static class ToValueSourceBuilder {
             if(item.Element is TakeWhileNode)
                 builder.Tab.AppendLine($"takeWhile{item.Level.Next}:");
         }
-        if((toInstanceType is ToValueType.First or ToValueType.First_Predicate or ToValueType.FirstOrDefault && piece.LoopType is LoopType.Forward)
+        if((toInstanceType is ToValueType.First or ToValueType.First_Predicate or ToValueType.FirstOrDefault or ToValueType.FirstOrDefault_Predicate && piece.LoopType is LoopType.Forward)
             || (toInstanceType is ToValueType.Last or ToValueType.LastOrDefault && piece.LoopType is LoopType.Backward)
             || (toInstanceType is ToValueType.Any or ToValueType.All && piece.LoopType is LoopType.Forward))
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
@@ -182,13 +182,20 @@ $@"if(!found{topLevel})
     throw new InvalidOperationException(""Sequence contains no elements"");
 var result_{lastLevel} = result{topLevel}!;"
                 );
-            case (_, LoopType.Forward, ToValueType.FirstOrDefault) or (_, LoopType.Backward, ToValueType.LastOrDefault):
+            case (_, LoopType.Forward, ToValueType.FirstOrDefault_Predicate) or (_, LoopType.Backward, ToValueType.LastOrDefault):
                 return (
 $@"var result{topLevel} = default({outputType});",
 $@"if(predicate(item{lastLevel.Next})) {{
     result{topLevel} = item{lastLevel.Next};
     goto firstFound{lastLevel};
 }}",
+GetFirstLastSingleOrDefaultResultStatement()
+                );
+            case (_, LoopType.Forward, ToValueType.FirstOrDefault) /*or (_, LoopType.Backward, ToValueType.LastOrDefault)*/:
+                return (
+$@"var result{topLevel} = default({outputType})!;",
+$@"result{topLevel} = item{lastLevel.Next};
+goto firstFound{lastLevel};",
 GetFirstLastSingleOrDefaultResultStatement()
                 );
             case (_, LoopType.Forward, ToValueType.Any or ToValueType.All):
@@ -319,7 +326,11 @@ var comparer{lastLevel} = {comparerExpression};
 var result_{lastLevel} = {resultExpression};"
                 );
 
-            case (_, LoopType.Sort, ToValueType.First or ToValueType.First_Predicate or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault):
+            case (_, LoopType.Sort, 
+                ToValueType.First or ToValueType.First_Predicate or
+                ToValueType.FirstOrDefault or ToValueType.FirstOrDefault_Predicate or 
+                ToValueType.Last or ToValueType.LastOrDefault
+            ):
                 var order_ = GetOrder();
                 var itemLevel = order_.First().Level;
                 var keyDefinitions = order_
@@ -336,7 +347,11 @@ var result_{lastLevel} = {resultExpression};"
                             result = "if(compareResult == 0) " + result;
                         return "    " + result;
                     });
-                char sign = toValueType is ToValueType.First or ToValueType.First_Predicate or ToValueType.FirstOrDefault ? '<' : '>';
+                char sign = toValueType switch {
+                    ToValueType.First or ToValueType.First_Predicate or ToValueType.FirstOrDefault or ToValueType.FirstOrDefault_Predicate => '<',
+                    ToValueType.Last  or ToValueType.LastOrDefault => '>',
+                    _ => throw new InvalidOperationException()
+                };
                 var getResult =
 @$"if(!found{topLevel}) {{
 {string.Join(Environment.NewLine, keyAssignments)}
@@ -349,7 +364,7 @@ if(compareResult {sign} 0) {{
     result{topLevel} = item{itemLevel};
 }}
 found{topLevel} = true;";
-                if(toValueType is not ToValueType.First) {
+                if(toValueType is not (ToValueType.First or ToValueType.FirstOrDefault)) {
                     getResult =
 @$"if(predicate(item{itemLevel})) {{
 {getResult}

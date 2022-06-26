@@ -50,7 +50,7 @@ public enum ToValueType {
     ToDictionary,
     Aggregate, Aggregate_Seed, Aggregate_Seed_Result,
     First, First_Predicate,
-    FirstOrDefault,
+    FirstOrDefault, FirstOrDefault_Predicate,
     Last,
     LastOrDefault,
     Single,
@@ -87,6 +87,7 @@ public static class ValueTypeTraits {
     public static string ToMethodName(this ToValueType type) {
         return type switch {
             ToValueType.First_Predicate => "First",
+            ToValueType.FirstOrDefault_Predicate => "FirstOrDefault",
             _ => type.ToString(),
         };
     }
@@ -146,8 +147,9 @@ public static class ValueTypeTraits {
             or ToValueType.ToDictionary or ToValueType.ToHashSet;
     }
     public static bool IsOrderDependentLoop(this ToValueType value) {
-        return value is ToValueType.First or ToValueType.First_Predicate 
-            or ToValueType.FirstOrDefault 
+        return value 
+            is ToValueType.First or ToValueType.First_Predicate
+            or ToValueType.FirstOrDefault or ToValueType.FirstOrDefault_Predicate 
             or ToValueType.Last 
             or ToValueType.LastOrDefault;
     }

@@ -161,7 +161,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderByDescending_FirstOrDefault() {
+    public void Array_OrderByDescending_FirstOrDefault_Predicate() {
         AssertGeneration(
 @"Data? __() {{
     var source = Data.Array(10).Shuffle();
@@ -169,6 +169,23 @@ public class GenerationTests : BaseFixture {
     return source.OrderByDescending(x => -x.Int).FirstOrDefault(x => x.Int > 4);
 }}",
         (Data x) => Assert.AreEqual(5, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("FirstOrDefault")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderByDescending_FirstOrDefault() {
+        AssertGeneration(
+@"Data? __() {{
+    Assert.Null(Data.Array(0).OrderByDescending(x => -x.Int).FirstOrDefault());
+    return Data.Array(10).Shuffle().OrderByDescending(x => -x.Int).FirstOrDefault();
+}}",
+        (Data x) => Assert.AreEqual(0, x.Int),
         new[] {
                 new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
                     new StructMethod("FirstOrDefault")
@@ -506,7 +523,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_OrderBy_ThenBy_FirstAndFirstOrDefault() {
+    public void Array_OrderBy_ThenBy_FirstAndFirstOrDefault_Predicate() {
         AssertGeneration(
 @"void __() {{
     var source = Data.Array(10).Shuffle(longMaxValue: 3);
@@ -1456,7 +1473,7 @@ $@"string __() {{
         AssertAllocations(largeArrayBuilder: 1);
     }
     [Test]
-    public void Array_TakeWhile_FirstOrDefault() {
+    public void Array_TakeWhile_FirstOrDefault_Predicate() {
         AssertGeneration(
 @"Data? __() { 
     Assert.Null(Data.Array(20).TakeWhile(x => x.Int < 10).FirstOrDefault(x => x.Int % 15 == 12));
@@ -2086,12 +2103,31 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Where_FirstOrDefault() {
+    public void Array_Where_FirstOrDefault_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Null(Data.Array(10).Where(x => x.Int > 5).FirstOrDefault(x => x.Int == 0));
     var source = Data.Array(10);
     var result = source.Where(x => x.Int > 5).FirstOrDefault(x => x.Int % 4 == 0);
+    Assert.AreEqual(0, source[9].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("FirstOrDefault")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Where_FirstOrDefault() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Null(Data.Array(10).Where(x => x.Int < 0).FirstOrDefault());
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5 && x.Int % 4 == 0).FirstOrDefault();
     Assert.AreEqual(0, source[9].Int_GetCount);
     return result!;
 }}",
@@ -2516,7 +2552,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_FirstOrDefault() {
+    public void Array_Select_FirstOrDefault_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Null(Data.Array(10).Select(x => x.Self).FirstOrDefault(x => x.Int == -1));
@@ -4148,7 +4184,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SelectManyList_FirstOrDefault() {
+    public void Array_SelectManyList_FirstOrDefault_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Null(Data.Array(5).SelectMany(x => x.DataList).FirstOrDefault(x => x.Int < 0));
@@ -4249,7 +4285,7 @@ $@"Data? __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_SelectManyCustomEnumerable_FirstOrDefault() {
+    public void CustomEnumerable_SelectManyCustomEnumerable_FirstOrDefault_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(5);
@@ -4572,7 +4608,7 @@ $@"Data __() {{
         );
     }
     [Test]
-    public void List_Where_Select_FirstOrDefault() {
+    public void List_Where_Select_FirstOrDefault_Predicate() {
         AssertGeneration(
 @"int? __() { 
     Assert.AreEqual(0, Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).FirstOrDefault(x => x == -1));

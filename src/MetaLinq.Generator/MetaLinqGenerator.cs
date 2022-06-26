@@ -177,7 +177,7 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "ToHashSet" => ToValueType.ToHashSet,
             "ToDictionary" => ToValueType.ToDictionary,
             "First" => ChooseOverload(noArgs: ToValueType.First, oneArg: ToValueType.First_Predicate),
-            "FirstOrDefault" => ToValueType.FirstOrDefault,
+            "FirstOrDefault" => ChooseOverload(noArgs: ToValueType.FirstOrDefault, oneArg: ToValueType.FirstOrDefault_Predicate),
             "Last" => ToValueType.Last,
             "LastOrDefault" => ToValueType.LastOrDefault,
             "Any" => ToValueType.Any,
