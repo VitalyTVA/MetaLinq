@@ -350,7 +350,7 @@ public class LinqModelTests : BaseFixture {
     }
 
     static ToValueType[] NoSortChainElements = new[] {
-        First, First_Predicate, FirstOrDefault, FirstOrDefault_Predicate, Last, LastOrDefault
+        First, First_Predicate, FirstOrDefault, FirstOrDefault_Predicate, Last, Last_Predicate, LastOrDefault, LastOrDefault_Predicate
     }.Concat(PieceOfWorkTests.OrderIndependentValueTypes).ToArray();
 
     [TestCaseSource(nameof(NoSortChainElements))]

@@ -51,8 +51,8 @@ public enum ToValueType {
     Aggregate, Aggregate_Seed, Aggregate_Seed_Result,
     First, First_Predicate,
     FirstOrDefault, FirstOrDefault_Predicate,
-    Last,
-    LastOrDefault,
+    Last, Last_Predicate,
+    LastOrDefault, LastOrDefault_Predicate,
     Single,
     SingleOrDefault,
     Any,
@@ -88,6 +88,8 @@ public static class ValueTypeTraits {
         return type switch {
             ToValueType.First_Predicate => "First",
             ToValueType.FirstOrDefault_Predicate => "FirstOrDefault",
+            ToValueType.Last_Predicate => "Last",
+            ToValueType.LastOrDefault_Predicate => "LastOrDefault",
             _ => type.ToString(),
         };
     }
@@ -149,9 +151,9 @@ public static class ValueTypeTraits {
     public static bool IsOrderDependentLoop(this ToValueType value) {
         return value 
             is ToValueType.First or ToValueType.First_Predicate
-            or ToValueType.FirstOrDefault or ToValueType.FirstOrDefault_Predicate 
-            or ToValueType.Last 
-            or ToValueType.LastOrDefault;
+            or ToValueType.FirstOrDefault or ToValueType.FirstOrDefault_Predicate
+            or ToValueType.Last or ToValueType.Last_Predicate
+            or ToValueType.LastOrDefault or ToValueType.LastOrDefault_Predicate;
     }
     public static ToValueChainElement AsElement(this ToValueType type) => new ToValueChainElement(type);
     public static ToValueChainElement? AsElement(this ToValueType? type) => type != null ? new ToValueChainElement(type.Value) : null;

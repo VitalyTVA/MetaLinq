@@ -69,12 +69,29 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderBy_Last() {
+    public void Array_OrderBy_Last_Predicate() {
         AssertGeneration(
 @"Data __() {{
     var source = Data.Array(10).Shuffle();
     Assert.Throws<System.InvalidOperationException>(() => source.OrderBy(x => x.Int).Last(x => x.Int < 0));
     return source.OrderBy(x => x.Int).Last(x => x.Int > 4);
+}}",
+        (Data x) => Assert.AreEqual(9, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("Last")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderBy_Last() {
+        AssertGeneration(
+@"Data __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Shuffle().OrderBy(x => x.Int).Last());
+    return Data.Array(10).Shuffle().OrderBy(x => x.Int).Last();
 }}",
         (Data x) => Assert.AreEqual(9, x.Int),
         new[] {
@@ -104,7 +121,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void CustomEnumerable_OrderBy_Last() {
+    public void CustomEnumerable_OrderBy_Last_Predicate() {
         AssertGeneration(
 @"Data __() {{
     var source = Data.Array(10).Shuffle();
@@ -141,7 +158,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void CustomEnumerable_Where_OrderBy_Last() {
+    public void CustomEnumerable_Where_OrderBy_Last_Predicate() {
         AssertGeneration(
 @"Data __() {{
     var source = Data.Array(20).Shuffle();
@@ -486,12 +503,29 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_OrderByDescending_LastOrDefault() {
+    public void Array_OrderByDescending_LastOrDefault_Predicate() {
         AssertGeneration(
 @"Data? __() {{
     var source = Data.Array(10).Shuffle();
     Assert.Null(source.OrderByDescending(x => -x.Int).LastOrDefault(x => x.Int < 0));
     return source.OrderByDescending(x => -x.Int).LastOrDefault(x => x.Int > 4);
+}}",
+        (Data x) => Assert.AreEqual(9, x.Int),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderByDescending", new[] {
+                    new StructMethod("LastOrDefault")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderByDescending_LastOrDefault() {
+        AssertGeneration(
+@"Data? __() {{
+    Assert.Null(Data.Array(0).Shuffle().OrderByDescending(x => -x.Int).LastOrDefault());
+    return Data.Array(10).Shuffle().OrderByDescending(x => -x.Int).LastOrDefault();
 }}",
         (Data x) => Assert.AreEqual(9, x.Int),
         new[] {
@@ -603,7 +637,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_OrderBy_ThenBy_LastAndLastOrDefault() {
+    public void Array_OrderBy_ThenBy_LastAndLastOrDefault_Predicate() {
         AssertGeneration(
 @"void __() {{
     var source = Data.Array(10).Shuffle(longMaxValue: 3);
@@ -952,7 +986,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void List_Select_Select_OrderByDescending_Last() {
+    public void List_Select_Select_OrderByDescending_Last_Predicate() {
         AssertGeneration(
 @"int __() {{
     var source = Data.List(10).Shuffle();
@@ -1314,7 +1348,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_Where_OrderBy_Select_OrderBy_Last() {
+    public void Array_Where_OrderBy_Select_OrderBy_Last_Predicate() {
         AssertGeneration(
 @"int __() {{
     var source = Data.Array(10).Shuffle();
@@ -1360,7 +1394,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void CustomEnumerable_Where_OrderBy_Select_OrderBy_Last() {
+    public void CustomEnumerable_Where_OrderBy_Select_OrderBy_Last_Predicate() {
         AssertGeneration(
 @"int __() {{
     var source = Data.Array(10).Shuffle();
@@ -1521,7 +1555,7 @@ $@"string __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_TakeWhile_LastOrDefault() {
+    public void Array_TakeWhile_LastOrDefault_Predicate() {
         AssertGeneration(
 @"Data? __() { 
     Assert.Null(Data.Array(20).TakeWhile(x => x.Int < 10).LastOrDefault(x => x.Int % 15 == 12));
@@ -1563,7 +1597,7 @@ $@"string __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SkipWhile_Last() {
+    public void Array_SkipWhile_Last_Predicate() {
         AssertGeneration(
 @"Data __() { 
     var source = Data.Array(20);
@@ -1683,7 +1717,7 @@ $@"string __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SelectMany_SkipWhile_Last() {
+    public void Array_SelectMany_SkipWhile_Last_Predicate() {
         AssertGeneration(
             "int __() => Data.Array(10).SelectMany(x => new[] { 2 * x.Int, 2 * x.Int + 1 }).SkipWhile(x => x < 5).Last(x => x % 4 == 0);",
             (int x) => Assert.AreEqual(16, x),
@@ -1770,7 +1804,7 @@ $@"string __() {{
         AssertAllocations(largeArrayBuilder: 2, array: 1);
     }
     [Test]
-    public void Array_TakeWhile_OrderBy_Select_TakeWhile_OrderByDescending_Last() {
+    public void Array_TakeWhile_OrderBy_Select_TakeWhile_OrderByDescending_Last_Predicate() {
         AssertGeneration(
 @"int __() {{
     var source = Enumerable.ToArray(Enumerable.Reverse(Data.Array(10)));
@@ -2200,7 +2234,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Where_Last() {
+    public void Array_Where_Last_Predicate() {
         var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.Last(x => x == 0))!.Message;
         AssertGeneration(
 $@"Data __() {{
@@ -2222,7 +2256,29 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Where_LastOrDefault() {
+    public void Array_Where_Last() {
+        var expectedMessage = Assert.Throws<InvalidOperationException>(() => new int[] { }.Last())!.Message;
+        AssertGeneration(
+$@"Data __() {{
+    var ex = Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Where(x => x.Int > 5 && x.Int == 0).Last());
+    Assert.AreEqual(""{expectedMessage}"", ex!.Message);
+    Assert.AreEqual(6, Data.Array(10).Where(static x => x.Int % 3 == 0 && x.Int % 2 == 0).Last().Int);
+    var source = Data.Array(15);
+    var result = source.Where(x => x.Int < 12 && x.Int % 4 == 0).Last();
+    Assert.AreEqual(0, source[7].Int_GetCount);
+    return result;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("Last")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Where_LastOrDefault_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Null(Data.Array(10).Where(x => x.Int > 5).LastOrDefault(x => x.Int == 0));
@@ -2241,7 +2297,26 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_Where_Last() {
+    public void Array_Where_LastOrDefault() {
+        AssertGeneration(
+$@"Data __() {{
+    Assert.Null(Data.Array(10).Where(x => x.Int > 5 && x.Int == 0).LastOrDefault());
+    var source = Data.Array(15);
+    var result = source.Where(x => x.Int < 12 && x.Int % 4 == 0).LastOrDefault();
+    Assert.AreEqual(0, source[7].Int_GetCount);
+    return result!;
+}}",
+            (Data x) => Assert.AreEqual(8, x.Int),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("LastOrDefault")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void CustomEnumerable_Where_Last_Predicate() {
         var expectedMessage = Assert.Throws<InvalidOperationException>(() => new[] { 1 }.Last(x => x == 0))!.Message;
         AssertGeneration(
 $@"Data __() {{
@@ -3461,7 +3536,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Last() {
+    public void Array_Select_Last_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Throws<System.InvalidOperationException>(() => Data.Array(10).Select(x => x.Self).Last(x => x.Int == -1));
@@ -3480,7 +3555,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_LastOrDefault() {
+    public void Array_Select_LastOrDefault_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Null(Data.Array(10).Select(x => x.Self).LastOrDefault(x => x.Int == -1));
@@ -3499,7 +3574,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_Select_Last() {
+    public void CustomEnumerable_Select_Last_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(10);
@@ -4343,7 +4418,7 @@ $@"bool __() {{
     }
 
     [Test]
-    public void Array_SelectManyList_Last() {
+    public void Array_SelectManyList_Last_Predicate() {
         AssertGeneration(
 $@"void __() {{
     var source = Data.Array(5);
@@ -4368,7 +4443,7 @@ $@"void __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SelectManyList_LastOrDefault() {
+    public void Array_SelectManyList_LastOrDefault_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Null(Data.Array(5).SelectMany(x => x.DataList).LastOrDefault(x => x.Int < 0));
@@ -4388,7 +4463,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_SelectManyCustomEnumerable_Last() {
+    public void CustomEnumerable_SelectManyCustomEnumerable_Last_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(5);
@@ -4407,7 +4482,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SelectManyCustomEnumerable_Last() {
+    public void Array_SelectManyCustomEnumerable_Last_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(5);
@@ -4426,7 +4501,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_SelectManyList_Last() {
+    public void CustomEnumerable_SelectManyList_Last_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     var source = Data.Array(5);
@@ -4659,7 +4734,7 @@ $@"Data __() {{
         );
     }
     [Test]
-    public void List_Select_Where_Last() {
+    public void List_Select_Where_Last_Predicate() {
         AssertGeneration(
             "int __() => Data.List(15).Select(x => x.Int).Where(x => x < 12).Last(x => x % 4 == 0);",
             (int x) => Assert.AreEqual(8, x),
@@ -4673,7 +4748,7 @@ $@"Data __() {{
         );
     }
     [Test]
-    public void List_Where_Select_LastOrDefault() {
+    public void List_Where_Select_LastOrDefault_Predicate() {
         AssertGeneration(
 @"int? __() { 
     Assert.AreEqual(0, Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).LastOrDefault(x => x == -1));

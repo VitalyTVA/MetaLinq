@@ -21,7 +21,7 @@ public static class PieceOfWorkExtensions {
             result.RemoveAt(0);
             result[0] = result[0] with { KnownSize = false };
         }
-        if(toValueType is ToValueType.Last or ToValueType.LastOrDefault
+        if(toValueType is ToValueType.Last or ToValueType.Last_Predicate or ToValueType.LastOrDefault or ToValueType.LastOrDefault_Predicate
             && result.Count == 1
             && sourceType.HasIndexer() 
             && result.Single().LoopType == LoopType.Forward

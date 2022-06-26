@@ -5,7 +5,8 @@ namespace MetaLinqTests.Unit;
 [TestFixture]
 public class PieceOfWorkTests {
     static readonly ToValueType[] OrderDependentValueTypes = new[] {
-        ToValueType.First, ToValueType.First_Predicate, ToValueType.FirstOrDefault, ToValueType.FirstOrDefault_Predicate, ToValueType.Last, ToValueType.LastOrDefault
+        ToValueType.First, ToValueType.First_Predicate, ToValueType.FirstOrDefault, ToValueType.FirstOrDefault_Predicate,
+        ToValueType.Last, ToValueType.Last_Predicate, ToValueType.LastOrDefault, ToValueType.LastOrDefault_Predicate
     };
     public static readonly ToValueType[] OrderIndependentValueTypes = new[] {
         ToValueType.All, ToValueType.Any, 
@@ -152,7 +153,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Where_Last(
-[Values(ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.Last, ToValueType.Last_Predicate, ToValueType.LastOrDefault, ToValueType.LastOrDefault_Predicate)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Where }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Forward, Nodes: [Where]",
@@ -169,7 +170,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void CustomEnumerable_Select_Last(
-[Values(ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.Last, ToValueType.Last_Predicate, ToValueType.LastOrDefault, ToValueType.LastOrDefault_Predicate)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Select }, new[] {
 "KnownType: False, KnownSize: False, LoopType: Forward, Nodes: [Select]",
@@ -206,7 +207,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Where_Last(
-[Values(ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.Last, ToValueType.Last_Predicate, ToValueType.LastOrDefault, ToValueType.LastOrDefault_Predicate)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Where }, new[] {
 "KnownType: True, KnownSize: False, LoopType: Backward, Nodes: [Where]",
@@ -222,7 +223,7 @@ public class PieceOfWorkTests {
 
     [Test]
     public void Select_Last(
-[Values(ToValueType.Last, ToValueType.LastOrDefault)] ToValueType toValueType
+[Values(ToValueType.Last, ToValueType.Last_Predicate, ToValueType.Last, ToValueType.LastOrDefault_Predicate)] ToValueType toValueType
 ) {
         AssertPieces(new[] { Select }, new[] {
 "KnownType: False, KnownSize: True, LoopType: Backward, Nodes: [Select]",
