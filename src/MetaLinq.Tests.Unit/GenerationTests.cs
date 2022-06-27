@@ -291,7 +291,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderBy_Single() {
+    public void Array_OrderBy_Single_Predicate() {
         AssertGeneration(
 @"Data __() {{
     Assert.Throws<System.InvalidOperationException>(() => Data.Array(5).OrderBy(x => -x.Int).Single(x => x.Int == -1));
@@ -313,7 +313,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderBy_SingleOrDefault() {
+    public void Array_OrderBy_SingleOrDefault_Predicate() {
         AssertGeneration(
 @"Data? __() {{
     Assert.Null(Data.Array(5).OrderBy(x => -x.Int).SingleOrDefault(x => x.Int == -1));
@@ -4319,7 +4319,7 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SelectManyList_Single() {
+    public void Array_SelectManyList_Single_Predicate() {
         AssertGeneration(
 $@"Data __() {{
     Assert.Throws<System.InvalidOperationException>(() => Data.Array(5).SelectMany(x => x.DataList).Single(x => x.Int > 0 && x.Int % 4 == 0));
@@ -4339,7 +4339,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SelectManyList_SingleOrDefault() {
+    public void Array_SelectManyList_SingleOrDefault_Predicate() {
         AssertGeneration(
 $@"Data? __() {{
     Assert.Throws<System.InvalidOperationException>(() => Data.Array(5).SelectMany(x => x.DataList).SingleOrDefault(x => x.Int > 0 && x.Int % 4 == 0));
@@ -4765,18 +4765,20 @@ $@"Data __() {{
         );
     }
     [Test]
-    public void List_Select_Where_Single() {
+    public void List_Select_Where_Single_Predicate() {
+        var message = Assert.Throws<System.InvalidOperationException>(() => Data.List(10).Select(x => x.Int).Where(x => x > 4).Single(x => x > 0))!.Message;
         AssertGeneration(
-@"int __() { 
+$@"int __() {{ 
     var data = Data.List(10);
-    Assert.Throws<System.InvalidOperationException>(() => data.Select(x => x.Int).Where(x => x > 4).Single(x => x > 0));
+    var message = Assert.Throws<System.InvalidOperationException>(() => data.Select(x => x.Int).Where(x => x > 4).Single(x => x > 0))!.Message;
+    Assert.AreEqual(""{message}"", message);
     Assert.AreEqual(1, data[5].Int_GetCount);
     Assert.AreEqual(1, data[6].Int_GetCount);
     Assert.AreEqual(0, data[7].Int_GetCount);
     Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4).Single(x => x % 4 == 3));
     Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4).Single(x => x < 0));
     return Data.List(10).Select(x => x.Int).Where(x => x > 4).Single(x => x % 4 == 3);
-}",
+}}",
             (int x) => Assert.AreEqual(7, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
@@ -4788,18 +4790,70 @@ $@"Data __() {{
         );
     }
     [Test]
-    public void List_Select_Where_SingleOrDefault() {
+    public void List_Select_Where_Single() {
+        var message = Assert.Throws<System.InvalidOperationException>(() => Data.List(10).Select(x => x.Int).Where(x => x > 4 && x > 0).Single())!.Message;
         AssertGeneration(
-@"int? __() { 
+$@"int __() {{ 
     var data = Data.List(10);
-    Assert.Throws<System.InvalidOperationException>(() => data.Select(x => x.Int).Where(x => x > 4).SingleOrDefault(x => x > 0));
+    var message = Assert.Throws<System.InvalidOperationException>(() => data.Select(x => x.Int).Where(x => x > 4 && x > 0).Single())!.Message;
+    Assert.AreEqual(""{message}"", message);
+    Assert.AreEqual(1, data[5].Int_GetCount);
+    Assert.AreEqual(1, data[6].Int_GetCount);
+    Assert.AreEqual(0, data[7].Int_GetCount);
+    Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4 && x % 4 == 3).Single());
+    Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4 && x < 0).Single());
+    return Data.List(10).Select(x => x.Int).Where(x => x > 4 && x % 4 == 3).Single();
+}}",
+            (int x) => Assert.AreEqual(7, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("Where", new[] {
+                        new StructMethod("Single")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Select_Where_SingleOrDefault_Predicate() {
+        var message = Assert.Throws<System.InvalidOperationException>(() => Data.List(10).Select(x => x.Int).Where(x => x > 4).SingleOrDefault(x => x > 0))!.Message;
+        AssertGeneration(
+$@"int? __() {{ 
+    var data = Data.List(10);
+    var message = Assert.Throws<System.InvalidOperationException>(() => data.Select(x => x.Int).Where(x => x > 4).SingleOrDefault(x => x > 0))!.Message;
+    Assert.AreEqual(""{message}"", message);
     Assert.AreEqual(1, data[5].Int_GetCount);
     Assert.AreEqual(1, data[6].Int_GetCount);
     Assert.AreEqual(0, data[7].Int_GetCount);
     Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4).SingleOrDefault(x => x % 4 == 3));
     Assert.Null(Data.List(12).Select(x => (int?)x.Int).Where(x => x > 4).SingleOrDefault(x => x < 0));
     return Data.List(10).Select(x => x.Int).Where(x => x > 4).SingleOrDefault(x => x % 4 == 3);
-}",
+}}",
+            (int x) => Assert.AreEqual(7, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.List, "Select", new[] {
+                    new StructMethod("Where", new[] {
+                        new StructMethod("SingleOrDefault")
+                    })
+                })
+            }
+        );
+    }
+    [Test]
+    public void List_Select_Where_SingleOrDefault() {
+        var message = Assert.Throws<System.InvalidOperationException>(() => Data.List(10).Select(x => x.Int).Where(x => x > 4 && x > 0).SingleOrDefault())!.Message;
+        AssertGeneration(
+$@"int? __() {{ 
+    var data = Data.List(10);
+    var message = Assert.Throws<System.InvalidOperationException>(() => data.Select(x => x.Int).Where(x => x > 4 && x > 0).SingleOrDefault())!.Message;
+    Assert.AreEqual(""{message}"", message);
+    Assert.AreEqual(1, data[5].Int_GetCount);
+    Assert.AreEqual(1, data[6].Int_GetCount);
+    Assert.AreEqual(0, data[7].Int_GetCount);
+    Assert.Throws<System.InvalidOperationException>(() => Data.List(12).Select(x => x.Int).Where(x => x > 4 && x % 4 == 3).SingleOrDefault());
+    Assert.Null(Data.List(12).Select(x => (int?)x.Int).Where(x => x > 4 && x < 0).SingleOrDefault());
+    return Data.List(10).Select(x => x.Int).Where(x => x > 4 && x % 4 == 3).SingleOrDefault();
+}}",
             (int x) => Assert.AreEqual(7, x),
             new[] {
                 new MetaLinqMethodInfo(SourceType.List, "Select", new[] {

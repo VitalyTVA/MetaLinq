@@ -22,9 +22,9 @@ public static class ToValueSourceBuilder {
             ToValueType.ToArray => $"{outputType}[] ToArray()",
             ToValueType.ToHashSet => $"HashSet<{outputType}> ToHashSet()",
             ToValueType.ToDictionary => $"Dictionary<TKey, {outputType}> ToDictionary<TKey>(Func<{outputType}, TKey> keySelector) where TKey : notnull",
-            ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault => $"{outputType} {toValueType.ToMethodName()}()",
-            ToValueType.First_Predicate or ToValueType.Last_Predicate or ToValueType.Single => $"{outputType} {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
-            ToValueType.FirstOrDefault_Predicate or ToValueType.LastOrDefault_Predicate or ToValueType.SingleOrDefault => $"{outputType}? {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
+            ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault or ToValueType.Single or ToValueType.SingleOrDefault => $"{outputType} {toValueType.ToMethodName()}()",
+            ToValueType.First_Predicate or ToValueType.Last_Predicate or ToValueType.Single_Predicate => $"{outputType} {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
+            ToValueType.FirstOrDefault_Predicate or ToValueType.LastOrDefault_Predicate or ToValueType.SingleOrDefault_Predicate => $"{outputType}? {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
             ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
             ToValueType.Aggregate => $"{outputType} Aggregate(Func<{outputType}, {outputType}, {outputType}> func)",
             ToValueType.Aggregate_Seed => $"TAccumulate Aggregate<TAccumulate>(TAccumulate seed, Func<TAccumulate, {outputType}, TAccumulate> func)",
@@ -212,7 +212,7 @@ $@"if({invert}predicate(item{lastLevel.Next})) {{
 }}",
 $@"var result_{lastLevel} = {invert}found{topLevel};"
                 );
-            case (_, LoopType.Forward, ToValueType.Single):
+            case (_, LoopType.Forward, ToValueType.Single_Predicate):
                 return (
 $@"var result{topLevel} = default({outputType});
 bool found{topLevel} = false;",
@@ -226,7 +226,19 @@ $@"if(predicate(item{lastLevel.Next})) {{
 }}",
 GetFirstLastSingleResultStatement()
                 );
-            case (_, LoopType.Forward, ToValueType.SingleOrDefault):
+            case (_, LoopType.Forward, ToValueType.Single):
+                return (
+$@"var result{topLevel} = default({outputType});
+bool found{topLevel} = false;",
+$@"if(!found{topLevel}) {{
+    found{topLevel} = true;
+    result{topLevel} = item{lastLevel.Next};
+}} else {{
+    throw new InvalidOperationException(""Sequence contains more than one element"");
+}}",
+GetFirstLastSingleResultStatement()
+                );
+            case (_, LoopType.Forward, ToValueType.SingleOrDefault_Predicate):
                 return (
 $@"var result{topLevel} = default({outputType});
 bool found{topLevel} = false;",
@@ -237,6 +249,18 @@ $@"if(predicate(item{lastLevel.Next})) {{
     }} else {{
         throw new InvalidOperationException(""Sequence contains more than one matching element"");
     }}
+}}",
+GetFirstLastSingleOrDefaultResultStatement()
+                );
+            case (_, LoopType.Forward, ToValueType.SingleOrDefault):
+                return (
+$@"var result{topLevel} = default({outputType})!;
+bool found{topLevel} = false;",
+$@"if(!found{topLevel}) {{
+    found{topLevel} = true;
+    result{topLevel} = item{lastLevel.Next};
+}} else {{
+    throw new InvalidOperationException(""Sequence contains more than one element"");
 }}",
 GetFirstLastSingleOrDefaultResultStatement()
                 );

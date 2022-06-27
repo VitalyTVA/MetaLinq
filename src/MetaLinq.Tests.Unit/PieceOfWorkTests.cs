@@ -9,8 +9,8 @@ public class PieceOfWorkTests {
         ToValueType.Last, ToValueType.Last_Predicate, ToValueType.LastOrDefault, ToValueType.LastOrDefault_Predicate
     };
     public static readonly ToValueType[] OrderIndependentValueTypes = new[] {
-        ToValueType.All, ToValueType.Any, 
-        ToValueType.Single, ToValueType.SingleOrDefault,
+        ToValueType.All, ToValueType.Any,
+        ToValueType.Single, ToValueType.Single_Predicate, ToValueType.SingleOrDefault, ToValueType.SingleOrDefault_Predicate,
 
         ToValueType.Sum_Int, ToValueType.Sum_IntN, 
         ToValueType.Sum_Long, ToValueType.Sum_LongN,

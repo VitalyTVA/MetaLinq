@@ -53,8 +53,8 @@ public enum ToValueType {
     FirstOrDefault, FirstOrDefault_Predicate,
     Last, Last_Predicate,
     LastOrDefault, LastOrDefault_Predicate,
-    Single,
-    SingleOrDefault,
+    Single, Single_Predicate,
+    SingleOrDefault, SingleOrDefault_Predicate,
     Any,
     All,
     Sum_Int, Sum_IntN, 
@@ -90,6 +90,8 @@ public static class ValueTypeTraits {
             ToValueType.FirstOrDefault_Predicate => "FirstOrDefault",
             ToValueType.Last_Predicate => "Last",
             ToValueType.LastOrDefault_Predicate => "LastOrDefault",
+            ToValueType.Single_Predicate => "Single",
+            ToValueType.SingleOrDefault_Predicate => "SingleOrDefault",
             _ => type.ToString(),
         };
     }
@@ -145,7 +147,8 @@ public static class ValueTypeTraits {
     public static bool IsOrderIndependentLoop(this ToValueType value) { 
        return GetAggregateInfo(value) != null || value 
             is ToValueType.All or ToValueType.Any 
-            or ToValueType.Single or ToValueType.SingleOrDefault
+            or ToValueType.Single or ToValueType.Single_Predicate
+            or ToValueType.SingleOrDefault or ToValueType.SingleOrDefault_Predicate
             or ToValueType.ToDictionary or ToValueType.ToHashSet;
     }
     public static bool IsOrderDependentLoop(this ToValueType value) {
