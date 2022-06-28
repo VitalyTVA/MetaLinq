@@ -213,7 +213,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderByDescending_Any() {
+    public void Array_OrderByDescending_Any_Predicate() {
         AssertGeneration(
 @"bool __() {{
     var source = Data.Array(10).Shuffle();
@@ -231,7 +231,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderByDescending_All () {
+    public void Array_OrderByDescending_All_Predicate() {
         AssertGeneration(
 @"bool __() {{
     var source = Data.Array(10).Shuffle();
@@ -249,7 +249,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderBy_Any() {
+    public void Array_OrderBy_Any_Predicate() {
         AssertGeneration(
 @"bool __() {{
     var source = Data.Array(10);
@@ -270,7 +270,28 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderBy_All() {
+    public void Array_OrderBy_Any() {
+        AssertGeneration(
+@"bool __() {{
+    var source = Data.Array(10);
+    var result = source.OrderBy(x => -x.Int).Any();
+    Assert.AreEqual(0, source[0].Int_GetCount);
+    Assert.AreEqual(0, source[1].Int_GetCount);
+    Assert.AreEqual(0, source[2].Int_GetCount);
+    return result;
+}}",
+          (bool x) => Assert.True(x),
+        new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "OrderBy", new[] {
+                    new StructMethod("Any")
+                })
+        }
+    );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_OrderBy_All_Predicate() {
         AssertGeneration(
 @"bool __() {{
     var source = Data.Array(10);
@@ -595,7 +616,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_OrderBy_ThenBy_Any() {
+    public void Array_OrderBy_ThenBy_Any_Predicate() {
         AssertGeneration(
 @"void __() {{
     var source = Data.Array(10).Shuffle(longMaxValue: 3);
@@ -616,7 +637,7 @@ $@"string __() {{
     }
 
     [Test]
-    public void Array_OrderBy_ThenBy_All() {
+    public void Array_OrderBy_ThenBy_All_Predicate() {
         AssertGeneration(
 @"void __() {{
     var source = Data.Array(10).Shuffle(longMaxValue: 3);
@@ -1523,7 +1544,7 @@ $@"string __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_TakeWhile_Any() {
+    public void Array_TakeWhile_Any_Predicate() {
         AssertGeneration(
 @"bool __() { 
     Assert.False(Data.Array(20).TakeWhile(x => x.Int < 10).Any(x => x.Int % 15 == 12));
@@ -1539,7 +1560,7 @@ $@"string __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_TakeWhile_All() {
+    public void Array_TakeWhile_All_Predicate() {
         AssertGeneration(
 @"bool __() { 
     Assert.True(Data.Array(20).TakeWhile(x => x.Int < 10).All(x => x.Int % 15 != 12));
@@ -2175,7 +2196,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Where_Any() {
+    public void Array_Where_Any_Predicate() {
         AssertGeneration(
 $@"bool __() {{
     Assert.False(Data.Array(10).Where(x => x.Int > 5).Any(x => x.Int == 0));
@@ -2195,7 +2216,27 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Where_All() {
+    public void Array_Where_Any() {
+        AssertGeneration(
+$@"bool __() {{
+    Assert.False(Data.Array(10).Where(x => x.Int > 5 && x.Int == 0).Any());
+    var source = Data.Array(10);
+    var result = source.Where(x => x.Int > 5 && x.Int % 4 == 0).Any();
+    Assert.AreEqual(2, source[8].Int_GetCount);
+    Assert.AreEqual(0, source[9].Int_GetCount);
+    return result!;
+}}",
+            (bool x) => Assert.AreEqual(true, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Where", new[] {
+                    new StructMethod("Any")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Where_All_Predicate() {
         AssertGeneration(
 $@"bool __() {{
     Assert.True(Data.Array(10).Where(x => x.Int > 5).All(x => x.Int != 0));
@@ -2646,7 +2687,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Any() {
+    public void Array_Select_Any_Predicate() {
         AssertGeneration(
 $@"bool __() {{
     Assert.False(Data.Array(10).Select(x => x.Self).Any(x => x.Int == -1));
@@ -2665,7 +2706,7 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_All() {
+    public void Array_Select_All_Predicate() {
         AssertGeneration(
 $@"bool __() {{
     Assert.True(Data.Array(10).Select(x => x.Self).All(x => x.Int != -1));
@@ -4279,7 +4320,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SelectManyList_Any() {
+    public void Array_SelectManyList_Any_Predicate() {
         AssertGeneration(
 $@"bool __() {{
     Assert.False(Data.Array(5).SelectMany(x => x.DataList).Any(x => x.Int < 0));
@@ -4299,7 +4340,7 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_SelectManyList_All() {
+    public void Array_SelectManyList_All_Predicate() {
         AssertGeneration(
 $@"bool __() {{
     Assert.True(Data.Array(5).SelectMany(x => x.DataList).All(x => x.Int >= 0));
@@ -4379,7 +4420,7 @@ $@"Data __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_SelectManyCustomEnumerable_Any() {
+    public void CustomEnumerable_SelectManyCustomEnumerable_Any_Predicate() {
         AssertGeneration(
 $@"bool __() {{
     var source = Data.Array(5);
@@ -4398,7 +4439,7 @@ $@"bool __() {{
         AssertAllocations();
     }
     [Test]
-    public void CustomEnumerable_SelectManyCustomEnumerable_All() {
+    public void CustomEnumerable_SelectManyCustomEnumerable_All_Predicate() {
         AssertGeneration(
 $@"bool __() {{
     var source = Data.Array(5);
@@ -4700,7 +4741,7 @@ $@"Data __() {{
         );
     }
     [Test]
-    public void List_Where_Select_Any() {
+    public void List_Where_Select_Any_Predicate() {
         AssertGeneration(
 @"bool __() { 
     Assert.False(Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).Any(x => x == -1));
@@ -4717,7 +4758,7 @@ $@"Data __() {{
         );
     }
     [Test]
-    public void List_Where_Select_All() {
+    public void List_Where_Select_All_Predicate() {
         AssertGeneration(
 @"bool __() { 
     Assert.True(Data.List(10).Where(x => x.Int > 4).Select(x => x.Int).All(x => x != -1));

@@ -25,7 +25,8 @@ public static class ToValueSourceBuilder {
             ToValueType.First or ToValueType.FirstOrDefault or ToValueType.Last or ToValueType.LastOrDefault or ToValueType.Single or ToValueType.SingleOrDefault => $"{outputType} {toValueType.ToMethodName()}()",
             ToValueType.First_Predicate or ToValueType.Last_Predicate or ToValueType.Single_Predicate => $"{outputType} {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
             ToValueType.FirstOrDefault_Predicate or ToValueType.LastOrDefault_Predicate or ToValueType.SingleOrDefault_Predicate => $"{outputType}? {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
-            ToValueType.Any or ToValueType.All => $"bool {toValueType}(Func<{outputType}, bool> predicate)",
+            ToValueType.Any_Predicate or ToValueType.All_Predicate => $"bool {toValueType.ToMethodName()}(Func<{outputType}, bool> predicate)",
+            ToValueType.Any => $"bool {toValueType.ToMethodName()}()",
             ToValueType.Aggregate => $"{outputType} Aggregate(Func<{outputType}, {outputType}, {outputType}> func)",
             ToValueType.Aggregate_Seed => $"TAccumulate Aggregate<TAccumulate>(TAccumulate seed, Func<TAccumulate, {outputType}, TAccumulate> func)",
             ToValueType.Aggregate_Seed_Result => $"TResult Aggregate<TAccumulate, TResult>(TAccumulate seed, Func<TAccumulate, {outputType}, TAccumulate> func, Func<TAccumulate, TResult> resultSelector)",
@@ -72,8 +73,12 @@ public static class ToValueSourceBuilder {
                 builder.Tab.AppendLine($"var skipWhile{item.Level.Next} = true;");
         }
 
+        if(toInstanceType is ToValueType.Any)
+            builder.Tab.AppendLine("#pragma warning disable 0162");
         EmitLoop(source, piece.LoopType.IsForwardLoop(), builder.Tab, topLevel, sourcePath,
             bodyBuilder => EmitLoopBody(topLevel, bodyBuilder, piece, b => b.AppendMultipleLines(addValue), totalLevels));
+        if(toInstanceType is ToValueType.Any)
+            builder.Tab.AppendLine("#pragma warning restore 0162");
 
         foreach(var item in piece.Contexts) {
             if(item.Element is TakeWhileNode)
@@ -81,7 +86,7 @@ public static class ToValueSourceBuilder {
         }
         if((toInstanceType is ToValueType.First or ToValueType.First_Predicate or ToValueType.FirstOrDefault or ToValueType.FirstOrDefault_Predicate && piece.LoopType is LoopType.Forward)
             || (toInstanceType is ToValueType.Last or ToValueType.Last_Predicate or ToValueType.LastOrDefault or ToValueType.LastOrDefault_Predicate && piece.LoopType is LoopType.Backward)
-            || (toInstanceType is ToValueType.Any or ToValueType.All && piece.LoopType is LoopType.Forward))
+            || (toInstanceType is ToValueType.Any or ToValueType.Any_Predicate or ToValueType.All_Predicate && piece.LoopType is LoopType.Forward))
             builder.Tab.AppendLine($"firstFound{lastLevel}:");
 
         builder.Tab.AppendMultipleLines(result);
@@ -198,10 +203,10 @@ $@"result{topLevel} = item{lastLevel.Next};
 goto firstFound{lastLevel};",
 GetFirstLastSingleOrDefaultResultStatement()
                 );
-            case (_, LoopType.Forward, ToValueType.Any or ToValueType.All):
+            case (_, LoopType.Forward, ToValueType.Any_Predicate or ToValueType.All_Predicate):
                 string invert = toValueType switch {
-                    ToValueType.Any => string.Empty,
-                    ToValueType.All => "!",
+                    ToValueType.Any_Predicate => string.Empty,
+                    ToValueType.All_Predicate => "!",
                     _ => throw new InvalidOperationException()
                 };
                 return (
@@ -211,6 +216,13 @@ $@"if({invert}predicate(item{lastLevel.Next})) {{
     goto firstFound{lastLevel};
 }}",
 $@"var result_{lastLevel} = {invert}found{topLevel};"
+                );
+            case (_, LoopType.Forward, ToValueType.Any):
+                return (
+$@"bool found{topLevel} = false;",
+$@"found{topLevel} = true;
+goto firstFound{lastLevel};",
+$@"var result_{lastLevel} = found{topLevel};"
                 );
             case (_, LoopType.Forward, ToValueType.Single_Predicate):
                 return (

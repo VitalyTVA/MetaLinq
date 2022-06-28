@@ -55,8 +55,8 @@ public enum ToValueType {
     LastOrDefault, LastOrDefault_Predicate,
     Single, Single_Predicate,
     SingleOrDefault, SingleOrDefault_Predicate,
-    Any,
-    All,
+    Any, Any_Predicate,
+    All_Predicate,
     Sum_Int, Sum_IntN, 
     Sum_Long, Sum_LongN, 
     Sum_Float, Sum_FloatN, 
@@ -86,13 +86,15 @@ public record struct AggregateInfo(AggregateKind Kind, AggregateValueType Type, 
 public static class ValueTypeTraits {
     public static string ToMethodName(this ToValueType type) {
         return type switch {
-            ToValueType.First_Predicate => "First",
-            ToValueType.FirstOrDefault_Predicate => "FirstOrDefault",
-            ToValueType.Last_Predicate => "Last",
-            ToValueType.LastOrDefault_Predicate => "LastOrDefault",
-            ToValueType.Single_Predicate => "Single",
-            ToValueType.SingleOrDefault_Predicate => "SingleOrDefault",
-            _ => type.ToString(),
+            ToValueType.First or ToValueType.First_Predicate => "First",
+            ToValueType.FirstOrDefault or ToValueType.FirstOrDefault_Predicate => "FirstOrDefault",
+            ToValueType.Last or ToValueType.Last_Predicate => "Last",
+            ToValueType.LastOrDefault or ToValueType.LastOrDefault_Predicate => "LastOrDefault",
+            ToValueType.Single or ToValueType.Single_Predicate => "Single",
+            ToValueType.SingleOrDefault or ToValueType.SingleOrDefault_Predicate => "SingleOrDefault",
+            ToValueType.Any or ToValueType.Any_Predicate => "Any",
+            ToValueType.All_Predicate => "All",
+            _ => throw new InvalidOperationException(),
         };
     }
     public static AggregateInfo? GetAggregateInfo(this ToValueType value) {
@@ -146,7 +148,8 @@ public static class ValueTypeTraits {
     }
     public static bool IsOrderIndependentLoop(this ToValueType value) { 
        return GetAggregateInfo(value) != null || value 
-            is ToValueType.All or ToValueType.Any 
+            is ToValueType.All_Predicate 
+            or ToValueType.Any or ToValueType.Any_Predicate 
             or ToValueType.Single or ToValueType.Single_Predicate
             or ToValueType.SingleOrDefault or ToValueType.SingleOrDefault_Predicate
             or ToValueType.ToDictionary or ToValueType.ToHashSet;

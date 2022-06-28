@@ -180,8 +180,8 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "FirstOrDefault" => ChooseOverload(noArgs: ToValueType.FirstOrDefault, oneArg: ToValueType.FirstOrDefault_Predicate),
             "Last" => ChooseOverload(noArgs: ToValueType.Last, oneArg: ToValueType.Last_Predicate),
             "LastOrDefault" => ChooseOverload(noArgs: ToValueType.LastOrDefault, oneArg: ToValueType.LastOrDefault_Predicate),
-            "Any" => ToValueType.Any,
-            "All" => ToValueType.All,
+            "Any" => ChooseOverload(noArgs: ToValueType.Any, oneArg: ToValueType.Any_Predicate),
+            "All" => ToValueType.All_Predicate,
             "Single" => ChooseOverload(noArgs: ToValueType.Single, oneArg: ToValueType.Single_Predicate),
             "SingleOrDefault" => ChooseOverload(noArgs: ToValueType.SingleOrDefault, oneArg: ToValueType.SingleOrDefault_Predicate),
             "Sum" => GetAggregateToValueType(
