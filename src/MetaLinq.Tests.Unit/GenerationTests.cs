@@ -3,6 +3,7 @@ using MetaLinq.Tests;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Buffers;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -3144,6 +3145,24 @@ $@"decimal? __() {{
 
     #region Average with selector
     [Test]
+    public void Array_Select_Average_Int() {
+        Assert.Throws<InvalidOperationException>(() => new int[] { }.Average());
+        AssertGenerationErrors(
+$@"double __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Int).Average());
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Int).Average();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            assertDiagnostics: x => { Assert.AreSame("ML9999", x.Single().Descriptor.Id); }
+        );
+        AssertAllocations();
+    }
+    #endregion
+
+    #region Average with selector
+    [Test]
     public void Array_Select_Average_Int_Selector() {
         Assert.Throws<InvalidOperationException>(() => new int[] { }.Average());
         AssertGeneration(
@@ -5216,74 +5235,7 @@ $@"int? __() {{
         AssertGeneration(new[] { (code, assert) }, methods, addMetaLinqUsing, addStadardLinqUsing, additionalClassCode, assertGeneratedCode);
     }
     static void AssertGeneration<T>((string code, Action<T> assert)[] cases, MetaLinqMethodInfo[] methods, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null, Action<IEnumerable<string>>? assertGeneratedCode = null) {
-        var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
-        var references = new[] {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(Path.Combine(refLocation, "netstandard.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Linq.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Runtime.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Buffers.dll")),
-                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Collections.dll")),
-                MetadataReference.CreateFromFile(typeof(Data).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(Assert).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(MetaLinq.MetaEnumerable).Assembly.Location),
-            };
-
-        var executeMethodsCode = string.Join(Environment.NewLine, cases.Select((x, i) => "static " + x.code.Replace("__", "Execute" + i)));
-
-        var source =
-$@"
-{(addMetaLinqUsing ? "using MetaLinq;" : null)}
-{(addStadardLinqUsing ? "using System.Linq;" : null)}
-using MetaLinq.Tests;
-using NUnit.Framework;
-using System.Collections;
-using System.Collections.Generic;
-public class Executor {{
-{additionalClassCode}
-{executeMethodsCode}
-}}
-";
-
-
-        var location = Path.Combine(Path.GetDirectoryName(typeof(GenerationTests).Assembly.Location)!, "Generated");
-        if(!Directory.Exists(location))
-            Directory.CreateDirectory(location);
-        var filesPath = Path.Combine(location, NUnit.Framework.TestContext.CurrentContext.Test.Name);
-        if(!Directory.Exists(filesPath))
-            Directory.CreateDirectory(filesPath);
-        var dllPath = filesPath + ".dll";
-
-        Compilation inputCompilation = CSharpCompilation.Create(
-            "MyCompilation",
-            new[] { CSharpSyntaxTree.ParseText(source, path: "Source.cs", encoding: Encoding.UTF8) },
-            references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable)
-        );
-        MetaLinqGenerator generator = new();
-
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
-        driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation, out var diagnostics);
-
-        bool DebugMode = false;
-        if(Debugger.IsAttached)
-            DebugMode = true;
-
-        foreach(var tree in outputCompilation.SyntaxTrees.ToArray()) {
-            if(!File.Exists(tree.FilePath)) {
-                var newPath = Path.Combine(filesPath, Path.GetFileName(tree.FilePath));
-                
-                if(DebugMode) {
-                    outputCompilation = outputCompilation.ReplaceSyntaxTree(tree, tree.WithFilePath(newPath));
-                    File.WriteAllText(newPath, tree.GetText().ToString(), Encoding.UTF8);
-                } else {
-                    //if(File.Exists(newPath))
-                    //    File.Delete(newPath);
-                }
-
-            }
-        }
-        GeneratorDriverRunResult runResult = driver.GetRunResult();
+        var (dllPath, outputCompilation, DebugMode, runResult) = RunGenerator(cases.Select(x => x.code).ToArray(), addMetaLinqUsing, addStadardLinqUsing, additionalClassCode);
         CollectionAssert.IsEmpty(runResult.Diagnostics);
         GeneratorRunResult generatorResult = runResult.Results[0];
         var generatedCode = generatorResult.GeneratedSources.Select(x => x.SourceText.ToString());
@@ -5321,6 +5273,81 @@ public class Executor {{
         }
 
         AssertGeneratedClasses(methods, assembly, executorType);
+    }
+    
+    static void AssertGenerationErrors(string code, Action<ImmutableArray<Diagnostic>> assertDiagnostics, bool addMetaLinqUsing = true, bool addStadardLinqUsing = true, string? additionalClassCode = null) {
+        var (dllPath, outputCompilation, DebugMode, runResult) = RunGenerator(new[] { code }, addMetaLinqUsing, addStadardLinqUsing, additionalClassCode);
+        assertDiagnostics(runResult.Diagnostics);
+    }
+    static (string dllPath, Compilation outputCompilation, bool DebugMode, GeneratorDriverRunResult runResult) RunGenerator(string[] code, bool addMetaLinqUsing, bool addStadardLinqUsing, string? additionalClassCode) {
+        var refLocation = Path.GetDirectoryName(typeof(object).Assembly.Location)!;
+        var references = new[] {
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(Path.Combine(refLocation, "netstandard.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Linq.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Runtime.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Buffers.dll")),
+                MetadataReference.CreateFromFile(Path.Combine(refLocation, "System.Collections.dll")),
+                MetadataReference.CreateFromFile(typeof(Data).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Assert).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(MetaLinq.MetaEnumerable).Assembly.Location),
+            };
+
+        var executeMethodsCode = string.Join(Environment.NewLine, code.Select((x, i) => "static " + x.Replace("__", "Execute" + i)));
+
+        var source =
+$@"
+{(addMetaLinqUsing ? "using MetaLinq;" : null)}
+{(addStadardLinqUsing ? "using System.Linq;" : null)}
+using MetaLinq.Tests;
+using NUnit.Framework;
+using System.Collections;
+using System.Collections.Generic;
+public class Executor {{
+{additionalClassCode}
+{executeMethodsCode}
+}}
+";
+
+
+        var location = Path.Combine(Path.GetDirectoryName(typeof(GenerationTests).Assembly.Location)!, "Generated");
+        if(!Directory.Exists(location))
+            Directory.CreateDirectory(location);
+        var filesPath = Path.Combine(location, NUnit.Framework.TestContext.CurrentContext.Test.Name);
+        if(!Directory.Exists(filesPath))
+            Directory.CreateDirectory(filesPath);
+        var dllPath = filesPath + ".dll";
+        Compilation inputCompilation = CSharpCompilation.Create(
+            "MyCompilation",
+            new[] { CSharpSyntaxTree.ParseText(source, path: "Source.cs", encoding: Encoding.UTF8) },
+            references,
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable)
+        );
+        MetaLinqGenerator generator = new();
+
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+        driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out Compilation outputCompilation, out var diagnostics);
+
+        var DebugMode = false;
+        if(Debugger.IsAttached)
+            DebugMode = true;
+
+        foreach(var tree in outputCompilation.SyntaxTrees.ToArray()) {
+            if(!File.Exists(tree.FilePath)) {
+                var newPath = Path.Combine(filesPath, Path.GetFileName(tree.FilePath));
+
+                if(DebugMode) {
+                    outputCompilation = outputCompilation.ReplaceSyntaxTree(tree, tree.WithFilePath(newPath));
+                    File.WriteAllText(newPath, tree.GetText().ToString(), Encoding.UTF8);
+                } else {
+                    //if(File.Exists(newPath))
+                    //    File.Delete(newPath);
+                }
+
+            }
+        }
+        var runResult = driver.GetRunResult();
+        return (dllPath, outputCompilation, DebugMode, runResult);
     }
 
     static void AssertGeneratedClasses(MetaLinqMethodInfo[] methods, Assembly assembly, Type executorType) {

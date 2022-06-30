@@ -147,17 +147,15 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 _ => throw new InvalidOperationException()
             };
         };
-        ToValueType ChooseOverload(ToValueType? noArgs = null, ToValueType? oneArg = null, ToValueType? twoArgs = null, ToValueType? threeArgs = null) {
+        ToValueType ChooseOverload(Func<ToValueType>? noArgs = null, Func<ToValueType>? oneArg = null, Func<ToValueType>? twoArgs = null, Func<ToValueType>? threeArgs = null) {
             var type = method.Parameters.Length switch {
-                0 => noArgs,
-                1 => oneArg,
-                2 => twoArgs,
-                3 => threeArgs,
+                0 => noArgs!(),
+                1 => oneArg!(),
+                2 => twoArgs!(),
+                3 => threeArgs!(),
                 _ => throw new InvalidOperationException()
             };
-            if(type == null)
-                throw new InvalidOperationException();
-            return type.Value;
+            return type;
         };
         return method.Name switch {
             "Where" => LinqNode.Where,
@@ -176,17 +174,17 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
             "ToArray" => ToValueType.ToArray,
             "ToHashSet" => ToValueType.ToHashSet,
             "ToDictionary" => ToValueType.ToDictionary,
-            "First" => ChooseOverload(noArgs: ToValueType.First, oneArg: ToValueType.First_Predicate),
-            "FirstOrDefault" => ChooseOverload(noArgs: ToValueType.FirstOrDefault, oneArg: ToValueType.FirstOrDefault_Predicate),
-            "Last" => ChooseOverload(noArgs: ToValueType.Last, oneArg: ToValueType.Last_Predicate),
-            "LastOrDefault" => ChooseOverload(noArgs: ToValueType.LastOrDefault, oneArg: ToValueType.LastOrDefault_Predicate),
-            "Any" => ChooseOverload(noArgs: ToValueType.Any, oneArg: ToValueType.Any_Predicate),
+            "First" => ChooseOverload(noArgs: () => ToValueType.First, oneArg: () => ToValueType.First_Predicate),
+            "FirstOrDefault" => ChooseOverload(noArgs: () => ToValueType.FirstOrDefault, oneArg: () => ToValueType.FirstOrDefault_Predicate),
+            "Last" => ChooseOverload(noArgs: () => ToValueType.Last, oneArg: () => ToValueType.Last_Predicate),
+            "LastOrDefault" => ChooseOverload(noArgs: () => ToValueType.LastOrDefault, oneArg: () => ToValueType.LastOrDefault_Predicate),
+            "Any" => ChooseOverload(noArgs: () => ToValueType.Any, oneArg: () => ToValueType.Any_Predicate),
             "All" => ToValueType.All_Predicate,
-            "Single" => ChooseOverload(noArgs: ToValueType.Single, oneArg: ToValueType.Single_Predicate),
-            "SingleOrDefault" => ChooseOverload(noArgs: ToValueType.SingleOrDefault, oneArg: ToValueType.SingleOrDefault_Predicate),
+            "Single" => ChooseOverload(noArgs: () => ToValueType.Single, oneArg: () => ToValueType.Single_Predicate),
+            "SingleOrDefault" => ChooseOverload(noArgs: () => ToValueType.SingleOrDefault, oneArg: () => ToValueType.SingleOrDefault_Predicate),
             "Sum" => ChooseOverload(
-                noArgs: ToValueType.Sum, 
-                oneArg: GetAggregateToValueType(
+                noArgs: () => ToValueType.Sum, 
+                oneArg: () => GetAggregateToValueType(
                     ToValueType.Sum_Int_Selector, ToValueType.Sum_IntN_Selector,
                     ToValueType.Sum_Long_Selector, ToValueType.Sum_LongN_Selector,
                     ToValueType.Sum_Float_Selector, ToValueType.Sum_FloatN_Selector,
@@ -194,12 +192,15 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                     ToValueType.Sum_Decimal_Selector, ToValueType.Sum_DecimalN_Selector
                 )
             ),
-            "Average" => GetAggregateToValueType(
-                ToValueType.Average_Int_Selector, ToValueType.Average_IntN_Selector,
-                ToValueType.Average_Long_Selector, ToValueType.Average_LongN_Selector,
-                ToValueType.Average_Float_Selector, ToValueType.Average_FloatN_Selector,
-                ToValueType.Average_Double_Selector, ToValueType.Average_DoubleN_Selector,
-                ToValueType.Average_Decimal_Selector, ToValueType.Average_DecimalN_Selector
+            "Average" => ChooseOverload(
+                noArgs: () => throw new InvalidOperationException("Average without selector not supported"), //TODO diagnostic instead of exception
+                oneArg: () => GetAggregateToValueType(
+                    ToValueType.Average_Int_Selector, ToValueType.Average_IntN_Selector,
+                    ToValueType.Average_Long_Selector, ToValueType.Average_LongN_Selector,
+                    ToValueType.Average_Float_Selector, ToValueType.Average_FloatN_Selector,
+                    ToValueType.Average_Double_Selector, ToValueType.Average_DoubleN_Selector,
+                    ToValueType.Average_Decimal_Selector, ToValueType.Average_DecimalN_Selector
+                )
             ),
             "Min" => GetAggregateToValueType(
                 ToValueType.Min_Int_Selector, ToValueType.Min_IntN_Selector,
@@ -216,9 +217,9 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                 ToValueType.Max_Decimal_Selector, ToValueType.Max_DecimalN_Selector
             ),
             "Aggregate" => ChooseOverload(
-                oneArg: ToValueType.Aggregate, 
-                twoArgs: ToValueType.Aggregate_Seed, 
-                threeArgs: ToValueType.Aggregate_Seed_Result
+                oneArg: () => ToValueType.Aggregate, 
+                twoArgs: () => ToValueType.Aggregate_Seed, 
+                threeArgs: () => ToValueType.Aggregate_Seed_Result
             ),
             _ => null
         });
