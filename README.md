@@ -21,7 +21,7 @@ Main idea
 
 Array builders
 
-Comparers JIT-time meta-programming and optimizations
+Comparers JIT-time meta-programming and optimizations (Comparers, AggregateHelper)
 
 How stable, key-dependent sorting work
 
@@ -46,6 +46,8 @@ Two modes (using+asmeta)
 Feature switch (turn off meta sharp in a moment)
 
 Stack allocations for small arrays
+
+How tests work (including debugging generated code)
 
 ## Select benchmark
 
@@ -318,3 +320,29 @@ current:
 |           |      |             |             |           |       |        |        |           |
 | Standard_ | 1000 | 86,688.5 ns |   933.19 ns | 617.25 ns |  1.00 | 4.8828 | 0.3662 |  31,208 B |
 |     Meta_ | 1000 | 27,715.3 ns | 1,227.21 ns | 811.72 ns |  0.32 | 2.9907 | 0.1526 |  18,920 B |
+
+## Select_Sum
+
+|    Method |     N |         Mean |        Error |       StdDev | Ratio | RatioSD |  Gen 0 | Allocated |
+|---------- |------ |-------------:|-------------:|-------------:|------:|--------:|-------:|----------:|
+| Standard_ |    10 |     65.97 ns |     1.787 ns |     1.182 ns |  1.00 |    0.00 | 0.0076 |      48 B |
+|     Meta_ |    10 |     26.20 ns |     1.403 ns |     0.835 ns |  0.40 |    0.01 |      - |         - |
+|           |       |              |              |              |       |         |        |           |
+| Standard_ |   100 |    461.78 ns |    20.359 ns |    13.466 ns |  1.00 |    0.00 | 0.0076 |      48 B |
+|     Meta_ |   100 |    200.50 ns |     6.276 ns |     4.151 ns |  0.43 |    0.01 |      - |         - |
+|           |       |              |              |              |       |         |        |           |
+| Standard_ |  1000 |  5,160.87 ns | 1,249.993 ns |   826.793 ns |  1.00 |    0.00 | 0.0076 |      48 B |
+|     Meta_ |  1000 |  2,784.47 ns |   120.835 ns |    79.925 ns |  0.55 |    0.09 |      - |         - |
+|           |       |              |              |              |       |         |        |           |
+| Standard_ | 10000 | 50,453.12 ns |   994.219 ns |   591.644 ns |  1.00 |    0.00 |      - |      48 B |
+|     Meta_ | 10000 | 28,103.30 ns | 2,753.736 ns | 1,821.426 ns |  0.55 |    0.04 |      - |         - |
+
+## Select_SumN
+
+|    Method |     N |        Mean |       Error |      StdDev |      Median | Ratio | RatioSD |  Gen 0 | Allocated |
+|---------- |------ |------------:|------------:|------------:|------------:|------:|--------:|-------:|----------:|
+| Standard_ |   100 |    934.2 ns |   691.51 ns |   457.39 ns |    713.5 ns |  1.00 |    0.00 | 0.0076 |      48 B |
+|     Meta_ |   100 |    392.0 ns |     3.82 ns |     2.53 ns |    391.3 ns |  0.51 |    0.21 | 0.0038 |      24 B |
+|           |       |             |             |             |             |       |         |        |           |
+| Standard_ | 10000 | 86,110.0 ns |   968.31 ns |   640.48 ns | 86,219.3 ns |  1.00 |    0.00 |      - |      48 B |
+|     Meta_ | 10000 | 61,583.1 ns | 2,162.90 ns | 1,287.11 ns | 61,239.0 ns |  0.71 |    0.02 |      - |      24 B |

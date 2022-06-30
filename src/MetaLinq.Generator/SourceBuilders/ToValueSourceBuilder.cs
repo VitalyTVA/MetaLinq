@@ -13,6 +13,8 @@ public static class ToValueSourceBuilder {
         string? GetAggregateMethodDefinition(ToValueType toValueType) {
             var info = toValueType.GetAggregateInfo();
             if(info is not null) {
+                if(!info.Value.HasSelector)
+                    return $"{outputType} {info.Value.Kind}()";
                 return $"{info.Value.GetAggregateOutputType()} {info.Value.Kind}(Func<{outputType}, {info.Value.GetAggregateInputType()}> selector)";
             }
             return null;
@@ -120,6 +122,16 @@ $@"var result_{lastLevel} = result{topLevel};";
         if(aggregateInfo != null) {
             if(piece.LoopType != LoopType.Forward)
                 throw new InvalidOperationException();
+            if(!aggregateInfo.Value.HasSelector && aggregateInfo.Value.Kind == AggregateKind.Sum) {
+                return (
+$@"{outputType} result{topLevel} = AggregateHelper.Zero<{outputType}>();",
+$@"var value{lastLevel.Next} = item{lastLevel.Next};
+{(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)} {{ 
+    result{topLevel} = AggregateHelper.Sum(result{topLevel}, value{lastLevel.Next});
+}}",
+$@"var result_{lastLevel} = result{topLevel};"
+                );
+            }
             switch(aggregateInfo.Value.Kind) {
                 case AggregateKind.Sum:
                     return (

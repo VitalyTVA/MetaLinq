@@ -356,7 +356,7 @@ public class GenerationTests : BaseFixture {
     }
 
     [Test]
-    public void Array_OrderBy_Sum_Int() {
+    public void Array_OrderBy_Sum_Int_Selector() {
         AssertGeneration(
 @"int __() {{
     var source = Data.Array(10);
@@ -2764,6 +2764,199 @@ $@"string __() {{
         Assert.AreEqual(0, new int[] { }.Sum());
         AssertGeneration(
 $@"int __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => x.Int).Sum());
+    var source = Data.Array(10);
+    var result = source.Select(x => x.Int).Sum();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (int x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_IntN() {
+        Assert.AreEqual(0, new int?[] { }.Sum());
+        Assert.AreEqual(0, new int?[] { null }.Sum());
+        AssertGeneration(
+$@"int? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (int?)null).Sum());
+    Assert.AreEqual(0, Data.Array(3).Select(x => (int?)null).Sum());
+    var source = Data.Array(10);
+    Assert.AreEqual(45, source.Select(x => x.Int).Sum());
+    return source.Select(x => x.Int % 2 == 0 ? null : (int?)x.Int).Sum();
+}}",
+            (int? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_Long() {
+        AssertGeneration(
+$@"long __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (long)x.Int).Sum());
+    var source = Data.Array(10);
+    var result = source.Select(x => (long)x.Int).Sum();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (long x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_LongN() {
+        AssertGeneration(
+$@"long? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (long?)null).Sum());
+    Assert.AreEqual(0, Data.Array(3).Select(x => (long?)null).Sum());
+    var source = Data.Array(10);
+    return source.Select(x => x.Int % 2 == 0 ? null : (long?)x.Int).Sum();
+}}",
+            (long? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_Select_Sum_Float() {
+        AssertGeneration(
+$@"float __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (float)x.Int).Sum());
+    var source = Data.Array(10);
+    var result = source.Select(x => (float)x.Int).Sum();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (float x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_FloatN() {
+        AssertGeneration(
+$@"float? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (float?)x.Int).Sum());
+    Assert.AreEqual(0, Data.Array(3).Select(x => (float?)null).Sum());
+    var source = Data.Array(10);
+    return source.Select(x => x.Int % 2 == 0 ? null : (float?)x.Int).Sum();
+}}",
+            (float? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_Double() {
+        AssertGeneration(
+$@"double __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (double)x.Int).Sum());
+    var source = Data.Array(10);
+    var result = source.Select(x => (double)x.Int).Sum();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (double x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_DoubleN() {
+        AssertGeneration(
+$@"double? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (double?)x.Int).Sum());
+    Assert.AreEqual(0, Data.Array(3).Select(x => (double?)null).Sum());
+    var source = Data.Array(10);
+    return source.Select(x => x.Int % 2 == 0 ? null : (double?)x.Int).Sum();
+}}",
+            (double? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_Decimal() {
+        AssertGeneration(
+$@"decimal __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (decimal)x.Int).Sum());
+    var source = Data.Array(10);
+    var result = source.Select(x => (decimal)x.Int).Sum();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (decimal x) => Assert.AreEqual(45, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Sum_DecimalN() {
+        AssertGeneration(
+$@"decimal? __() {{
+    Assert.AreEqual(0, Data.Array(0).Select(x => (decimal?)null).Sum());
+    Assert.AreEqual(0, Data.Array(3).Select(x => (decimal?)null).Sum());
+    var source = Data.Array(10);
+    return source.Select(x => x.Int % 2 == 0 ? null : (decimal?)x.Int).Sum();
+}}",
+            (decimal? x) => Assert.AreEqual(25, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Sum")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    #endregion
+
+    #region Sum with selector
+    [Test]
+    public void Array_Select_Sum_Int_Selector() {
+        Assert.AreEqual(0, new int[] { }.Sum());
+        AssertGeneration(
+$@"int __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => x.Int));
     var source = Data.Array(10);
     var result = source.Select(x => x.Self).Sum(x => x.Int);
@@ -2780,7 +2973,7 @@ $@"int __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_IntN() {
+    public void Array_Select_Sum_IntN_Selector() {
         Assert.AreEqual(0, new int?[] { }.Sum());
         Assert.AreEqual(0, new int?[] { null }.Sum());
         AssertGeneration(
@@ -2800,7 +2993,7 @@ $@"int? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_Long() {
+    public void Array_Select_Sum_Long_Selector() {
         AssertGeneration(
 $@"long __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (long)x.Int));
@@ -2819,7 +3012,7 @@ $@"long __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_LongN() {
+    public void Array_Select_Sum_LongN_Selector() {
         AssertGeneration(
 $@"long? __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (long?)null));
@@ -2837,7 +3030,7 @@ $@"long? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_Float() {
+    public void Array_Select_Sum_Float_Selector() {
         AssertGeneration(
 $@"float __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (float)x.Int));
@@ -2856,7 +3049,7 @@ $@"float __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_FloatN() {
+    public void Array_Select_Sum_FloatN_Selector() {
         AssertGeneration(
 $@"float? __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (float?)x.Int));
@@ -2874,7 +3067,7 @@ $@"float? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_Double() {
+    public void Array_Select_Sum_Double_Selector() {
         AssertGeneration(
 $@"double __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (double)x.Int));
@@ -2893,7 +3086,7 @@ $@"double __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_DoubleN() {
+    public void Array_Select_Sum_DoubleN_Selector() {
         AssertGeneration(
 $@"double? __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (double?)x.Int));
@@ -2911,7 +3104,7 @@ $@"double? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_Decimal() {
+    public void Array_Select_Sum_Decimal_Selector() {
         AssertGeneration(
 $@"decimal __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (decimal)x.Int));
@@ -2930,7 +3123,7 @@ $@"decimal __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Sum_DecimalN() {
+    public void Array_Select_Sum_DecimalN_Selector() {
         AssertGeneration(
 $@"decimal? __() {{
     Assert.AreEqual(0, Data.Array(0).Select(x => x.Self).Sum(x => (decimal?)null));
@@ -2949,9 +3142,9 @@ $@"decimal? __() {{
     }
     #endregion
 
-    #region Average
+    #region Average with selector
     [Test]
-    public void Array_Select_Average_Int() {
+    public void Array_Select_Average_Int_Selector() {
         Assert.Throws<InvalidOperationException>(() => new int[] { }.Average());
         AssertGeneration(
 $@"double __() {{
@@ -2971,7 +3164,7 @@ $@"double __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_IntN() {
+    public void Array_Select_Average_IntN_Selector() {
         Assert.Null(new int?[] { }.Average());
         Assert.Null(new int?[] { null }.Average());
         AssertGeneration(
@@ -2991,7 +3184,7 @@ $@"double? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_Long() {
+    public void Array_Select_Average_Long_Selector() {
         Assert.Throws<InvalidOperationException>(() => new long[] { }.Average());
         AssertGeneration(
 $@"double __() {{
@@ -3011,7 +3204,7 @@ $@"double __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_LongN() {
+    public void Array_Select_Average_LongN_Selector() {
         Assert.Null(new long?[] { }.Average());
         Assert.Null(new long?[] { null }.Average());
         AssertGeneration(
@@ -3031,7 +3224,7 @@ $@"double? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_Float() {
+    public void Array_Select_Average_Float_Selector() {
         Assert.Throws<InvalidOperationException>(() => new float[] { }.Average());
         AssertGeneration(
 $@"float __() {{
@@ -3051,7 +3244,7 @@ $@"float __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_FloatN() {
+    public void Array_Select_Average_FloatN_Selector() {
         Assert.Null(new int?[] { }.Average());
         Assert.Null(new int?[] { null }.Average());
         AssertGeneration(
@@ -3071,7 +3264,7 @@ $@"float? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_Double() {
+    public void Array_Select_Average_Double_Selector() {
         Assert.Throws<InvalidOperationException>(() => new double[] { }.Average());
         AssertGeneration(
 $@"double __() {{
@@ -3091,7 +3284,7 @@ $@"double __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_DoubleN() {
+    public void Array_Select_Average_DoubleN_Selector() {
         Assert.Null(new int?[] { }.Average());
         Assert.Null(new int?[] { null }.Average());
         AssertGeneration(
@@ -3111,7 +3304,7 @@ $@"double? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_Decimal() {
+    public void Array_Select_Average_Decimal_Selector() {
         Assert.Throws<InvalidOperationException>(() => new double[] { }.Average());
         AssertGeneration(
 $@"double __() {{
@@ -3131,7 +3324,7 @@ $@"double __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Average_DecimalN() {
+    public void Array_Select_Average_DecimalN_Selector() {
         Assert.Null(new int?[] { }.Average());
         Assert.Null(new int?[] { null }.Average());
         AssertGeneration(
@@ -3152,9 +3345,9 @@ $@"double? __() {{
     }
     #endregion
 
-    #region Min
+    #region Min with selector
     [Test]
-    public void Array_Select_Min_Int() {
+    public void Array_Select_Min_Int_Selector() {
         Assert.Throws<InvalidOperationException>(() => new int[] { }.Min());
         AssertGeneration(
 $@"int __() {{
@@ -3174,7 +3367,7 @@ $@"int __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_IntN() {
+    public void Array_Select_Min_IntN_Selector() {
         Assert.Null(new int?[] { }.Min());
         Assert.Null(new int?[] { null }.Min());
         AssertGeneration(
@@ -3194,7 +3387,7 @@ $@"int? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_Long() {
+    public void Array_Select_Min_Long_Selector() {
         Assert.Throws<InvalidOperationException>(() => new long[] { }.Min());
         AssertGeneration(
 $@"long __() {{
@@ -3214,7 +3407,7 @@ $@"long __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_LongN() {
+    public void Array_Select_Min_LongN_Selector() {
         Assert.Null(new long?[] { }.Min());
         Assert.Null(new long?[] { null }.Min());
         AssertGeneration(
@@ -3234,7 +3427,7 @@ $@"long? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_Float() {
+    public void Array_Select_Min_Float_Selector() {
         Assert.Throws<InvalidOperationException>(() => new float[] { }.Min());
         AssertGeneration(
 $@"float __() {{
@@ -3254,7 +3447,7 @@ $@"float __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_FloatN() {
+    public void Array_Select_Min_FloatN_Selector() {
         Assert.Null(new float?[] { }.Min());
         Assert.Null(new float?[] { null }.Min());
         AssertGeneration(
@@ -3274,7 +3467,7 @@ $@"float? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_Double() {
+    public void Array_Select_Min_Double_Selector() {
         Assert.Throws<InvalidOperationException>(() => new double[] { }.Min());
         AssertGeneration(
 $@"double __() {{
@@ -3294,7 +3487,7 @@ $@"double __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_DoubleN() {
+    public void Array_Select_Min_DoubleN_Selector() {
         Assert.Null(new double?[] { }.Min());
         Assert.Null(new double?[] { null }.Min());
         AssertGeneration(
@@ -3314,7 +3507,7 @@ $@"double? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_Decimal() {
+    public void Array_Select_Min_Decimal_Selector() {
         Assert.Throws<InvalidOperationException>(() => new decimal[] { }.Min());
         AssertGeneration(
 $@"decimal __() {{
@@ -3334,7 +3527,7 @@ $@"decimal __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Min_DecimalN() {
+    public void Array_Select_Min_DecimalN_Selector() {
         Assert.Null(new decimal?[] { }.Min());
         Assert.Null(new decimal?[] { null }.Min());
         AssertGeneration(
@@ -3355,9 +3548,9 @@ $@"decimal? __() {{
     }
     #endregion
 
-    #region Max
+    #region Max with selector
     [Test]
-    public void Array_Select_Max_Int() {
+    public void Array_Select_Max_Int_Selector() {
         Assert.Throws<InvalidOperationException>(() => new int[] { }.Max());
         AssertGeneration(
 $@"int __() {{
@@ -3377,7 +3570,7 @@ $@"int __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_IntN() {
+    public void Array_Select_Max_IntN_Selector() {
         Assert.Null(new int?[] { }.Max());
         Assert.Null(new int?[] { null }.Max());
         AssertGeneration(
@@ -3397,7 +3590,7 @@ $@"int? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_Long() {
+    public void Array_Select_Max_Long_Selector() {
         Assert.Throws<InvalidOperationException>(() => new long[] { }.Max());
         AssertGeneration(
 $@"long __() {{
@@ -3417,7 +3610,7 @@ $@"long __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_LongN() {
+    public void Array_Select_Max_LongN_Selector() {
         Assert.Null(new long?[] { }.Max());
         Assert.Null(new long?[] { null }.Max());
         AssertGeneration(
@@ -3437,7 +3630,7 @@ $@"long? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_Float() {
+    public void Array_Select_Max_Float_Selector() {
         Assert.Throws<InvalidOperationException>(() => new float[] { }.Max());
         AssertGeneration(
 $@"float __() {{
@@ -3457,7 +3650,7 @@ $@"float __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_FloatN() {
+    public void Array_Select_Max_FloatN_Selector() {
         Assert.Null(new float?[] { }.Max());
         Assert.Null(new float?[] { null }.Max());
         AssertGeneration(
@@ -3477,7 +3670,7 @@ $@"float? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_Double() {
+    public void Array_Select_Max_Double_Selector() {
         Assert.Throws<InvalidOperationException>(() => new double[] { }.Max());
         AssertGeneration(
 $@"double __() {{
@@ -3497,7 +3690,7 @@ $@"double __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_DoubleN() {
+    public void Array_Select_Max_DoubleN_Selector() {
         Assert.Null(new double?[] { }.Max());
         Assert.Null(new double?[] { null }.Max());
         AssertGeneration(
@@ -3517,7 +3710,7 @@ $@"double? __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_Decimal() {
+    public void Array_Select_Max_Decimal_Selector() {
         Assert.Throws<InvalidOperationException>(() => new decimal[] { }.Max());
         AssertGeneration(
 $@"decimal __() {{
@@ -3537,7 +3730,7 @@ $@"decimal __() {{
         AssertAllocations();
     }
     [Test]
-    public void Array_Select_Max_DecimalN() {
+    public void Array_Select_Max_DecimalN_Selector() {
         Assert.Null(new decimal?[] { }.Max());
         Assert.Null(new decimal?[] { null }.Max());
         AssertGeneration(
