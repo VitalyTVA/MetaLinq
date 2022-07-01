@@ -11,7 +11,9 @@ namespace MetaLinqBenchmark;
 
 class Program {
     static void Main(string[] args) {
-        BenchmarkRunner.Run<Select_SumNBenchmarks>();
+        BenchmarkRunner.Run<Select_MinNBenchmarks>();
+        //BenchmarkRunner.Run<Select_MinBenchmarks>();
+        //BenchmarkRunner.Run<Select_SumNBenchmarks>();
         //BenchmarkRunner.Run<Select_SumBenchmarks>();
 
         //new Where_LastBenchmarks { N = 10 }.Standard_();

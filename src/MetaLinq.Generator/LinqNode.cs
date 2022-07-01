@@ -59,7 +59,6 @@ public enum ToValueType {
     All_Predicate,
 
     Sum,
-    Average,
     Min,
     Max,
 
@@ -106,7 +105,6 @@ public static class ValueTypeTraits {
     public static AggregateInfo? GetAggregateInfo(this ToValueType value) {
         return value switch {
             ToValueType.Sum => new AggregateInfo(AggregateKind.Sum, null, false, HasSelector: false),
-            ToValueType.Average => new AggregateInfo(AggregateKind.Average, null, false, HasSelector: false),
             ToValueType.Min => new AggregateInfo(AggregateKind.Min, null, false, HasSelector: false),
             ToValueType.Max => new AggregateInfo(AggregateKind.Max, null, false, HasSelector: false),
 

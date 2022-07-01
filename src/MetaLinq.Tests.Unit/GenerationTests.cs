@@ -3366,6 +3366,213 @@ $@"double? __() {{
 
     #region Min with selector
     [Test]
+    public void Array_Select_Min_Int() {
+        Assert.Throws<InvalidOperationException>(() => new int[] { }.Min());
+        AssertGeneration(
+$@"int __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Int).Min());
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => x.Int + 1).Min();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (int x) => Assert.AreEqual(1, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Min")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_Select_Min_IntN() {
+        Assert.Null(new int?[] { }.Min());
+        Assert.Null(new int?[] { null }.Min());
+        AssertGeneration(
+$@"int? __() {{
+    Assert.Null(Data.Array(0).Select(x => (int?)x.Int).Min());
+    Assert.Null(Data.Array(3).Select(x => (int?)null).Min());
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int % 2 == 0 ? null : (int?)x.Int).Min();
+}}",
+            (int? x) => Assert.AreEqual(1, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Min")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_Select_Min_Long() {
+        Assert.Throws<InvalidOperationException>(() => new long[] { }.Min());
+        AssertGeneration(
+$@"long __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => (long)x.Int).Min());
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => (long)x.Int + 1).Min();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (long x) => Assert.AreEqual(1, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Min")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Min_LongN() {
+        Assert.Null(new long?[] { }.Min());
+        Assert.Null(new long?[] { null }.Min());
+        AssertGeneration(
+$@"long? __() {{
+    Assert.Null(Data.Array(0).Select(x => (long?)x.Int).Min());
+    Assert.Null(Data.Array(3).Select(x => (long?)null).Min());
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int % 2 == 0 ? null : (long?)x.Int).Min();
+}}",
+            (long? x) => Assert.AreEqual(1, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Min")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Min_Float() {
+        Assert.Throws<InvalidOperationException>(() => new float[] { }.Min());
+        AssertGeneration(
+$@"float __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => (float)x.Int).Min());
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => (float)x.Int + 1).Min();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (float x) => Assert.AreEqual(1, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Min")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+
+    [Test]
+    public void Array_Select_Min_FloatN() {
+        Assert.Null(new float?[] { }.Min());
+        Assert.Null(new float?[] { null }.Min());
+        AssertGeneration(
+$@"float? __() {{
+    Assert.Null(Data.Array(0).Select(x => (float?)x.Int).Min());
+    Assert.Null(Data.Array(3).Select(x => (float?)null).Min());
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int % 2 == 0 ? null : (float?)x.Int).Min();
+}}",
+            (float? x) => Assert.AreEqual(1, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Min")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+ 
+    [Test]
+    public void Array_Select_Min_Double() {
+            Assert.Throws<InvalidOperationException>(() => new double[] { }.Min());
+            AssertGeneration(
+    $@"double __() {{
+        Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => (double)x.Int).Min());
+        var source = Data.Array(10).Shuffle();
+        var result = source.Select(x => (double)x.Int + 1).Min();
+        Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+        return result;
+    }}",
+                (double x) => Assert.AreEqual(1, x),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Min")
+                    })
+                }
+            );
+            AssertAllocations();
+        }
+        [Test]
+        public void Array_Select_Min_DoubleN() {
+            Assert.Null(new double?[] { }.Min());
+            Assert.Null(new double?[] { null }.Min());
+            AssertGeneration(
+    $@"double? __() {{
+        Assert.Null(Data.Array(0).Select(x => (double?)x.Int).Min());
+        Assert.Null(Data.Array(3).Select(x => (double?)null).Min());
+        var source = Data.Array(10).Shuffle();
+        return source.Select(x => x.Int % 2 == 0 ? null : (double?)x.Int).Min();
+    }}",
+                (double? x) => Assert.AreEqual(1, x),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Min")
+                    })
+                }
+            );
+            AssertAllocations();
+        }
+        [Test]
+        public void Array_Select_Min_Decimal() {
+            Assert.Throws<InvalidOperationException>(() => new decimal[] { }.Min());
+            AssertGeneration(
+    $@"decimal __() {{
+        Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => (decimal)x.Int).Min());
+        var source = Data.Array(10).Shuffle();
+        var result = source.Select(x => (decimal)x.Int + 1).Min();
+        Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+        return result;
+    }}",
+                (decimal x) => Assert.AreEqual(1, x),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Min")
+                    })
+                }
+            );
+            AssertAllocations();
+        }
+        [Test]
+        public void Array_Select_Min_DecimalN() {
+            Assert.Null(new decimal?[] { }.Min());
+            Assert.Null(new decimal?[] { null }.Min());
+            AssertGeneration(
+    $@"decimal? __() {{
+        Assert.Null(Data.Array(0).Select(x => (decimal?)x.Int).Min());
+        Assert.Null(Data.Array(3).Select(x => (decimal?)null).Min());
+        var source = Data.Array(10).Shuffle();
+        return source.Select(x => x.Int % 2 == 0 ? null : (decimal?)x.Int).Min();
+    }}",
+                (decimal? x) => Assert.AreEqual(1, x),
+                new[] {
+                    new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                        new StructMethod("Min")
+                    })
+                }
+            );
+            AssertAllocations();
+        }
+    #endregion
+
+    #region Min with selector
+    [Test]
     public void Array_Select_Min_Int_Selector() {
         Assert.Throws<InvalidOperationException>(() => new int[] { }.Min());
         AssertGeneration(

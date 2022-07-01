@@ -122,15 +122,35 @@ $@"var result_{lastLevel} = result{topLevel};";
         if(aggregateInfo != null) {
             if(piece.LoopType != LoopType.Forward)
                 throw new InvalidOperationException();
-            if(!aggregateInfo.Value.HasSelector && aggregateInfo.Value.Kind == AggregateKind.Sum) {
-                return (
+            if(!aggregateInfo.Value.HasSelector) {
+                switch(aggregateInfo.Value.Kind) {
+                    case AggregateKind.Sum:
+                        return (
 $@"{outputType} result{topLevel} = AggregateHelper.Zero<{outputType}>();",
 $@"var value{lastLevel.Next} = item{lastLevel.Next};
-{(aggregateInfo.Value.Nullable ? $"if(value{lastLevel.Next} != null) " : null)} {{ 
-    result{topLevel} = AggregateHelper.Sum(result{topLevel}, value{lastLevel.Next});
-}}",
+result{topLevel} = AggregateHelper.Sum(result{topLevel}, value{lastLevel.Next});",
 $@"var result_{lastLevel} = result{topLevel};"
-                );
+                        );
+                    case AggregateKind.Min:
+                        return (
+$@"{outputType} result{topLevel} = default({outputType})!;
+var found{lastLevel.Next} = false;",
+$@"var value{lastLevel.Next} = item{lastLevel.Next};
+if(value{lastLevel.Next} != null) {{
+    if(found{lastLevel.Next} && Comparer<{outputType}>.Default.Compare(value{lastLevel.Next}, result{topLevel}) {(aggregateInfo.Value.Kind == AggregateKind.Min ? '<' : '>')} 0) {{
+        result{topLevel} = value{lastLevel.Next};
+    }} else if(!found{lastLevel.Next}) {{
+        result{topLevel} = value{lastLevel.Next};
+        found{lastLevel.Next} = true;
+    }}
+}}",
+$@"if(!found{lastLevel.Next} && default({outputType}) != null) throw new InvalidOperationException(""Sequence contains no elements"");
+var result_{lastLevel} = result{topLevel};"
+                        );
+
+                    default: 
+                        throw new InvalidOperationException();
+                };
             }
             switch(aggregateInfo.Value.Kind) {
                 case AggregateKind.Sum:

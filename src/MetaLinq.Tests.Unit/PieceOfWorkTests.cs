@@ -13,7 +13,6 @@ public class PieceOfWorkTests {
         ToValueType.Single, ToValueType.Single_Predicate, ToValueType.SingleOrDefault, ToValueType.SingleOrDefault_Predicate,
 
         ToValueType.Sum,
-        ToValueType.Average,
         ToValueType.Min,
         ToValueType.Max,
 
