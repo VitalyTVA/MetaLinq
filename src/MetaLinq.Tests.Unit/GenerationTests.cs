@@ -3774,6 +3774,209 @@ $@"decimal? __() {{
     }
     #endregion
 
+    #region Max
+    [Test]
+    public void Array_Select_Max_Int() {
+        Assert.Throws<InvalidOperationException>(() => new int[] { }.Max());
+        AssertGeneration(
+$@"int __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => x.Int).Max());
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => x.Int + 1).Max();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (int x) => Assert.AreEqual(10, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_IntN() {
+        Assert.Null(new int?[] { }.Max());
+        Assert.Null(new int?[] { null }.Max());
+        AssertGeneration(
+$@"int? __() {{
+    Assert.Null(Data.Array(0).Select(x => (int?)x.Int).Max());
+    Assert.Null(Data.Array(3).Select(x => (int?)null).Max());
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int % 2 == 0 ? null : (int?)x.Int).Max();
+}}",
+            (int? x) => Assert.AreEqual(9, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_Long() {
+        Assert.Throws<InvalidOperationException>(() => new long[] { }.Max());
+        AssertGeneration(
+$@"long __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => (long)x.Int).Max());
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => (long)x.Int + 1).Max();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (long x) => Assert.AreEqual(10, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_LongN() {
+        Assert.Null(new long?[] { }.Max());
+        Assert.Null(new long?[] { null }.Max());
+        AssertGeneration(
+$@"long? __() {{
+    Assert.Null(Data.Array(0).Select(x => (long?)x.Int).Max());
+    Assert.Null(Data.Array(3).Select(x => (long?)null).Max());
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int % 2 == 0 ? null : (long?)x.Int).Max();
+}}",
+            (long? x) => Assert.AreEqual(9, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_Float() {
+        Assert.Throws<InvalidOperationException>(() => new float[] { }.Max());
+        AssertGeneration(
+$@"float __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => (float)x.Int).Max());
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => (float)x.Int + 1).Max();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (float x) => Assert.AreEqual(10, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_FloatN() {
+        Assert.Null(new float?[] { }.Max());
+        Assert.Null(new float?[] { null }.Max());
+        AssertGeneration(
+$@"float? __() {{
+    Assert.Null(Data.Array(0).Select(x => (float?)x.Int).Max());
+    Assert.Null(Data.Array(3).Select(x => (float?)null).Max());
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int % 2 == 0 ? null : (float?)x.Int).Max();
+}}",
+            (float? x) => Assert.AreEqual(9, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_Double() {
+        Assert.Throws<InvalidOperationException>(() => new double[] { }.Max());
+        AssertGeneration(
+$@"double __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => (double)x.Int).Max());
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => (double)x.Int + 1).Max();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (double x) => Assert.AreEqual(10, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_DoubleN() {
+        Assert.Null(new double?[] { }.Max());
+        Assert.Null(new double?[] { null }.Max());
+        AssertGeneration(
+$@"double? __() {{
+    Assert.Null(Data.Array(0).Select(x => (double?)x.Int).Max());
+    Assert.Null(Data.Array(3).Select(x => (double?)null).Max());
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int % 2 == 0 ? null : (double?)x.Int).Max();
+}}",
+            (double? x) => Assert.AreEqual(9, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_Decimal() {
+        Assert.Throws<InvalidOperationException>(() => new decimal[] { }.Max());
+        AssertGeneration(
+$@"decimal __() {{
+    Assert.Throws<System.InvalidOperationException>(() => Data.Array(0).Select(x => (decimal)x.Int).Max());
+    var source = Data.Array(10).Shuffle();
+    var result = source.Select(x => (decimal)x.Int + 1).Max();
+    Assert.True(Enumerable.All(source, x => x.Int_GetCount == 1));
+    return result;
+}}",
+            (decimal x) => Assert.AreEqual(10, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    [Test]
+    public void Array_Select_Max_DecimalN() {
+        Assert.Null(new decimal?[] { }.Max());
+        Assert.Null(new decimal?[] { null }.Max());
+        AssertGeneration(
+$@"decimal? __() {{
+    Assert.Null(Data.Array(0).Select(x => (decimal?)x.Int).Max());
+    Assert.Null(Data.Array(3).Select(x => (decimal?)null).Max());
+    var source = Data.Array(10).Shuffle();
+    return source.Select(x => x.Int % 2 == 0 ? null : (decimal?)x.Int).Max();
+}}",
+            (decimal? x) => Assert.AreEqual(9, x),
+            new[] {
+                new MetaLinqMethodInfo(SourceType.Array, "Select", new[] {
+                    new StructMethod("Max")
+                })
+            }
+        );
+        AssertAllocations();
+    }
+    #endregion
+
     #region Max with selector
     [Test]
     public void Array_Select_Max_Int_Selector() {

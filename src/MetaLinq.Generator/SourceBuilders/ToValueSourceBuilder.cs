@@ -131,7 +131,7 @@ $@"var value{lastLevel.Next} = item{lastLevel.Next};
 result{topLevel} = AggregateHelper.Sum(result{topLevel}, value{lastLevel.Next});",
 $@"var result_{lastLevel} = result{topLevel};"
                         );
-                    case AggregateKind.Min:
+                    case AggregateKind.Min or AggregateKind.Max:
                         return (
 $@"{outputType} result{topLevel} = default({outputType})!;
 var found{lastLevel.Next} = false;",

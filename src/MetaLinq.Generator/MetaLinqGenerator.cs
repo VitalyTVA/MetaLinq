@@ -212,12 +212,15 @@ class SyntaxContextReceiver : ISyntaxContextReceiver {
                     ToValueType.Min_Decimal_Selector, ToValueType.Min_DecimalN_Selector
                 )
             ),
-            "Max" => GetAggregateToValueType(
-                ToValueType.Max_Int_Selector, ToValueType.Max_IntN_Selector,
-                ToValueType.Max_Long_Selector, ToValueType.Max_LongN_Selector,
-                ToValueType.Max_Float_Selector, ToValueType.Max_FloatN_Selector,
-                ToValueType.Max_Double_Selector, ToValueType.Max_DoubleN_Selector,
-                ToValueType.Max_Decimal_Selector, ToValueType.Max_DecimalN_Selector
+            "Max" => ChooseOverload(
+                noArgs: () => ToValueType.Max,
+                oneArg: () => GetAggregateToValueType(
+                    ToValueType.Max_Int_Selector, ToValueType.Max_IntN_Selector,
+                    ToValueType.Max_Long_Selector, ToValueType.Max_LongN_Selector,
+                    ToValueType.Max_Float_Selector, ToValueType.Max_FloatN_Selector,
+                    ToValueType.Max_Double_Selector, ToValueType.Max_DoubleN_Selector,
+                    ToValueType.Max_Decimal_Selector, ToValueType.Max_DecimalN_Selector
+                )
             ),
             "Aggregate" => ChooseOverload(
                 oneArg: () => ToValueType.Aggregate, 
