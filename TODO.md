@@ -12,13 +12,7 @@ CustomEnumerable should not be a special case - introduce Source Type Traits
 
 warning for queries like source.OrderBy(x => -x.Int).Any(x => x.Int > 0); - orderby is not necessary and can be omited + Order.ToHashSet
 
-check fake Sum methods with invalid parameters ((INamedTypeSymbol)method.Parameters[0].Type).TypeArguments[1].SpecialType
-
-check fake Aggregate methods with invalid parameters "Aggregate" => method.Parameters.Length switch {
-
-"Sequence contains no matching element" - duplicated strings
-
-"Sequence contains no elements" - duplicated strings
+checked arthmetics in sum, etc.: num = checked(num + item);
 
 # Optimizations
 CustomEnumerable-Where-OrderBy-First, CustomEnumerable_Where_OrderBy_Any or CustomEnumerable_Where_OrderBy_First chains optimization - merge pieces of work into one

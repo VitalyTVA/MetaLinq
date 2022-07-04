@@ -112,7 +112,7 @@ public static class ToValueSourceBuilder {
             .ToArray();
         string GetFirstLastSingleResultStatement() =>
 $@"if(!found{topLevel})
-    throw new InvalidOperationException(""Sequence contains no matching element"");
+    throw new InvalidOperationException(""{SR.SequenceContainsNoMatchingElement}"");
 var result_{lastLevel} = result{topLevel}!;";
         string GetFirstLastSingleOrDefaultResultStatement() =>
 $@"var result_{lastLevel} = result{topLevel};";
@@ -144,7 +144,7 @@ if(value{lastLevel.Next} != null) {{
         found{lastLevel.Next} = true;
     }}
 }}",
-$@"if(!found{lastLevel.Next} && default({outputType}) != null) throw new InvalidOperationException(""Sequence contains no elements"");
+$@"if(!found{lastLevel.Next} && default({outputType}) != null) throw new InvalidOperationException(""{SR.SequenceContainsNoElements}"");
 var result_{lastLevel} = result{topLevel};"
                         );
 
@@ -171,7 +171,7 @@ $@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
     result{topLevel} += value{lastLevel.Next};
     count{lastLevel.Next}++;
 }}",
-$@"{(!aggregateInfo.Value.Nullable ? $"if(count{lastLevel.Next} == 0) throw new InvalidOperationException(\"Sequence contains no elements\");" : null)}
+$@"{(!aggregateInfo.Value.Nullable ? $"if(count{lastLevel.Next} == 0) throw new InvalidOperationException(\"{SR.SequenceContainsNoElements}\");" : null)}
 var result_{lastLevel} = {(aggregateInfo.Value.Nullable ? $"count{lastLevel.Next} == 0 ? null : " : null)} result{topLevel} / count{lastLevel.Next};"
                     );
                 case AggregateKind.Min or AggregateKind.Max:
@@ -187,7 +187,7 @@ $@"var value{lastLevel.Next} = selector(item{lastLevel.Next});
         found{lastLevel.Next} = true;
     }}
 }}",
-$@"{(!aggregateInfo.Value.Nullable ? $"if(!found{lastLevel.Next}) throw new InvalidOperationException(\"Sequence contains no elements\");" : null)}
+$@"{(!aggregateInfo.Value.Nullable ? $"if(!found{lastLevel.Next}) throw new InvalidOperationException(\"{SR.SequenceContainsNoElements}\");" : null)}
 var result_{lastLevel} = {(aggregateInfo.Value.Nullable ? $"!found{lastLevel.Next} ? null : " : null)} result{topLevel};"
                     );
                 default:
@@ -216,7 +216,7 @@ $@"found{topLevel} = true;
 result{topLevel} = item{lastLevel.Next};
 goto firstFound{lastLevel};",
 $@"if(!found{topLevel})
-    throw new InvalidOperationException(""Sequence contains no elements"");
+    throw new InvalidOperationException(""{SR.SequenceContainsNoElements}"");
 var result_{lastLevel} = result{topLevel}!;"
                 );
             case (_, LoopType.Forward, ToValueType.FirstOrDefault_Predicate) or (_, LoopType.Backward, ToValueType.LastOrDefault_Predicate):
@@ -265,7 +265,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
         found{topLevel} = true;
         result{topLevel} = item{lastLevel.Next};
     }} else {{
-        throw new InvalidOperationException(""Sequence contains more than one matching element"");
+        throw new InvalidOperationException(""{SR.SequenceContainsMoreThanOneMatchingElement}"");
     }}
 }}",
 GetFirstLastSingleResultStatement()
@@ -278,7 +278,7 @@ $@"if(!found{topLevel}) {{
     found{topLevel} = true;
     result{topLevel} = item{lastLevel.Next};
 }} else {{
-    throw new InvalidOperationException(""Sequence contains more than one element"");
+    throw new InvalidOperationException(""{SR.SequenceContainsMoreThanOneElement}"");
 }}",
 GetFirstLastSingleResultStatement()
                 );
@@ -291,7 +291,7 @@ $@"if(predicate(item{lastLevel.Next})) {{
         found{topLevel} = true;
         result{topLevel} = item{lastLevel.Next};
     }} else {{
-        throw new InvalidOperationException(""Sequence contains more than one matching element"");
+        throw new InvalidOperationException(""{SR.SequenceContainsMoreThanOneMatchingElement}"");
     }}
 }}",
 GetFirstLastSingleOrDefaultResultStatement()
@@ -304,7 +304,7 @@ $@"if(!found{topLevel}) {{
     found{topLevel} = true;
     result{topLevel} = item{lastLevel.Next};
 }} else {{
-    throw new InvalidOperationException(""Sequence contains more than one element"");
+    throw new InvalidOperationException(""{SR.SequenceContainsMoreThanOneElement}"");
 }}",
 GetFirstLastSingleOrDefaultResultStatement()
                 );
@@ -469,7 +469,7 @@ $@"if(found{topLevel}) {{
     found{topLevel} = true;
 }}",
 $@"if(!found{topLevel})
-    throw new InvalidOperationException(""Sequence contains no elements"");
+    throw new InvalidOperationException(""{SR.SequenceContainsNoElements}"");
 var result_{lastLevel} = result{topLevel};"
                 );
             default:
