@@ -8,7 +8,7 @@ public static class SortHelper {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Aggregate<T, TComparer>(T[] source, int[] map, TComparer comparer, int len, Func<T, T, T> func) where TComparer : IComparer<int> {
         if(len == 0)
-            throw new InvalidOperationException("Sequence contains no elements");
+            throw new InvalidOperationException(SR.SequenceContainsNoElements);
         SortCore<TComparer>(map, comparer, len);
         T result = source[map[0]];
         for(int i = 1; i != len; i++) {
@@ -20,7 +20,7 @@ public static class SortHelper {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Aggregate<T, TComparer>(IList<T> source, int[] map, TComparer comparer, int len, Func<T, T, T> func) where TComparer : IComparer<int> {
         if(len == 0)
-            throw new InvalidOperationException("Sequence contains no elements");
+            throw new InvalidOperationException(SR.SequenceContainsNoElements);
         SortCore<TComparer>(map, comparer, len);
         T result = source[map[0]];
         for(int i = 1; i != len; i++) {
